@@ -1,35 +1,92 @@
-import axios, {AxiosRequestConfig, AxiosResponse} from "axios";
+import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
 import queryString from "query-string";
 
-export const GetApi = <Response, Query = null>
-(url: string, query?: Query, config?: object) => {
-    let newUrl = url;
-    if (query) {
-        newUrl = `${newUrl}?${queryString.stringify(query)}`;
+const getApiBaseUrl = () => {
+  if (typeof window !== "undefined") {
+    const { hostname } = window.location; // Get current subdomain
+    if (hostname.includes(".")) {
+      return `http://${hostname}:5000`; // Handles publisher1.localhost:5000
     }
-    return axios.get<Response, AxiosResponse<Response, object>, object>(newUrl, config);
+  }
+  return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"; // Default to main domain
 };
-export const DeleteApi = <Response, Query = null>
-(url: string, query?: Query, config?: object) => {
-    let newUrl = url;
-    if (query) {
-        newUrl = `${newUrl}?${queryString.stringify(query)}`;
+
+// ✅ Create Axios instance with dynamic base URL
+const api = axios.create({
+  baseURL: getApiBaseUrl(),
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+// Automatically attach JWT token to every request
+api.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return axios.delete<Response, AxiosResponse<Response, object>, object>(newUrl, config);
+  }
+  return config;
+});
+
+// Utility function for GET requests
+export const GetApi = async <Response, Query = null>(
+  url: string,
+  query?: Query,
+  config?: AxiosRequestConfig,
+) => {
+  let newUrl = url;
+  if (query) {
+    newUrl = `${newUrl}?${queryString.stringify(query)}`;
+  }
+  return api.get<Response, AxiosResponse<Response>>(newUrl, config).then((res) => res.data);
 };
-export const PostApi = <Data, Response, Query = null>
-(url: string, data: Data, query?: Query, config?: AxiosRequestConfig<Data>) => {
-    let newUrl = url;
-    if (query) {
-        newUrl = `${newUrl}?${queryString.stringify(query)}`;
-    }
-    return axios.post<Response, AxiosResponse<Response, Data>, Data>(newUrl, data, config);
+
+// Utility function for DELETE requests
+export const DeleteApi = async <Response, Query = null>(
+  url: string,
+  query?: Query,
+  config?: AxiosRequestConfig,
+) => {
+  let newUrl = url;
+  if (query) {
+    newUrl = `${newUrl}?${queryString.stringify(query)}`;
+  }
+  return api.delete<Response, AxiosResponse<Response>>(newUrl, config).then((res) => res.data);
 };
-export const PutApi = <Data, Response, Query = null>
-(url: string, data: Data, query?: Query, config?: object) => {
-    let newUrl = url;
-    if (query) {
-        newUrl = `${newUrl}?${queryString.stringify(query)}`;
-    }
-    return axios.put<Response, AxiosResponse<Response, Data>, Data>(newUrl, data, config);
+
+// Utility function for POST requests
+export const PostApi = async <Data, Response, Query = null>(
+  url: string,
+  data: Data,
+  query?: Query,
+  config?: AxiosRequestConfig<Data>,
+) => {
+  let newUrl = url;
+  if (query) {
+    newUrl = `${newUrl}?${queryString.stringify(query)}`;
+  }
+  return api
+    .post<Response, AxiosResponse<Response>, Data>(newUrl, data, config)
+    .then((res) => res.data);
 };
+
+// Utility function for PUT requests
+export const PutApi = async <Data, Response, Query = null>(
+  url: string,
+  data: Data,
+  query?: Query,
+  config?: AxiosRequestConfig<Data>,
+) => {
+  let newUrl = url;
+  if (query) {
+    newUrl = `${newUrl}?${queryString.stringify(query)}`;
+  }
+  return api
+    .put<Response, AxiosResponse<Response>, Data>(newUrl, data, config)
+    .then((res) => res.data);
+};
+
+// Export Axios instance for direct use if needed
+export default api;
