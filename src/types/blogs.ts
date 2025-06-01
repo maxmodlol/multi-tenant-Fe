@@ -7,6 +7,10 @@ export interface BlogPage {
   createdAt: string;
   updatedAt: string;
 }
+export interface BlogPageInput {
+  pageNumber: number;
+  content: string;
+}
 
 export enum BlogStatus {
   DRAFTED = "DRAFTED",
@@ -56,8 +60,9 @@ export interface CreateBlogInput {
   title: string;
   coverPhoto?: string;
   tags?: string[];
+  description?: string;
   categoryNames?: string[];
-  pages: string[];
+  pages: BlogPageInput[]; // <-- was BlogPage[]
   authorId: string;
   tenant: string;
 }
@@ -79,5 +84,9 @@ export interface BlogCardData {
     id: string;
   };
   tags?: string[];
+  pages?: BlogPage[];
+  categories?: Category[];
+  status?: BlogStatus;
+  description?: string;
   url?: string; // ✅ New
 }

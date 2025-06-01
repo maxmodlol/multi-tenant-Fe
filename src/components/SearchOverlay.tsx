@@ -1,61 +1,68 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, KeyboardEvent, FocusEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Search } from "lucide-react";
-import clsx from "clsx";
 import { Input } from "./ui/input";
 
 export default function SearchOverlay({ onClose }: { onClose: () => void }) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
-  const [query, setQuery] = useState("");
   const router = useRouter();
+  const overlayRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [query, setQuery] = useState("");
 
   // Focus input on mount
   useEffect(() => {
     inputRef.current?.focus();
 
-    const handleOutsideClick = (e: MouseEvent) => {
-      if (overlayRef.current && !overlayRef.current.contains(e.target as Node)) {
-        onClose();
-      }
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
     };
-
-    document.addEventListener("mousedown", handleOutsideClick);
-    return () => document.removeEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("keydown", onKeyDown as any);
+    return () => document.removeEventListener("keydown", onKeyDown as any);
   }, [onClose]);
 
-  const handleSearch = () => {
-    if (query.trim().length > 1) {
-      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+  // close if click outside
+  const handleClickOutside = (e: MouseEvent) => {
+    if (overlayRef.current && !overlayRef.current.contains(e.target as Node)) {
+      onClose();
+    }
+  };
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const submit = () => {
+    const q = query.trim();
+    if (q.length > 1) {
+      router.push(`/search?q=${encodeURIComponent(q)}`);
       onClose();
     }
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4">
+    <div
+      className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="search-label"
+    >
       <div
         ref={overlayRef}
-        className={clsx(
-          "relative w-full max-w-2xl rounded-full px-4 py-3",
-          " text-black shadow-md dark:bg-gray-900 dark:text-text-black",
-        )}
+        className="relative w-full max-w-2xl rounded-full bg-white dark:bg-gray-900 px-4 py-3 shadow-lg flex items-center"
       >
-        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
-
+        <label htmlFor="search-input" id="search-label" className="sr-only">
+          بحث
+        </label>
         <Input
           ref={inputRef}
+          id="search-input"
           type="text"
-          placeholder="Search"
           value={query}
-          icon={"search"}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-          className={clsx(
-            "w-full pl-10 pr-10 py-2 text-lg bg-transparent focus:outline-none",
-            "text-black  placeholder-gray-400 dark:placeholder-gray-500",
-          )}
+          onChange={(e) => setQuery(e.currentTarget.value)}
+          onKeyDown={(e) => e.key === "Enter" && submit()}
+          placeholder="ابحث في المدونة…"
+          className="flex-1 bg-transparent outline-none text-lg text-black  dark:text-gray-900 placeholder-gray-400 dark:placeholder-gray-500"
         />
       </div>
     </div>

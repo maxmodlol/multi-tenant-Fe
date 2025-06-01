@@ -2,21 +2,51 @@
 import { useState } from "react";
 import BlogCard from "./BlogCard";
 import { useBlogs } from "@explore/lib/useBlogs";
-import clsx from "clsx";
 import { useCategories } from "@explore/lib/useCategories";
+import clsx from "clsx";
 import Pagination from "./ui/Pagination";
 import { Button } from "./ui/button";
+import { Blog } from "../types/blogs";
+import { Category } from "../types/category";
 
-export default function BlogsList() {
-  const [activeCategory, setActiveCategory] = useState("all");
+interface BlogsListProps {
+  initialBlogs: Blog[];
+  initialTotalPages: number;
+  initialCategories: Category[];
+  initialCategory?: string;
+}
+
+export default function BlogsList({
+  initialBlogs,
+  initialTotalPages,
+  initialCategories,
+  initialCategory,
+}: BlogsListProps) {
+  const [activeCategory, setActiveCategory] = useState(initialCategory ?? "all");
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 11; // 9 regular + 2 wide at the bottom
+  const pageSize = 11; // 9 regular + 2 wide
 
-  const { blogsQuery } = useBlogs(activeCategory, currentPage, pageSize);
-  const { data: categories } = useCategories();
+  // 1) Categories query + fallback
+  const categoriesQuery = useCategories({
+    initialData: initialCategories,
+  });
+  const categories = categoriesQuery.data ?? initialCategories;
 
-  const blogs = blogsQuery.data?.blogs || [];
-  const totalPages = blogsQuery.data?.totalPages || 1;
+  // 2) Blogs query + fallback
+  const { data: blogsResponse } = useBlogs(activeCategory, currentPage, pageSize, {
+    // initialData lines up with BlogsResponse
+    initialData:
+      activeCategory === (initialCategory ?? "all") && currentPage === 1
+        ? {
+            blogs: initialBlogs,
+            totalPages: initialTotalPages,
+            totalBlogs: initialBlogs.length,
+          }
+        : undefined,
+  });
+
+  const blogs = blogsResponse?.blogs || initialBlogs;
+  const totalPages = blogsResponse?.totalPages || initialTotalPages;
 
   const handleCategoryChange = (category: string) => {
     setActiveCategory(category);
@@ -36,7 +66,7 @@ export default function BlogsList() {
         >
           جميع التصنيفات
         </Button>
-        {categories?.map((cat) => (
+        {categories.map((cat) => (
           <Button
             key={cat.id}
             onClick={() => handleCategoryChange(cat.name)}
@@ -64,7 +94,7 @@ export default function BlogsList() {
         ))}
       </div>
 
-      {/* Pagination Component */}
+      {/* Pagination */}
       <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
     </div>
   );

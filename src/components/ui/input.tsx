@@ -41,11 +41,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             ref={ref}
             className={cn(
               // Layout
-              "flex h-10 w-full items-center rounded-full px-3 py-2 text-sm",
+              "flex h-10 w-full items-center te rounded-full px-3 py-2 text-sm",
               // Default look
-              "text-text-primary placeholder-text-placeholder",
+              "text-text-primary placeholder-text-placeholder dark:text-gray-900",
               // Focus state
-              "border-0 border-transparent", // default border
+              "border border-gray-300", // default border
               "focus:outline-none focus:border-2 focus:ring-0 focus:ring-offset-0", // kill ring
               "focus:border-border-brand dark:border-border-primary", // apply your brand color
               // Disabled

@@ -1,10 +1,12 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Moon, X } from "lucide-react";
 import { useCategories } from "@explore/lib/useCategories";
 import { Category } from "@explore/types/category";
 import { Input } from "@explore/components/ui/input";
 import { ResponsiveMenuProps } from "./types";
+import { Spinner } from "../ui/spinner";
+import { useRouter } from "next/navigation";
 
 const ResponsiveMenu: React.FC<ResponsiveMenuProps> = ({
   isDark,
@@ -13,31 +15,52 @@ const ResponsiveMenu: React.FC<ResponsiveMenuProps> = ({
   isMobile,
 }) => {
   const { data: categories, isLoading, error } = useCategories();
+  const [query, setQuery] = useState("");
+  const router = useRouter();
 
+  const onSearch = () => {
+    if (query.trim().length > 0) {
+      router.push(`/search?q=${encodeURIComponent(query.trim())}`);
+      closeMenu();
+    }
+  };
   return (
-    <div className="flex flex-col justify-between h-full overflow-auto p-4 gap-4">
+    <div className="flex flex-col justify-between h-full  p-4 gap-4 ">
       <div className="flex flex-col gap-4">
         {/* Search bar (Mobile only) */}
-        {isMobile && <Input placeholder="ابحث هنا..." icon="search" />}
+        {isMobile && (
+          <Input
+            placeholder="ابحث هنا..."
+            icon="search"
+            value={query}
+            autoFocus
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSearch()}
+          />
+        )}
 
         {/* Navigation links */}
         <nav className="flex flex-col gap-2">
           <a
-            href="#"
+            href="/"
+            onClick={closeMenu}
             className="text-gray-700 hover:text-brand-600 dark:text-gray-200 dark:hover:text-white transition"
           >
             الصفحة الرئيسية
           </a>
 
           {isLoading ? (
-            <p className="text-gray-500 text-sm">جاري التحميل...</p>
+            <div className="flex justify-center items-center py-20">
+              <Spinner />
+            </div>
           ) : error ? (
             <p className="text-red-500 text-sm">حدث خطأ أثناء جلب التصنيفات</p>
           ) : (
             categories?.map((category: Category) => (
               <a
                 key={category.id}
-                href={`/category/${category.id}`}
+                href={`/category/${encodeURIComponent(category.name)}`}
+                onClick={closeMenu}
                 className="text-gray-700 hover:text-brand-600 dark:text-gray-200 dark:hover:text-white transition"
               >
                 {category.name}

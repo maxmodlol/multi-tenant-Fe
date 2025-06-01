@@ -1,8 +1,6 @@
-"use client";
-import { DefaultPageProps } from "@explore/types/defaultPage";
-import * as React from "react";
+// app/(dashboard)/page.tsx
+import { redirect } from "next/navigation";
 
-const Page: React.FC<DefaultPageProps> = () => {
-  return <div>test</div>;
-};
-export default Page;
+export default function DashboardHome() {
+  redirect("/dashboard/settings");
+}

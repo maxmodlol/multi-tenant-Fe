@@ -26,7 +26,6 @@ export default function Pagination({ currentPage, totalPages, onPageChange }: Pa
             onClick={() => onPageChange(page)}
             variant={page === currentPage ? "primary" : "outline"}
             size="sm"
-            className="!rounded-full "
           >
             {page}
           </Button>

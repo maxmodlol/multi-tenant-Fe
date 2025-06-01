@@ -1,9 +1,16 @@
 import type { Config } from "tailwindcss";
+import typography from "@tailwindcss/typography";
 
 // We want each package to be responsible for its own content.
 const config: Config = {
   darkMode: "class",
-  content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
+  content: [
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx}",
+    "./src/lib/**/*.{js,ts,jsx,tsx}",
+    "./src/services/**/*.{js,ts,jsx,tsx}",
+  ],
+
   theme: {
     borderRadius: {
       none: "0",
@@ -580,17 +587,24 @@ const config: Config = {
           "0%,70%,100%": { opacity: "1" },
           "20%,50%": { opacity: "0" },
         },
+        "gradient-x": {
+          "0%, 100%": { "background-position": "0% 50%" },
+          "50%": { "background-position": "100% 50%" },
+        },
       },
       animation: {
         "caret-blink": "caret-blink 1.25s ease-out infinite",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "gradient-x": "gradient-x 8s ease infinite",
       },
     },
   },
+
   plugins: [
     require("@tailwindcss/forms"), // Ensures form elements work well in RTL
-    require("tailwindcss-rtl"), // Enables automatic RTL support
+    require("tailwindcss-rtl"),
+    typography, // Enables automatic RTL support
   ],
 };
 export default config;

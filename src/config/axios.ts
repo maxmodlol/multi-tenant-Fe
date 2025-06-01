@@ -1,4 +1,5 @@
 import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
+import { getSession } from "next-auth/react";
 import queryString from "query-string";
 
 const getApiBaseUrl = () => {
@@ -17,15 +18,15 @@ const api = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
+  withCredentials: true,
 });
 
 // Automatically attach JWT token to every request
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("token");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+api.interceptors.request.use(async (config) => {
+  const sess = await getSession();
+  const raw = (sess as any)?.token; // <— bypass TS for now
+  if (raw) {
+    config.headers.Authorization = `Bearer ${raw}`;
   }
   return config;
 });

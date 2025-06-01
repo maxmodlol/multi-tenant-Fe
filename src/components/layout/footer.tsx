@@ -1,3 +1,4 @@
+// components/Footer.tsx
 "use client";
 
 import { Input } from "@explore/components/ui/input";
@@ -5,70 +6,91 @@ import { Button } from "@explore/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 
-const Footer = () => {
+export default function Footer() {
   return (
-    <footer className="w-full bg-brand-50  border border-gray-100 shadow-md dark:bg-gray-900 text-sm dark:border-gray-800">
-      <div className="mx-auto max-w-screen-xl px-4 py-10 md:px-16">
-        {/* Top Section: Logo + Subscription */}
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          {/* Logo */}
-          <div className="flex justify-center md:justify-start">
-            <Image src="/logo.svg" alt="Logo" width={100} height={40} />
-          </div>
+    <footer
+      role="contentinfo"
+      className="
+        relative overflow-hidden
+        bg-black dark:bg-white/5 text-white dark:text-black
+        pt-16 pb-8
+      "
+    >
+      {/* شريط التدرج النيون العلوي */}
+      <div
+        className="
+          absolute inset-x-0 top-0 h-2
+          bg-gradient-to-r from-indigo-400 via-brand-500 to-cyan-400
+          bg-[length:200%_200%] animate-gradient-x
+        "
+      />
 
-          {/* Subscription */}
-          <form className="flex flex-row items-center gap-2 md:gap-3 md:justify-end">
+      <div className="relative z-10 mx-auto max-w-screen-xl px-6">
+        {/* الشعار + الاشتراك */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+          <Link href="/" aria-label="الصفحة الرئيسية">
+            <Image
+              src="/logo.svg"
+              alt="شعار الموقع"
+              width={120}
+              height={40}
+              className="drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
+            />
+          </Link>
+          <form aria-label="نموذج الاشتراك في النشرة الإخبارية" className="flex items-center gap-2">
             <Input
-              placeholder="ادخل ايميلك"
-              className="min-w-[240px] md:min-w-[260px] dark:bg-transparent text-right"
+              type="email"
+              name="email"
+              placeholder="أدخل بريدك الإلكتروني"
+              aria-label="عنوان بريدك الإلكتروني"
+              className="min-w-[200px] bg-white/10 text-white placeholder-white/60 focus:bg-white/20"
             />
             <Button
-              variant="secondaryGray"
-              size="lg"
-              className="!rounded-full !dark:!bg-background-brand "
+              variant="ghost"
+              className="
+                bg-brand-500 hover:bg-brand-600
+                text-black font-semibold
+                px-6 py-2 rounded-full
+                shadow-[0_0_10px_rgba(255,0,255,0.7)]
+                transition
+              "
             >
               اشترك
             </Button>
           </form>
         </div>
 
-        {/* Middle Section: Navigation Links */}
-        <div className="mt-6">
-          {/* 
-            On mobile (default): grid with 2 columns => 2 links per row.
-            On md and above: switch to flex row.
-          */}
-          <ul
-            className="
-              grid grid-cols-2 gap-4 
-              justify-items-center
-              font-medium text-gray-700 dark:text-gray-300 text-base
-
-              md:flex md:justify-start md:gap-8
-            "
-          >
+        {/* روابط سريعة */}
+        <nav aria-label="روابط سريعة" className="mt-10">
+          <ul className="flex flex-wrap justify-center md:justify-start gap-6 text-sm font-medium">
             <li>
-              <Link href="#">من نحن</Link>
+              <Link href="/about" className="hover:text-cyan-400 transition">
+                من نحن
+              </Link>
             </li>
             <li>
-              <Link href="#">أتصل بنا</Link>
+              <Link href="/contact" className="hover:text-cyan-400 transition">
+                اتصل بنا
+              </Link>
             </li>
             <li>
-              <Link href="#">سياسة الخصوصية</Link>
+              <Link href="/privacy" className="hover:text-cyan-400 transition">
+                سياسة الخصوصية
+              </Link>
             </li>
             <li>
-              <Link href="#">انضم الى الناشر</Link>
+              <Link href="/publishers/join" className="hover:text-cyan-400 transition">
+                انضم إلى الناشرين
+              </Link>
             </li>
           </ul>
-        </div>
+        </nav>
 
-        {/* Bottom Section */}
-        <div className="mt-6 text-brand-500 dark:text-gray-400 md:mt-10 flex flex-start text-center">
-          © جميع الحقوق محفوظة لدى
-        </div>
+        {/* حقوق النشر */}
+        <p className="mt-12 text-center md:text-left text-xs opacity-60">
+          © {new Date().getFullYear()} مدونة الموقع. جميع الحقوق محفوظة.
+        </p>
       </div>
     </footer>
   );
-};
-
-export default Footer;
+}
