@@ -8,8 +8,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary:
-          "bg-background-brand-solid text-text-primary-on-brand hover:bg-background-brand-solid-hover",
+        primary: "bg-background-brand-solid   hover:bg-background-brand-solid-hover",
 
         secondaryGray:
           "bg-background-secondary text-text-secondary hover:bg-background-secondary-hover border border-border-primary",
@@ -30,6 +29,7 @@ const buttonVariants = cva(
 
         outline:
           "bg-transparent border border-border-primary text-text-primary hover:bg-background-secondary-hover",
+        destructive: "bg-red-500 text-white hover:bg-red-600 border border-red-500",
 
         white:
           "bg-white text-gray-900 shadow-sm border border-gray-300 hover:bg-gray-100 dark:bg-[#0f0f11] dark:text-white dark:border-[#2d2d2d] dark:hover:bg-[#1a1a1a]",

@@ -752,6 +752,16 @@
       "rlig" 1,
       "calt" 1;
   }
+  @layer utilities {
+    @keyframes slide {
+      from {
+        width: 0%;
+      }
+      to {
+        width: 100%;
+      }
+    }
+  }
   @keyframes shimmer {
     0% {
       background-position: -200% 0;

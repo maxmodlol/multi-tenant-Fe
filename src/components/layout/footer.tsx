@@ -1,12 +1,49 @@
-// components/Footer.tsx
 "use client";
 
+import React, { useEffect, useState } from "react";
 import { Input } from "@explore/components/ui/input";
 import { Button } from "@explore/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function Footer() {
+interface FooterProps {
+  logoLightUrl?: string | null;
+  logoDarkUrl?: string | null;
+}
+
+export default function Footer({ logoLightUrl, logoDarkUrl }: FooterProps) {
+  const [mounted, setMounted] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  // On mount: read saved theme or system preference
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("theme");
+      const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+      if (saved === "dark" || (!saved && systemDark)) {
+        document.documentElement.classList.add("dark");
+        setIsDark(true);
+      } else {
+        document.documentElement.classList.remove("dark");
+        setIsDark(false);
+      }
+    } catch {
+      // fail silently
+    }
+    setMounted(true);
+  }, []);
+
+  // Don’t render until mounted to avoid hydration mismatch
+  if (!mounted) return null;
+
+  // Pick the appropriate logo URL
+  let logoUrl = "/logo.svg";
+  if (isDark && logoDarkUrl) {
+    logoUrl = logoDarkUrl;
+  } else if (!isDark && logoLightUrl) {
+    logoUrl = logoLightUrl;
+  }
+
   return (
     <footer
       role="contentinfo"
@@ -29,13 +66,15 @@ export default function Footer() {
         {/* الشعار + الاشتراك */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <Link href="/" aria-label="الصفحة الرئيسية">
-            <Image
-              src="/logo.svg"
-              alt="شعار الموقع"
-              width={120}
-              height={40}
-              className="drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
-            />
+            <div className="relative w-[120px] h-[40px]">
+              <Image
+                src={logoUrl}
+                alt="شعار الموقع"
+                fill
+                className="object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]"
+                priority
+              />
+            </div>
           </Link>
           <form aria-label="نموذج الاشتراك في النشرة الإخبارية" className="flex items-center gap-2">
             <Input

@@ -58,7 +58,7 @@ export default function BlogCard({ blog, type }: BlogCardProps) {
           "relative w-full h-56 rounded-t-lg overflow-hidden",
           "border border-gray-200 dark:border-gray-700",
           "transition-transform duration-300 ease-out",
-          "group-hover:scale-[1.03] group-hover:-translate-y-1",
+          "group-hover:scale-[1.02] group-hover:-translate-y-1 shadow-sm group-hover:shadow-lg",
           "shadow-sm group-hover:shadow-lg",
         )}
       >

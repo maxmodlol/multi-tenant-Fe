@@ -26,7 +26,6 @@ export async function middleware(req: NextRequest) {
   return NextResponse.next();
 }
 
-/* Where should the middleware run? */
 export const config = {
   matcher: ["/dashboard/:path*", "/login"],
 };

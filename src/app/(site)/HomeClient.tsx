@@ -1,4 +1,3 @@
-// src/app/(site)/HomeClient.tsx
 "use client";
 
 import dynamic from "next/dynamic";
@@ -28,7 +27,7 @@ export default function HomeClient({
 }: HomeClientProps) {
   return (
     <>
-      <section className="max-w-screen-lg mx-auto">
+      <section className="">
         <FeaturedSlider
           initialBlogs={initialBlogs}
           initialTotalPages={initialTotalPages}

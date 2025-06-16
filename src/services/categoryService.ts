@@ -1,17 +1,32 @@
-// src/services/categoryService.ts
-import { GetApi, PostApi, PutApi, DeleteApi } from "@explore/config/axios";
 import { Category } from "@explore/types/category";
+import { createHttpHelpers } from "../config/helpers";
+import { apiPrivate } from "../config/axiosPrivate";
+import { apiPublic } from "../config/axiosPublic";
 
+/* build two helper sets */
+const { GetApi: GetPublic } = createHttpHelpers(apiPublic);
+const {
+  PostApi: PostPrivate,
+  PutApi: PutPrivate,
+  DeleteApi: DeletePrivate,
+} = createHttpHelpers(apiPrivate);
+
+/* ───────────────────────── PUBLIC ───────────────────────── */
+
+/** Anyone can read categories (site + dashboard) */
 export const fetchCategories = async (): Promise<Category[]> =>
-  GetApi<Category[]>("/api/categories");
+  GetPublic<Category[]>("/api/categories");
 
-// now only name
+/* ─────────────────── DASHBOARD-ONLY (JWT) ────────────────── */
+
+/** Create new category (dashboard) */
 export const createCategory = async (data: { name: string }): Promise<Category> =>
-  PostApi<typeof data, Category>("/api/categories", data);
+  PostPrivate<typeof data, Category>("/api/categories", data);
 
-// now only name
+/** Update category name (dashboard) */
 export const updateCategory = async (id: string, data: { name: string }): Promise<Category> =>
-  PutApi<typeof data, Category>(`/api/categories/${id}`, data);
+  PutPrivate<typeof data, Category>(`/api/categories/${id}`, data);
 
+/** Remove category (dashboard) */
 export const deleteCategory = async (id: string): Promise<void> =>
-  DeleteApi<void>("/api/categories/" + id);
+  DeletePrivate<void>(`/api/categories/${id}`);

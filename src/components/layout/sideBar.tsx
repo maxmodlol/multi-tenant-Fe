@@ -1,4 +1,3 @@
-// app/(dashboard)/_components/Sidebar.tsx
 "use client";
 
 import { useState, useRef, useEffect } from "react";

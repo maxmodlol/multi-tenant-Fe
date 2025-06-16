@@ -1,17 +1,22 @@
-// components/FeaturedSlider.tsx
 "use client";
 import "swiper/css";
 import "swiper/css/navigation";
-import "swiper/css/effect-fade";
+import "swiper/css/effect-creative";
+
 import { useRef, useState } from "react";
-import { useBlogs } from "@explore/lib/useBlogs";
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, Pagination, Autoplay, EffectFade } from "swiper/modules";
-import clsx from "clsx";
-import Image from "next/image";
+import {
+  Navigation,
+  Autoplay,
+  EffectCreative, // ← import the effect
+} from "swiper/modules";
+
+import { useBlogs } from "@/src/hooks/public/useBlogs";
 import BlogContent from "./BlogCard";
 import { Blog } from "@explore/types/blogs";
 import { Button } from "./ui/button";
+import Image from "next/image";
+import clsx from "clsx";
 
 interface FeaturedSliderProps {
   initialBlogs: Blog[];
@@ -24,8 +29,8 @@ export default function FeaturedSlider({
   initialTotalPages,
   initialTotalBlogs,
 }: FeaturedSliderProps) {
-  // Seed React-Query with our server data so it never re-fetches on mount
-  const { data: blogsResponse } = useBlogs("all", 1, initialBlogs.length, {
+  /* seed React-Query so it never re-fetches on mount */
+  const { data } = useBlogs("all", 1, initialBlogs.length, {
     initialData: {
       blogs: initialBlogs,
       totalPages: initialTotalPages,
@@ -33,7 +38,7 @@ export default function FeaturedSlider({
     },
   });
 
-  const blogs = blogsResponse?.blogs || [];
+  const blogs = data?.blogs ?? [];
   const prevRef = useRef<HTMLButtonElement>(null);
   const nextRef = useRef<HTMLButtonElement>(null);
   const [isBeginning, setIsBeginning] = useState(true);
@@ -44,13 +49,16 @@ export default function FeaturedSlider({
   return (
     <div className="relative w-full h-[500px] rounded-3xl overflow-hidden">
       <Swiper
-        modules={[Navigation, Pagination, Autoplay, EffectFade]}
+        modules={[Navigation, Autoplay, EffectCreative]}
         slidesPerView={1}
-        effect="fade"
+        effect="creative"
+        creativeEffect={{
+          prev: { translate: ["-20%", 0, -1] },
+          next: { translate: ["100%", 0, 0] },
+        }}
         speed={800}
         autoplay={{ delay: 3000 }}
         navigation={{ prevEl: prevRef.current, nextEl: nextRef.current }}
-        pagination={{ clickable: true }}
         onSwiper={(swiper) => {
           swiper.navigation.init();
           swiper.navigation.update();
@@ -71,14 +79,14 @@ export default function FeaturedSlider({
       </Swiper>
 
       {/* Navigation Buttons */}
-      <div className="absolute bottom-10 left-6 z-20 flex hidden md:flex items-center gap-3">
+      <div className="absolute bottom-10 left-6 z-20 hidden md:flex items-center gap-3">
         <Button
-          variant={"outline"}
           ref={prevRef}
+          variant="outline"
           disabled={isBeginning}
           aria-label="الشريحة السابقة"
           className={clsx(
-            "w-10 h-10 bg-white border border-white/30 rounded-full shadow-md flex items-center justify-center transition !rounded-full hover:bg-gray-100 dark:bg-black dark:hover:bg-gray-300",
+            "w-10 h-10 rounded-full bg-white border border-white/30 shadow-md flex items-center justify-center transition dark:bg-black",
             isBeginning && "opacity-50 cursor-not-allowed",
           )}
         >
@@ -88,7 +96,7 @@ export default function FeaturedSlider({
             width={40}
             height={40}
             aria-hidden
-            className="pointer-events-none dark:hidden"
+            className="dark:hidden pointer-events-none"
           />
           <Image
             src="/icons/dark-arrow-right.svg"
@@ -96,17 +104,17 @@ export default function FeaturedSlider({
             width={40}
             height={40}
             aria-hidden
-            className="pointer-events-none hidden dark:block"
+            className="hidden dark:block pointer-events-none"
           />
         </Button>
 
         <Button
-          variant={"outline"}
           ref={nextRef}
+          variant="outline"
           disabled={isEnd}
           aria-label="الشريحة التالية"
           className={clsx(
-            "w-10 h-10 bg-white border border-white/30 !rounded-full rounded-full shadow-md flex items-center justify-center transition hover:bg-gray-100 dark:bg-black dark:hover:bg-gray-300",
+            "w-10 h-10 rounded-full bg-white border border-white/30 shadow-md flex items-center justify-center transition dark:bg-black",
             isEnd && "opacity-50 cursor-not-allowed",
           )}
         >
@@ -116,7 +124,7 @@ export default function FeaturedSlider({
             width={40}
             height={40}
             aria-hidden
-            className="pointer-events-none dark:hidden"
+            className="dark:hidden pointer-events-none"
           />
           <Image
             src="/icons/dark-arrow-left.svg"
@@ -124,7 +132,7 @@ export default function FeaturedSlider({
             width={40}
             height={40}
             aria-hidden
-            className="pointer-events-none hidden  dark:block"
+            className="hidden dark:block pointer-events-none"
           />
         </Button>
       </div>

@@ -11,10 +11,12 @@ export function ToggleGroup({
   value,
   onValueChange,
   children,
+  className,
 }: {
   value: string;
   onValueChange: (val: string) => void;
   children: ReactNode;
+  className?: string;
 }) {
   return (
     <div className="inline-flex border border-gray-300 dark:border-gray-600 rounded-md ">
@@ -42,6 +44,7 @@ export function ToggleGroupItem({ isSelected, onClick, children }: ToggleItemPro
         ${isSelected ? "bg-gray-100 dark:bg-gray-700" : "bg-white dark:bg-gray-800"}
         border-r border-gray-300 dark:border-gray-600
         last:border-r-0
+        
       `}
     >
       {children}

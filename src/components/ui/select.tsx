@@ -1,4 +1,3 @@
-// components/ui/select.tsx
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -9,6 +8,7 @@ interface SelectProps {
   onChange: (val: string) => void;
   className?: string;
   placeholder?: string;
+  disabled?: boolean;
   children: React.ReactNode;
 }
 interface SelectItemProps {
@@ -18,7 +18,7 @@ interface SelectItemProps {
 
 export const Select: React.FC<SelectProps> & {
   Item: React.FC<SelectItemProps>;
-} = ({ value, onChange, className = "", placeholder = "Select…", children }) => {
+} = ({ value, onChange, className = "", placeholder = "Select…", disabled = false, children }) => {
   const [open, setOpen] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
@@ -67,6 +67,7 @@ export const Select: React.FC<SelectProps> & {
           hover:bg-gray-50 dark:hover:bg-gray-700
           focus:outline-none focus:ring-2 focus:ring-indigo-500
         "
+        disabled={disabled}
       >
         <span className="truncate">
           {label || <span className="text-gray-400">{placeholder}</span>}
@@ -79,7 +80,8 @@ export const Select: React.FC<SelectProps> & {
           ref={listRef}
           className="
             absolute left-0 right-0 z-50 mt-1
-            bg-white dark:bg-gray-800
+            bg-gray-100 dark:bg-gray-800
+            
             border border-gray-300 dark:border-gray-600
             rounded-md shadow-lg py-1
             max-h-60 overflow-auto
@@ -95,7 +97,7 @@ export const Select: React.FC<SelectProps> & {
               className={`
                 cursor-pointer px-4 py-2 text-sm
                 text-gray-700 dark:text-gray-200
-                hover:bg-gray-100 dark:hover:bg-gray-700
+                hover:bg-gray-300 dark:hover:bg-gray-700
                 ${c.props.value === value ? "bg-indigo-50 dark:bg-indigo-900 font-semibold" : ""}
               `}
             >

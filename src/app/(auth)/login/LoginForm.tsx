@@ -1,4 +1,3 @@
-/* app/(auth)/login/LoginForm.tsx ------------------------------- */
 "use client";
 
 import { useForm } from "react-hook-form";

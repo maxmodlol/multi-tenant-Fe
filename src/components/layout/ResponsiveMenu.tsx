@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Moon, X } from "lucide-react";
-import { useCategories } from "@explore/lib/useCategories";
+import { useCategories } from "@/src/hooks/public/useCategories";
 import { Category } from "@explore/types/category";
 import { Input } from "@explore/components/ui/input";
 import { ResponsiveMenuProps } from "./types";

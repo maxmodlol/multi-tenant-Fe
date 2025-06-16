@@ -1,13 +1,9 @@
-import { siteMetadata } from "./metadata";
+// app/(site)/page.tsx
 
-export const metadata = siteMetadata;
 export const revalidate = 60;
 export const dynamic = "force-static";
-
 import { blogService } from "@explore/services/blogService";
 import { fetchCategories } from "@explore/services/categoryService";
-
-// Render client wrapper below
 import HomeClient from "./HomeClient";
 
 export default async function Home() {
@@ -17,7 +13,7 @@ export default async function Home() {
   ]);
 
   return (
-    <main className="w-full min-h-screen px-4 md:px-14 py-10 bg-white dark:bg-gray-900">
+    <div className="w-full min-h-screen px-4 md:px-14 py-10 bg-white dark:bg-gray-900">
       {/* Top Section */}
       <header className="max-w-screen-xl mx-auto">
         <h1 className="text-right text-4xl font-bold text-gray-800 dark:text-gray-200">
@@ -34,6 +30,6 @@ export default async function Home() {
         initialTotalPages={blogsData.totalPages}
         initialCategories={categories}
       />
-    </main>
+    </div>
   );
 }

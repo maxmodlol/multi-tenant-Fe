@@ -1,19 +1,57 @@
-"use client"; //  ← this is a client layout
-
-import QueryClientProvider from "@explore/config/react-query";
+// app/(site)/layout.tsx
+import type { ReactNode } from "react";
+import { Toaster } from "react-hot-toast";
 import Header from "@explore/components/layout/header";
 import Footer from "@explore/components/layout/footer";
-import { Toaster } from "react-hot-toast";
-import axios from "axios";
+import AdHeaderInjector from "@explore/components/AdHeaderInjector";
+import { fetchSiteSetting } from "@explore/services/settingService";
+import type { Metadata } from "next";
 
-axios.defaults.baseURL = process.env.NEXT_PUBLIC_API_URL || "https://api.example.com";
+/** static tags merged for every page under (site) */
+export const metadata: Metadata = {
+  title: "الموارد والرؤى — مدونة الموقع",
+  description: "أحدث أخبار الصناعة، المقالات، الإرشادات، والنصائح.",
+  alternates: { canonical: "https://yourdomain.com/" },
+  openGraph: {
+    type: "website",
+    locale: "ar_AR",
+    siteName: "مدونة الموقع",
+    title: "الموارد والرؤى — مدونة الموقع",
+    description: "أحدث أخبار الصناعة، المقالات، الإرشادات، والنصائح.",
+    url: "https://yourdomain.com/",
+    images: [
+      {
+        url: "https://yourdomain.com/path/to/first-blog-image.jpg",
+        width: 1200,
+        height: 600,
+        alt: "صورة لموارد الموقع",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "الموارد والرؤى — مدونة الموقع",
+    description: "أحدث أخبار الصناعة، المقالات، الإرشادات، والنصائح.",
+    images: ["https://yourdomain.com/path/to/first-blog-image.jpg"],
+  },
+};
 
-export default function SiteLayout({ children }: { children: React.ReactNode }) {
+export default async function SiteLayout({ children }: { children: ReactNode }) {
+  let logoLight = "/logo.svg";
+  let logoDark = "/logo.svg";
+
+  try {
+    const s = await fetchSiteSetting();
+    if (s.logoLightUrl) logoLight = s.logoLightUrl;
+    if (s.logoDarkUrl) logoDark = s.logoDarkUrl;
+  } catch {}
+
   return (
     <>
-      <Header />
+      <AdHeaderInjector />
+      <Header logoLightUrl={logoLight} logoDarkUrl={logoDark} />
       <main className="mt-20">{children}</main>
-      <Footer />
+      <Footer logoLightUrl={logoLight} logoDarkUrl={logoDark} />
       <Toaster position="bottom-center" toastOptions={{ duration: 3000 }} />
     </>
   );

@@ -2,7 +2,7 @@
 import NextAuth from "next-auth/next";
 import Credentials from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
-import { Role } from "@/src/app/dashboard/settings/settings-config";
+import { Role } from "@/src/app/(dashboard)/dashboard/settings/settings-config";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },

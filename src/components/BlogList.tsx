@@ -1,8 +1,8 @@
 "use client";
 import { useState } from "react";
 import BlogCard from "./BlogCard";
-import { useBlogs } from "@explore/lib/useBlogs";
-import { useCategories } from "@explore/lib/useCategories";
+import { useBlogs } from "@/src/hooks/public/useBlogs";
+import { useCategories } from "@/src/hooks/public/useCategories";
 import clsx from "clsx";
 import Pagination from "./ui/Pagination";
 import { Button } from "./ui/button";
@@ -58,10 +58,11 @@ export default function BlogsList({
       {/* Category Filters */}
       <div className="flex gap-3 overflow-x-hidden pb-2 rtl:flex-row">
         <Button
+          variant="primary"
           onClick={() => handleCategoryChange("all")}
           className={clsx(
             "px-4 py-2 rounded-lg font-semibold whitespace-nowrap",
-            activeCategory === "all" ? "bg-red-500 text-white" : "bg-gray-100 text-gray-800",
+            activeCategory === "all" ? "bg-red-500 text-text-white" : "bg-gray-100 text-gray-800",
           )}
         >
           جميع التصنيفات
@@ -72,7 +73,9 @@ export default function BlogsList({
             onClick={() => handleCategoryChange(cat.name)}
             className={clsx(
               "px-4 py-2 rounded-lg font-semibold whitespace-nowrap",
-              activeCategory === cat.name ? "bg-red-500 text-white" : "bg-gray-100 text-gray-800",
+              activeCategory === cat.name
+                ? "bg-red-500 text-text-white"
+                : "bg-gray-100 text-gray-800",
             )}
           >
             {cat.name}

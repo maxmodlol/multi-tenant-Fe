@@ -1,9 +1,8 @@
-// components/RelatedBlogs.tsx
 "use client";
 
 import { Blog } from "@explore/types/blogs";
 import BlogCard from "./BlogCard";
-import { useRelatedBlogs } from "@explore/lib/useRelatedBlogs";
+import { useRelatedBlogs } from "@/src/hooks/public/useRelatedBlogs";
 
 export default function RelatedBlogs({ currentBlog }: { currentBlog: Blog }) {
   const { data: related = [] } = useRelatedBlogs(currentBlog.id);
