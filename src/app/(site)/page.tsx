@@ -1,5 +1,6 @@
-export const revalidate = 60;
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { blogService } from "@explore/services/blogService";
 import { fetchCategories } from "@explore/services/categoryService";
 import HomeClient from "./HomeClient";
