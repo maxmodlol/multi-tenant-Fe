@@ -1,5 +1,3 @@
-// app/(site)/page.tsx
-
 export const revalidate = 60;
 export const dynamic = "force-static";
 import { blogService } from "@explore/services/blogService";
