@@ -1,7 +1,7 @@
 // adjust path if needed
 
-import { apiPrivate } from "../config/axiosPrivate";
-import { apiPublic } from "../config/axiosPublic";
+import { getApiPrivate } from "../config/axiosPrivate";
+import { getApiPublic } from "../config/axiosPublic";
 import {
   AdSetting,
   AdHeaderSetting,
@@ -13,12 +13,16 @@ import {
 /* ───────────────────────── PUBLIC (no JWT) ────────────────────────── */
 
 export async function getAdSettings(blogId: string): Promise<AdSetting[]> {
-  const { data } = await apiPublic.get("/api/settings/ads", { params: { blogId } });
+  const apiPublic = await getApiPublic();
+
+  const { data } = await apiPublic.get("/settings/ads", { params: { blogId } });
   return data;
 }
 
 export async function getAdHeader(): Promise<AdHeaderSetting> {
-  const { data } = await apiPublic.get("/api/settings/ads/header");
+  const apiPublic = await getApiPublic();
+
+  const { data } = await apiPublic.get("/settings/ads/header");
   return data;
 }
 
@@ -27,21 +31,29 @@ export async function getAdHeader(): Promise<AdHeaderSetting> {
 export async function createAdSetting(
   dto: Omit<CreateAdSettingInput, "tenantId">,
 ): Promise<AdSetting> {
-  const { data } = await apiPrivate.post("/api/settings/ads", dto);
+  const apiPrivate = await getApiPrivate(); // ✅
+
+  const { data } = await apiPrivate.post("/settings/ads", dto);
   return data;
 }
 
 export async function updateAdSetting(dto: UpdateAdSettingInput): Promise<AdSetting> {
+  const apiPrivate = await getApiPrivate(); // ✅
+
   const { id, ...updates } = dto;
-  const { data } = await apiPrivate.put(`/api/settings/ads/${id}`, updates);
+  const { data } = await apiPrivate.put(`/settings/ads/${id}`, updates);
   return data;
 }
 
 export async function deleteAdSetting(id: string): Promise<void> {
-  await apiPrivate.delete(`/api/settings/ads/${id}`);
+  const apiPrivate = await getApiPrivate(); // ✅
+
+  await apiPrivate.delete(`/settings/ads/${id}`);
 }
 
 export async function upsertAdHeader(dto: UpsertAdHeaderInput): Promise<AdHeaderSetting> {
-  const { data } = await apiPrivate.post("/api/settings/ads/header", dto);
+  const apiPrivate = await getApiPrivate(); // ✅
+
+  const { data } = await apiPrivate.post("/settings/ads/header", dto);
   return data;
 }

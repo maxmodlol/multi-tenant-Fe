@@ -27,9 +27,11 @@ import { toast } from "react-hot-toast";
 import PreviewBlogModal from "../../_components/PreviewBlogModal";
 import { Spinner } from "@/src/components/ui/spinner";
 import { Category } from "@/src/types/category";
+import { useRouter } from "next/navigation";
 
 export default function BlogsPage() {
   const { status, data: session } = useSession();
+  const router = useRouter();
 
   // wait for auth
   if (status === "loading") {
@@ -131,7 +133,10 @@ export default function BlogsPage() {
           />
         </div>
 
-        <Button className="bg-red-600 hover:bg-brand-700 px-3 py-1 text-white text-xs">
+        <Button
+          className="bg-red-600 hover:bg-brand-700 px-3 py-1 text-white text-xs"
+          onClick={() => router.push("/dashboard/blogs/editor/new")}
+        >
           إضافة مدونة
         </Button>
       </div>
@@ -208,7 +213,10 @@ export default function BlogsPage() {
                           </Button>
                           <Button
                             variant={"ghost"}
-                            onClick={() => setOpenMenuFor(null)}
+                            onClick={() => {
+                              router.push(`/dashboard/blogs/editor/${b.id}`);
+                              setOpenMenuFor(null);
+                            }}
                             className="text-right px-3 py-2 hover:bg-gray-100"
                           >
                             تعديل
@@ -225,7 +233,8 @@ export default function BlogsPage() {
                           >
                             حذف
                           </Button>
-                          {b.status !== BlogStatus.ACCEPTED && (
+                          {(b.status == BlogStatus.READY_TO_PUBLISH ||
+                            b.status == BlogStatus.PENDING_REAPPROVAL) && (
                             <Button
                               variant={"ghost"}
                               onClick={() =>

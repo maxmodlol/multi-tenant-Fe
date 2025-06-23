@@ -5,8 +5,8 @@ import { Dialog, DialogHeader, DialogTitle, DialogContent } from "@explore/compo
 import { Input } from "@explore/components/ui/input";
 import { Button } from "@explore/components/ui/button";
 import { Select } from "@explore/components/ui/select";
-import type { Role } from "../../dashboard/settings/settings-config";
 import { useTenants, TenantDTO } from "@/src/hooks/dashboard/useTenants";
+import { Role } from "../dashboard/settings/settings-config";
 
 interface MemberInput {
   name: string;

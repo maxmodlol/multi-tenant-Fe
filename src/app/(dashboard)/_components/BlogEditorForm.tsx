@@ -50,7 +50,7 @@ import {
   usePublishBlog,
 } from "@/src/hooks/dashboard/mutations/useBlogMutations";
 import { useSession } from "next-auth/react";
-import { BlogPage, BlogPageInput, CreateBlogInput } from "@/src/types/blogs";
+import { BlogPage, BlogPageInput, BlogStatus, CreateBlogInput } from "@/src/types/blogs";
 import { Category } from "@/src/types/category";
 import { useCategories } from "@/src/hooks/public/useCategories";
 
@@ -74,6 +74,7 @@ export function BlogEditorForm({
     categories: Category[];
     tags?: string[];
     pages: BlogPage[];
+    status: BlogStatus;
   };
 }) {
   const isEdit = Boolean(initialData);
@@ -287,38 +288,31 @@ export function BlogEditorForm({
   };
 
   const handlePublish = () => {
-    // if brand-new, create first, then publish
-    if (!isEdit) {
-      const input: CreateBlogInput = {
-        title,
-        description,
-        coverPhoto: coverPreview,
-        categoryNames: selectedCats.map((c) => c.name),
-        tags,
-        pages,
-        authorId,
-        tenant,
-      };
+    const input: CreateBlogInput = {
+      title,
+      description,
+      coverPhoto: coverPreview,
+      categoryNames: selectedCats.map((c) => c.name),
+      tags,
+      pages,
+      authorId,
+      tenant,
+    };
 
+    if (!isEdit) {
       createBlog(input, {
-        onSuccess: (newBlog) => publishBlog(newBlog.id),
+        onSuccess: (newBlog) => publishBlog({ id: newBlog.id, currentStatus: BlogStatus.DRAFTED }),
       });
     } else {
-      // existing → update then publish
-      const input: CreateBlogInput = {
-        title,
-        description,
-        coverPhoto: coverPreview,
-        categoryNames: selectedCats.map((c) => c.name),
-        tags,
-        pages,
-        authorId,
-        tenant,
-      };
-
       updateBlog(
         { id: initialData!.id, dto: input },
-        { onSuccess: () => publishBlog(initialData!.id) },
+        {
+          onSuccess: () =>
+            publishBlog({
+              id: initialData!.id,
+              currentStatus: initialData?.status || BlogStatus.ACCEPTED, // or use actual initialData.status
+            }),
+        },
       );
     }
   };

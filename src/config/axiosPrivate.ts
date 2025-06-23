@@ -1,23 +1,35 @@
-// src/lib/http/axiosPrivate.ts
-import axios from "axios";
+import axios, { AxiosInstance } from "axios";
 import { getApiBaseUrl } from "./base";
 import { getSession } from "next-auth/react";
+import { detectTenant } from "./detectTenant";
 
-export const apiPrivate = axios.create({
-  baseURL: getApiBaseUrl(),
-  headers: { "Content-Type": "application/json" },
-  withCredentials: true,
-});
+let apiPrivate: AxiosInstance | null = null;
 
-let tokenCache: string | undefined; // avoids 2nd /session call
+export async function getApiPrivate(): Promise<AxiosInstance> {
+  if (apiPrivate) return apiPrivate;
 
-apiPrivate.interceptors.request.use(async (config) => {
-  if (!tokenCache) {
-    const sess = await getSession(); // ONE call after login
-    tokenCache = (sess as any)?.token;
-  }
-  if (tokenCache) {
-    config.headers.Authorization = `Bearer ${tokenCache}`;
-  }
-  return config;
-});
+  apiPrivate = axios.create({
+    baseURL: getApiBaseUrl(),
+    withCredentials: true,
+    headers: { "Content-Type": "application/json" },
+  });
+
+  // ① Attach tenant
+  apiPrivate.interceptors.request.use(async (config) => {
+    config.headers["x-tenant"] = await detectTenant();
+    return config;
+  });
+
+  // ② Attach bearer token (once per startup)
+  let tokenCache: string | undefined;
+  apiPrivate.interceptors.request.use(async (config) => {
+    if (!tokenCache) {
+      const sess = await getSession();
+      tokenCache = (sess as any)?.token;
+    }
+    if (tokenCache) config.headers.Authorization = `Bearer ${tokenCache}`;
+    return config;
+  });
+
+  return apiPrivate;
+}

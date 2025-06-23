@@ -118,10 +118,10 @@ export default function Header({ logoLightUrl, logoDarkUrl }: HeaderProps) {
           <Image
             src={logoUrl}
             alt="Logo"
-            width={40} // adjust to your actual logo dimensions
-            height={40}
+            width={50} // adjust to your actual logo dimensions
+            height={50}
             priority // mark as LCP if this is critical
-            className="object-contain"
+            className="object-contain h-[50px] w-[50px] "
           />
         </Link>
 

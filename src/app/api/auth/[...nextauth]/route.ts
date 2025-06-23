@@ -1,8 +1,8 @@
-// app/api/auth/[...nextauth]/route.ts
 import NextAuth from "next-auth/next";
 import Credentials from "next-auth/providers/credentials";
 import { NextAuthOptions } from "next-auth";
 import { Role } from "@/src/app/(dashboard)/dashboard/settings/settings-config";
+import { detectTenant } from "@/src/config/detectTenant";
 
 export const authOptions: NextAuthOptions = {
   session: { strategy: "jwt" },
@@ -11,9 +11,11 @@ export const authOptions: NextAuthOptions = {
     Credentials({
       credentials: { email: { type: "email" }, password: { type: "password" } },
       async authorize(creds) {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/login`, {
+        const tenant = await detectTenant();
+
+        const res = await fetch(`${process.env.API_URL}/auth/login`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", "x-tenant": tenant },
           body: JSON.stringify(creds),
           credentials: "include", // this only affects server→server
         });

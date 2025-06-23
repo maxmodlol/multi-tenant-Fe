@@ -1,14 +1,16 @@
 /* ─────────────────────── PUBLIC (no JWT) ─────────────────────── */
 
-import { apiPrivate } from "../config/axiosPrivate";
-import { apiPublic } from "../config/axiosPublic";
+import { getApiPrivate } from "../config/axiosPrivate";
+import { getApiPublic } from "../config/axiosPublic";
 import { SiteSetting } from "../types/siteSetting";
 
 /**
  * GET current tenant’s site settings (logos + palette).
  */
-export async function fetchSiteSetting(): Promise<SiteSetting> {
-  const { data } = await apiPublic.get<SiteSetting>("/api/settings/site");
+export async function fetchSiteSetting(tenant?: string): Promise<SiteSetting> {
+  const apiPublic = await getApiPublic(tenant);
+
+  const { data } = await apiPublic.get<SiteSetting>("/settings/site");
   return data;
 }
 
@@ -18,7 +20,9 @@ export async function fetchSiteSetting(): Promise<SiteSetting> {
  * PUT updated site settings.
  */
 export async function updateSiteSetting(dto: SiteSetting): Promise<SiteSetting> {
-  const { data } = await apiPrivate.put<SiteSetting>("/api/settings/site", dto);
+  const apiPrivate = await getApiPrivate(); // ✅
+
+  const { data } = await apiPrivate.put<SiteSetting>("/settings/site", dto);
   return data;
 }
 
@@ -27,10 +31,12 @@ export async function updateSiteSetting(dto: SiteSetting): Promise<SiteSetting> 
  * Returns the S3 URL.
  */
 export async function uploadLogo(file: File): Promise<string> {
+  const apiPrivate = await getApiPrivate(); // ✅
+
   const form = new FormData();
   form.append("file", file);
 
-  const { data } = await apiPrivate.post<{ url: string }>("/api/settings/uploadLogo", form, {
+  const { data } = await apiPrivate.post<{ url: string }>("/settings/uploadLogo", form, {
     headers: { "Content-Type": "multipart/form-data" },
   });
 

@@ -1,14 +1,43 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useQuery } from "@tanstack/react-query";
-import { useCreateBlog, usePublishBlog } from "@/src/hooks/dashboard/mutations/useBlogMutations";
-import { BlogEditorForm } from "../../../../_components/BlogEditorForm";
+import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { CreateBlogInput } from "@/src/types/blogs";
+import { Spinner } from "@/src/components/ui/spinner";
+import { BlogEditorForm } from "../../../../_components/BlogEditorForm";
+import { useSingleBlog } from "@/src/hooks/public/useSingleBlog";
 
-export default function CreateBlogPage() {
-  // fetch your categories for the multi-select
+export default function BlogEditorPage() {
+  const { id } = useParams();
+  const blogId = id as string;
+  const isNew = blogId === "new";
 
-  return <BlogEditorForm />;
+  const { data: session, status } = useSession();
+
+  const { data: blog, isLoading, isError } = useSingleBlog(blogId);
+
+  if (status === "loading") {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (status !== "authenticated") {
+    return <div className="p-4 text-center">غير مصرح</div>;
+  }
+
+  if (!isNew && isLoading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  if (!isNew && isError) {
+    return <div className="p-4 text-center">فشل في تحميل بيانات المدونة</div>;
+  }
+
+  return <BlogEditorForm initialData={isNew ? undefined : blog} />;
 }

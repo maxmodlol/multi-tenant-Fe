@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { blogService } from "@explore/services/blogService";
 import { Blog, BlogStatus, CreateBlogInput } from "@explore/types/blogs";
+import toast from "react-hot-toast";
 export function useApproveBlog() {
   const qc = useQueryClient();
   return useMutation<Blog, Error, string>({
@@ -57,9 +58,25 @@ export function useUpdateBlog() {
 
 export function usePublishBlog() {
   const qc = useQueryClient();
-  return useMutation<Blog, Error, string>({
-    mutationFn: (id) => blogService.updateBlogStatus(id, BlogStatus.READY_TO_PUBLISH),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["dashboardBlogs"] }),
+  return useMutation<Blog, Error, { id: string; currentStatus: BlogStatus }>({
+    mutationFn: ({ id, currentStatus }) => {
+      const newStatus =
+        currentStatus === BlogStatus.ACCEPTED
+          ? BlogStatus.PENDING_REAPPROVAL
+          : BlogStatus.READY_TO_PUBLISH;
+      return blogService.updateBlogStatus(id, newStatus);
+    },
+    onSuccess: (_, { currentStatus }) => {
+      toast.success(
+        currentStatus === BlogStatus.ACCEPTED
+          ? "تم إرسال التعديلات للمراجعة"
+          : "تم إرسال المدونة للنشر",
+      );
+      qc.invalidateQueries({ queryKey: ["dashboardBlogs"] });
+    },
+    onError: (err) => {
+      toast.error("فشل في تحديث حالة المدونة: " + err.message);
+    },
   });
 }
 

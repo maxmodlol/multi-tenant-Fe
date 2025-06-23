@@ -4,10 +4,11 @@ import { blogService } from "@explore/services/blogService";
 import BlogCard from "@explore/components/BlogCard";
 
 interface Props {
-  searchParams: { q?: string };
+  searchParams: Promise<{ q?: string }>;
 }
 
-export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const searchParams = await props.searchParams;
   const q = searchParams.q?.trim() || "";
   const title = q ? `نتائج البحث عن "${q}" – مدونة الموقع` : "بحث – مدونة الموقع";
   const description = q ? `عرض نتائج البحث عن "${q}" في مدونتنا.` : "ابحث في مقالاتنا ودروسنا.";
@@ -17,7 +18,8 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
   };
 }
 
-export default async function SearchPage({ searchParams }: Props) {
+export default async function SearchPage(props: Props) {
+  const searchParams = await props.searchParams;
   const q = (searchParams.q ?? "").trim();
   // if q is short, show nothing
   if (q.length < 2) {

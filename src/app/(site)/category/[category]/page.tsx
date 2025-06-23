@@ -8,11 +8,10 @@ export const revalidate = 60;
 export const dynamic = "force-static";
 
 // Generate metadata per category
-export async function generateMetadata({
-  params,
-}: {
-  params: { category: string };
+export async function generateMetadata(props: {
+  params: Promise<{ category: string }>;
 }): Promise<Metadata> {
+  const params = await props.params;
   const raw = decodeURIComponent(params.category);
   const title = `تصنيف: ${raw} — مدونة الموقع`;
   return {
@@ -32,10 +31,11 @@ export async function generateMetadata({
 }
 
 interface PageProps {
-  params: { category: string };
+  params: Promise<{ category: string }>;
 }
 
-export default async function CategoryPage({ params }: PageProps) {
+export default async function CategoryPage(props: PageProps) {
+  const params = await props.params;
   const categoryName = decodeURIComponent(params.category);
   // Fetch page 1 of this category
   const [blogsData, categories] = await Promise.all([

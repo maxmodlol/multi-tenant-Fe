@@ -1,17 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
-import { apiPrivate } from "../../config/axiosPrivate";
-import { createHttpHelpers } from "../../config/helpers";
+import { getApiPrivate } from "../../config/axiosPrivate"; // ← change
+
+/* ─────────────────────── Types ──────────────────────── */
 
 export interface TenantDTO {
   id: string;
   domain: string;
 }
-const { GetApi: GetPrivate } = createHttpHelpers(apiPrivate);
+
+/* ─────────────────────── Fetcher ─────────────────────── */
 
 async function fetchTenants(): Promise<TenantDTO[]> {
-  const data = await GetPrivate<{ tenants: TenantDTO[] }>("/api/tenants");
+  const api = await getApiPrivate(); // ← builds instance
+  const { data } = await api.get<{ tenants: TenantDTO[] }>("/tenants");
   return data.tenants;
 }
+
+/* ─────────────────── React-Query hook ────────────────── */
 
 export function useTenants() {
   return useQuery<TenantDTO[], Error>({

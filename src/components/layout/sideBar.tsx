@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Briefcase, BookOpen, LayoutGrid, Settings, ChevronDown, LogOut } from "lucide-react";
+import { Briefcase, BookOpen, LayoutGrid, Settings, ChevronDown, LogOut, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
+import ThemeToggle from "@/src/app/(dashboard)/_components/ThemeToggle";
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
@@ -16,7 +17,6 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // close on outside click
   useEffect(() => {
     function onClick(e: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
@@ -36,10 +36,12 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
 
   return (
     <aside className="flex h-full w-[260px] shrink-0 flex-col border-r bg-background px-6 py-8 shadow-lg dark:shadow-black/30">
+      {/* Logo */}
       <Link href="/dashboard/settings" className="-mx-2 mb-12 flex items-center gap-2">
         <Image src="/logo.svg" alt="Logo" width={120} height={28} priority className="h-8 w-auto" />
       </Link>
 
+      {/* Navigation */}
       <nav className="flex flex-col gap-6 text-[17px] font-medium">
         {nav.map(({ href, label, icon: Icon }) => {
           const active = pathname.startsWith(href);
@@ -59,8 +61,24 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
             </Link>
           );
         })}
+
+        {/* ➕ Add New Blog Button */}
+        <Link
+          href="/dashboard/blogs/editor/new"
+          onClick={onClose}
+          className="mt-2 flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-white hover:bg-brand-600 transition"
+        >
+          <Plus className="h-4 w-4" />
+          <span>إنشاء تدوينة جديدة</span>
+        </Link>
+
+        {/* 🌓 Theme Toggle */}
+        <div className="mt-2 px-2">
+          <ThemeToggle />
+        </div>
       </nav>
 
+      {/* 👤 Profile + Logout */}
       <div className="mt-auto relative" ref={menuRef}>
         <button
           onClick={() => setMenuOpen((o) => !o)}
@@ -88,13 +106,13 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         </button>
 
         {menuOpen && (
-          <div className="absolute bottom-full mb-2 right-0 w-full rounded-lg  border border-gray-300 bg-background shadow-lg">
+          <div className="absolute bottom-full mb-2 right-0 w-full rounded-lg border border-gray-300 bg-background shadow-lg">
             <button
               onClick={() => signOut({ callbackUrl: "/login" })}
               className="flex w-full items-center gap-2 px-4 py-2 hover:bg-muted"
             >
               <LogOut className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-foreground">Sign out</span>
+              <span className="text-sm text-foreground">تسجيل الخروج</span>
             </button>
           </div>
         )}

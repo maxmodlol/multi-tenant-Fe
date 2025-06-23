@@ -1,29 +1,27 @@
-// app/(site)/blogs/[id]/page.tsx   ← a Server Component (no "use client")
+export const dynamic = "force-dynamic"; // 👈 always run per request
+export const revalidate = 60;
 import type { Metadata } from "next";
 import sanitizeHtml from "sanitize-html";
 import { blogService } from "@explore/services/blogService";
 import BlogDetailClient from "./BlogDetailClient";
 
-export const revalidate = 60;
-export const dynamic = "force-static";
-
-export async function generateMetadata({ params }: { params: { id: string } }): Promise<Metadata> {
+export async function generateMetadata(props: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const params = await props.params;
   const blog = await blogService.getBlogById(params.id);
   if (!blog) return { title: "Not Found – مدونة الموقع" };
-  const canonical = `https://yourdomain.com/blogs/${params.id}`;
   const description = blog.description || "أفضل المدونة التقنيّة بالعربيّ";
 
   return {
     title: blog.title,
     description, // ← meta name="description"
-    alternates: { canonical }, // ← <link rel="canonical" … />
     openGraph: {
       type: "article",
       locale: "ar_AR",
       siteName: "مدونة الموقع",
       title: blog.title,
       description, // ← og:description
-      url: canonical, // ← og:url
       images: blog.coverPhoto ? [{ url: blog.coverPhoto }] : [],
     },
     twitter: {
@@ -35,7 +33,8 @@ export async function generateMetadata({ params }: { params: { id: string } }): 
   };
 }
 
-export default async function Page({ params }: { params: { id: string } }) {
+export default async function Page(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const blog = await blogService.getBlogById(params.id);
   if (!blog) return <div>Not Found</div>;
 

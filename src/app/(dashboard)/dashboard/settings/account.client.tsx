@@ -28,7 +28,7 @@ export default function AccountSettingsForm() {
 
     setSubmitting(true);
     try {
-      const res = await fetch("/api/settings/account/password", {
+      const res = await fetch("/settings/account/password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

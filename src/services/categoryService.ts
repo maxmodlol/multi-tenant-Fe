@@ -1,32 +1,32 @@
+// src/services/categoryService.ts  ← rename if you like
 import { Category } from "@explore/types/category";
-import { createHttpHelpers } from "../config/helpers";
-import { apiPrivate } from "../config/axiosPrivate";
-import { apiPublic } from "../config/axiosPublic";
-
-/* build two helper sets */
-const { GetApi: GetPublic } = createHttpHelpers(apiPublic);
-const {
-  PostApi: PostPrivate,
-  PutApi: PutPrivate,
-  DeleteApi: DeletePrivate,
-} = createHttpHelpers(apiPrivate);
+import { getApiPublic } from "../config/axiosPublic";
+import { getApiPrivate } from "../config/axiosPrivate";
 
 /* ───────────────────────── PUBLIC ───────────────────────── */
 
-/** Anyone can read categories (site + dashboard) */
-export const fetchCategories = async (): Promise<Category[]> =>
-  GetPublic<Category[]>("/api/categories");
+/** Anyone (site or dashboard) can read categories */
+export const fetchCategories = async (): Promise<Category[]> => {
+  const api = await getApiPublic();
+  const { data } = await api.get<Category[]>("/categories");
+  return data;
+};
 
-/* ─────────────────── DASHBOARD-ONLY (JWT) ────────────────── */
+/* ─────────────────── DASHBOARD-ONLY (needs JWT) ────────────────── */
 
-/** Create new category (dashboard) */
-export const createCategory = async (data: { name: string }): Promise<Category> =>
-  PostPrivate<typeof data, Category>("/api/categories", data);
+export const createCategory = async (payload: { name: string }): Promise<Category> => {
+  const api = await getApiPrivate();
+  const { data } = await api.post<Category>("/categories", payload);
+  return data;
+};
 
-/** Update category name (dashboard) */
-export const updateCategory = async (id: string, data: { name: string }): Promise<Category> =>
-  PutPrivate<typeof data, Category>(`/api/categories/${id}`, data);
+export const updateCategory = async (id: string, payload: { name: string }): Promise<Category> => {
+  const api = await getApiPrivate();
+  const data = await api.put<typeof payload, Category>(`/categories/${id}`, payload);
+  return data;
+};
 
-/** Remove category (dashboard) */
-export const deleteCategory = async (id: string): Promise<void> =>
-  DeletePrivate<void>(`/api/categories/${id}`);
+export const deleteCategory = async (id: string): Promise<void> => {
+  const api = await getApiPrivate();
+  await api.delete(`/categories/${id}`);
+};
