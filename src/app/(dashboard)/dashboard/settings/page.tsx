@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import SettingsTabs from "./tabs.client";
 import { SETTINGS_TABS, type Role } from "./settings-config";
-import { authOptions } from "@explore/app//auth/[...nextauth]/route"; // adjust this path if needed
+import { authOptions } from "@/src/lib/authOptions";
 
 export const metadata = { title: "Settings" };
 
