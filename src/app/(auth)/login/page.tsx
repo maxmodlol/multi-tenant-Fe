@@ -1,4 +1,3 @@
-/* app/(auth)/login/page.tsx ----------------------------------- */
 import QueryClientProvider from "@explore/config/react-query";
 import LoginForm from "./LoginForm";
 
