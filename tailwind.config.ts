@@ -1,12 +1,610 @@
 import type { Config } from "tailwindcss";
-import animate from "tailwindcss-animate";
+import typography from "@tailwindcss/typography";
 
+// We want each package to be responsible for its own content.
 const config: Config = {
-    content: ["./src/**/*.{js,ts,jsx,tsx}"],
-    theme: {
-        extend: {},
-    },
-    plugins: [animate],
-};
+  darkMode: "class",
+  content: [
+    "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
+    "./src/components/**/*.{js,ts,jsx,tsx}",
+    "./src/lib/**/*.{js,ts,jsx,tsx}",
+    "./src/services/**/*.{js,ts,jsx,tsx}",
+  ],
 
+  theme: {
+    borderRadius: {
+      none: "0",
+      xxs: "0.125rem",
+      xs: "0.25rem",
+      sm: "0.375rem",
+      md: "0.5rem",
+      lg: "0.625rem",
+      xl: "0.75rem",
+      "2xl": "1rem",
+      "3xl": "1.25rem",
+      "4xl": "1.5rem",
+      full: "9999px",
+    },
+    fontSize: {
+      "display-2xl": [
+        "4.5rem",
+        {
+          lineHeight: "5.625rem",
+          letterSpacing: "-2%",
+        },
+      ],
+      "display-xl": [
+        "3.75rem",
+        {
+          lineHeight: "4.5rem",
+          letterSpacing: "-2%",
+        },
+      ],
+      "display-lg": [
+        "3rem",
+        {
+          lineHeight: "3.75rem",
+          letterSpacing: "-2%",
+        },
+      ],
+      "display-md": [
+        "2.25rem",
+        {
+          lineHeight: "2.75rem",
+          letterSpacing: "-2%",
+        },
+      ],
+      "display-sm": [
+        "1.875rem",
+        {
+          lineHeight: "2.375rem",
+        },
+      ],
+      "display-xs": [
+        "1.5rem",
+        {
+          lineHeight: "2rem",
+        },
+      ],
+      xl: [
+        "1.25rem",
+        {
+          lineHeight: "1.875rem",
+        },
+      ],
+      lg: [
+        "1.125rem",
+        {
+          lineHeight: "1.75rem",
+        },
+      ],
+      md: [
+        "1rem",
+        {
+          lineHeight: "1.5rem",
+        },
+      ],
+      sm: [
+        "0.875rem",
+        {
+          lineHeight: "1.25rem",
+        },
+      ],
+      xs: [
+        "0.75rem",
+        {
+          lineHeight: "1.125rem",
+        },
+      ],
+    },
+    colors: {
+      text: {
+        primary: {
+          DEFAULT: "hsl(var(--text-primary))",
+          brand: "hsl(var(--text-primary-on-brand))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--text-secondary))",
+          hover: "hsl(var(--text-secondary-hover))",
+          brand: "hsl(var(--text-secondary-on-brand))",
+        },
+        tertiary: {
+          DEFAULT: "hsl(var(--text-tertiary))",
+          hover: "hsl(var(--text-tertiary-hover))",
+          brand: "hsl(var(--text-tertiary-on-brand))",
+        },
+        quaternary: {
+          DEFAULT: "hsl(var(--text-quaternary))",
+          brand: "hsl(var(--text-quaternary-on-brand))",
+        },
+        placeholder: {
+          DEFAULT: "hsl(var(--text-placeholder))",
+          subtle: "hsl(var(--text-placeholder-subtle))",
+        },
+        white: "hsl(var(--text-white))",
+        disabled: "hsl(var(--text-disabled))",
+        brand: {
+          primary: "hsl(var(--text-brand-primary))",
+          secondary: "hsl(var(--text-brand-secondary))",
+          tertiary: {
+            DEFAULT: "hsl(var(--text-brand-tertiary))",
+            alt: "hsl(var(--text-brand-tertiary-alt))",
+          },
+        },
+        error: "hsl(var(--text-error-primary))",
+        warning: "hsl(var(--text-warning-primary))",
+        success: "hsl(var(--text-success-primary))",
+      },
+      border: {
+        primary: "hsl(var(--border-primary))",
+        secondary: "hsl(var(--border-secondary))",
+        tertiary: "hsl(var(--border-tertiary))",
+        disabled: {
+          DEFAULT: "hsl(var(--border-disabled))",
+          subtle: "hsl(var(--border-disabled-subtle))",
+        },
+        brand: {
+          DEFAULT: "hsl(var(--border-brand))",
+          alt: "hsl(var(--border-brand-alt))",
+        },
+        error: {
+          DEFAULT: "hsl(var(--border-error))",
+          subtle: "hsl(var(--border-error-subtle))",
+        },
+      },
+      foreground: {
+        primary: "hsl(var(--fg-primary))",
+        secondary: {
+          DEFAULT: "hsl(var(--fg-secondary))",
+          hover: "hsl(var(--fg-secondary-hover))",
+        },
+        tertiary: {
+          DEFAULT: "hsl(var(--fg-tertiary))",
+          hover: "hsl(var(--fg-tertiary-hover))",
+        },
+        quaternary: {
+          DEFAULT: "hsl(var(--fg-quaternary))",
+          hover: "hsl(var(--fg-quaternary-hover))",
+        },
+        quinary: {
+          DEFAULT: "hsl(var(--fg-quinary))",
+          hover: "hsl(var(--fg-quinary-hover))",
+        },
+        senary: "hsl(var(--fg-senary))",
+        white: "hsl(var(--fg-white))",
+        disabled: {
+          DEFAULT: "hsl(var(--fg-disabled))",
+          subtle: "hsl(var(--fg-disabled-subtle))",
+        },
+        brand: {
+          primary: {
+            DEFAULT: "hsl(var(--fg-brand-primary))",
+            subtle: "hsl(var(--fg-brand-primary-subtle))",
+          },
+          secondary: "hsl(var(--fg-brand-secondary))",
+        },
+        error: {
+          primary: "hsl(var(--fg-error-primary))",
+          secondary: "hsl(var(--fg-error-secondary))",
+        },
+        warning: {
+          primary: "hsl(var(--fg-warning-primary))",
+          secondary: "hsl(var(--fg-warning-secondary))",
+        },
+        success: {
+          primary: "hsl(var(--fg-success-primary))",
+          secondary: "hsl(var(--fg-success-secondary))",
+        },
+      },
+      background: {
+        primary: {
+          DEFAULT: "hsl(var(--bg-primary))",
+          alt: "hsl(var(--bg-primary-alt))",
+          hover: "hsl(var(--bg-primary-hover))",
+          solid: "hsl(var(--bg-primary-solid))",
+        },
+        secondary: {
+          DEFAULT: "hsl(var(--bg-secondary))",
+          alt: "hsl(var(--bg-secondary-alt))",
+          hover: "hsl(var(--bg-secondary-hover))",
+          subtle: "hsl(var(--bg-secondary-subtle))",
+          solid: "hsl(var(--bg-secondary-solid))",
+        },
+        tertiary: "hsl(var(--bg-tertiary))",
+        quaternary: "hsl(var(--bg-quaternary))",
+        active: "hsl(var(--bg-active))",
+        disabled: {
+          DEFAULT: "hsl(var(--bg-disabled))",
+          subtle: "hsl(var(--bg-disabled-subtle))",
+        },
+        overlay: "hsl(var(--bg-overlay))",
+        brand: {
+          primary: {
+            DEFAULT: "hsl(var(--bg-brand-primary))",
+            alt: "hsl(var(--bg-brand-primary-alt))",
+          },
+          secondary: {
+            DEFAULT: "hsl(var(--bg-brand-secondary))",
+          },
+          solid: {
+            DEFAULT: "hsl(var(--bg-brand-solid))",
+            hover: "hsl(var(--bg-brand-solid-hover))",
+          },
+          section: {
+            DEFAULT: "hsl(var(--bg-brand-section))",
+            subtle: "hsl(var(--bg-brand-section-subtle))",
+          },
+        },
+        error: {
+          primary: "hsl(var(--bg-error-primary))",
+          secondary: "hsl(var(--bg-error-secondary))",
+          solid: "hsl(var(--bg-error-solid))",
+        },
+        warning: {
+          primary: "hsl(var(--bg-warning-primary))",
+          secondary: "hsl(var(--bg-warning-secondary))",
+          solid: "hsl(var(--bg-warning-solid))",
+        },
+        success: {
+          primary: "hsl(var(--bg-success-primary))",
+          secondary: "hsl(var(--bg-success-secondary))",
+          solid: "hsl(var(--bg-success-solid))",
+        },
+      },
+      success: {
+        25: "hsl(var(--success-25))",
+        50: "hsl(var(--success-50))",
+        100: "hsl(var(--success-100))",
+        200: "hsl(var(--success-200))",
+        300: "hsl(var(--success-300))",
+        400: "hsl(var(--success-400))",
+        500: "hsl(var(--success-500))",
+        600: "hsl(var(--success-600))",
+        700: "hsl(var(--success-700))",
+        800: "hsl(var(--success-800))",
+        900: "hsl(var(--success-900))",
+        950: "hsl(var(--success-950))",
+      },
+      brand: {
+        25: "hsl(var(--brand-25))",
+        50: {
+          DEFAULT: "hsl(var(--brand-50))",
+          alt: "hsl(var(--brand-50-alt))",
+        },
+        100: {
+          DEFAULT: "hsl(var(--brand-100))",
+          alt: "hsl(var(--brand-100-alt))",
+        },
+        200: {
+          DEFAULT: "hsl(var(--brand-200))",
+          alt: "hsl(var(--brand-200-alt))",
+        },
+        300: {
+          DEFAULT: "hsl(var(--brand-300))",
+          alt: "hsl(var(--brand-300-alt))",
+        },
+        400: {
+          DEFAULT: "hsl(var(--brand-400))",
+          alt: "hsl(var(--brand-400-alt))",
+        },
+        500: {
+          DEFAULT: "hsl(var(--brand-500))",
+          alt: "hsl(var(--brand-500-alt))",
+        },
+        600: {
+          DEFAULT: "hsl(var(--brand-600))",
+          alt: "hsl(var(--brand-600-alt))",
+        },
+        700: {
+          DEFAULT: "hsl(var(--brand-700))",
+          alt: "hsl(var(--brand-700-alt))",
+        },
+        800: {
+          DEFAULT: "hsl(var(--brand-800))",
+          alt: "hsl(var(--brand-800-alt))",
+        },
+        900: {
+          DEFAULT: "hsl(var(--brand-900))",
+          alt: "hsl(var(--brand-900-alt))",
+        },
+        950: "hsl(var(--brand-950))",
+      },
+      alphaWhite: {
+        10: "hsla(var(--alpha-white-10))",
+        20: "hsla(var(--alpha-white-20))",
+        30: "hsla(var(--alpha-white-30))",
+        40: "hsla(var(--alpha-white-40))",
+        50: "hsla(var(--alpha-white-50))",
+        60: "hsla(var(--alpha-white-60))",
+        70: "hsla(var(--alpha-white-70))",
+        80: "hsla(var(--alpha-white-80))",
+        90: "hsla(var(--alpha-white-90))",
+        100: "hsla(var(--alpha-white-100))",
+      },
+      alphaBlack: {
+        10: "hsla(var(--alpha-black-10))",
+        20: "hsla(var(--alpha-black-20))",
+        30: "hsla(var(--alpha-black-30))",
+        40: "hsla(var(--alpha-black-40))",
+        50: "hsla(var(--alpha-black-50))",
+        60: "hsla(var(--alpha-black-60))",
+        70: "hsla(var(--alpha-black-70))",
+        80: "hsla(var(--alpha-black-80))",
+        90: "hsla(var(--alpha-black-90))",
+        100: "hsla(var(--alpha-black-100))",
+      },
+      error: {
+        25: "hsl(var(--error-25))",
+        50: "hsl(var(--error-50))",
+        100: "hsl(var(--error-100))",
+        200: "hsl(var(--error-200))",
+        300: "hsl(var(--error-300))",
+        400: "hsl(var(--error-400))",
+        500: "hsl(var(--error-500))",
+        600: "hsl(var(--error-600))",
+        700: "hsl(var(--error-700))",
+        800: "hsl(var(--error-800))",
+        900: "hsl(var(--error-900))",
+        950: "hsl(var(--error-950))",
+      },
+      warning: {
+        25: "hsl(var(--warning-25))",
+        50: "hsl(var(--warning-50))",
+        100: "hsl(var(--warning-100))",
+        200: "hsl(var(--warning-200))",
+        300: "hsl(var(--warning-300))",
+        400: "hsl(var(--warning-400))",
+        500: "hsl(var(--warning-500))",
+        600: "hsl(var(--warning-600))",
+        700: "hsl(var(--warning-700))",
+        800: "hsl(var(--warning-800))",
+        900: "hsl(var(--warning-900))",
+        950: "hsl(var(--warning-950))",
+      },
+      grayBlue: {
+        25: "hsl(var(--gray-blue-25))",
+        50: "hsl(var(--gray-blue-50))",
+        100: "hsl(var(--gray-blue-100))",
+        200: "hsl(var(--gray-blue-200))",
+        300: "hsl(var(--gray-blue-300))",
+        400: "hsl(var(--gray-blue-400))",
+        500: "hsl(var(--gray-blue-500))",
+        600: "hsl(var(--gray-blue-600))",
+        700: "hsl(var(--gray-blue-700))",
+        800: "hsl(var(--gray-blue-800))",
+        900: "hsl(var(--gray-blue-900))",
+        950: "hsl(var(--gray-blue-950))",
+      },
+      blueLight: {
+        25: "hsl(var(--blue-light-25))",
+        50: "hsl(var(--blue-light-50))",
+        100: "hsl(var(--blue-light-100))",
+        200: "hsl(var(--blue-light-200))",
+        300: "hsl(var(--blue-light-300))",
+        400: "hsl(var(--blue-light-400))",
+        500: "hsl(var(--blue-light-500))",
+        600: "hsl(var(--blue-light-600))",
+        700: "hsl(var(--blue-light-700))",
+        800: "hsl(var(--blue-light-800))",
+        900: "hsl(var(--blue-light-900))",
+        950: "hsl(var(--blue-light-950))",
+      },
+      blue: {
+        25: "hsl(var(--blue-25))",
+        50: "hsl(var(--blue-50))",
+        100: "hsl(var(--blue-100))",
+        200: "hsl(var(--blue-200))",
+        300: "hsl(var(--blue-300))",
+        400: "hsl(var(--blue-400))",
+        500: "hsl(var(--blue-500))",
+        600: "hsl(var(--blue-600))",
+        700: "hsl(var(--blue-700))",
+        800: "hsl(var(--blue-800))",
+        900: "hsl(var(--blue-900))",
+        950: "hsl(var(--blue-950))",
+      },
+      blueDark: {
+        25: "hsl(var(--blue-dark-25))",
+        50: "hsl(var(--blue-dark-50))",
+        100: "hsl(var(--blue-dark-100))",
+        200: "hsl(var(--blue-dark-200))",
+        300: "hsl(var(--blue-dark-300))",
+        400: "hsl(var(--blue-dark-400))",
+        500: "hsl(var(--blue-dark-500))",
+        600: "hsl(var(--blue-dark-600))",
+        700: "hsl(var(--blue-dark-700))",
+        800: "hsl(var(--blue-dark-800))",
+        900: "hsl(var(--blue-dark-900))",
+        950: "hsl(var(--blue-dark-950))",
+      },
+      indigo: {
+        25: "hsl(var(--indigo-25))",
+        50: "hsl(var(--indigo-50))",
+        100: "hsl(var(--indigo-100))",
+        200: "hsl(var(--indigo-200))",
+        300: "hsl(var(--indigo-300))",
+        400: "hsl(var(--indigo-400))",
+        500: "hsl(var(--indigo-500))",
+        600: "hsl(var(--indigo-600))",
+        700: "hsl(var(--indigo-700))",
+        800: "hsl(var(--indigo-800))",
+        900: "hsl(var(--indigo-900))",
+        950: "hsl(var(--indigo-950))",
+      },
+      purple: {
+        25: "hsl(var(--purple-25))",
+        50: "hsl(var(--purple-50))",
+        100: "hsl(var(--purple-100))",
+        200: "hsl(var(--purple-200))",
+        300: "hsl(var(--purple-300))",
+        400: "hsl(var(--purple-400))",
+        500: "hsl(var(--purple-500))",
+        600: "hsl(var(--purple-600))",
+        700: "hsl(var(--purple-700))",
+        800: "hsl(var(--purple-800))",
+        900: "hsl(var(--purple-900))",
+        950: "hsl(var(--purple-950))",
+      },
+      fuchsia: {
+        25: "hsl(var(--fuchsia-25))",
+        50: "hsl(var(--fuchsia-50))",
+        100: "hsl(var(--fuchsia-100))",
+        200: "hsl(var(--fuchsia-200))",
+        300: "hsl(var(--fuchsia-300))",
+        400: "hsl(var(--fuchsia-400))",
+        500: "hsl(var(--fuchsia-500))",
+        600: "hsl(var(--fuchsia-600))",
+        700: "hsl(var(--fuchsia-700))",
+        800: "hsl(var(--fuchsia-800))",
+        900: "hsl(var(--fuchsia-900))",
+        950: "hsl(var(--fuchsia-950))",
+      },
+      pink: {
+        25: "hsl(var(--pink-25))",
+        50: "hsl(var(--pink-50))",
+        100: "hsl(var(--pink-100))",
+        200: "hsl(var(--pink-200))",
+        300: "hsl(var(--pink-300))",
+        400: "hsl(var(--pink-400))",
+        500: "hsl(var(--pink-500))",
+        600: "hsl(var(--pink-600))",
+        700: "hsl(var(--pink-700))",
+        800: "hsl(var(--pink-800))",
+        900: "hsl(var(--pink-900))",
+        950: "hsl(var(--pink-950))",
+      },
+      orangeDark: {
+        25: "hsl(var(--orange-dark-25))",
+        50: "hsl(var(--orange-dark-50))",
+        100: "hsl(var(--orange-dark-100))",
+        200: "hsl(var(--orange-dark-200))",
+        300: "hsl(var(--orange-dark-300))",
+        400: "hsl(var(--orange-dark-400))",
+        500: "hsl(var(--orange-dark-500))",
+        600: "hsl(var(--orange-dark-600))",
+        700: "hsl(var(--orange-dark-700))",
+        800: "hsl(var(--orange-dark-800))",
+        900: "hsl(var(--orange-dark-900))",
+        950: "hsl(var(--orange-dark-950))",
+      },
+      orange: {
+        25: "hsl(var(--orange-25))",
+        50: "hsl(var(--orange-50))",
+        100: "hsl(var(--orange-100))",
+        200: "hsl(var(--orange-200))",
+        300: "hsl(var(--orange-300))",
+        400: "hsl(var(--orange-400))",
+        500: "hsl(var(--orange-500))",
+        600: "hsl(var(--orange-600))",
+        700: "hsl(var(--orange-700))",
+        800: "hsl(var(--orange-800))",
+        900: "hsl(var(--orange-900))",
+        950: "hsl(var(--orange-950))",
+      },
+      gray: {
+        25: "hsl(var(--gray-25))",
+        50: "hsl(var(--gray-50))",
+        100: "hsl(var(--gray-100))",
+        200: "hsl(var(--gray-200))",
+        300: "hsl(var(--gray-300))",
+        400: "hsl(var(--gray-400))",
+        500: "hsl(var(--gray-500))",
+        600: "hsl(var(--gray-600))",
+        700: "hsl(var(--gray-700))",
+        800: "hsl(var(--gray-800))",
+        900: "hsl(var(--gray-900))",
+        950: "hsl(var(--gray-950))",
+      },
+      input: "hsl(var(--input))",
+      ring: "hsl(var(--ring))",
+    },
+    extend: {
+      backgroundImage: {
+        "page-header-gradient":
+          "linear-gradient(214deg, #FBC2EB 17.8%, #CDA6DE 34.03%, #A18CD1 79.88%)",
+        "gradient-1": "linear-gradient(45deg, #53389E 14.16%, #7F56D9 100%)",
+        "gradient-1-dark": "linear-gradient(45deg, #161B26 14.16%, #7F56D9 100%)",
+        "gradient-brand-60050090-deg": "linear-gradient(90deg, #7F56D9 0%, #9E77ED 100%)",
+        "overlay-black-t": "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))",
+        "figma-black-card": "linear-gradient(180deg, rgba(0, 0, 0, 0) -125.57%, #000000 100%)",
+      },
+      spacing: {
+        none: "0",
+        xxs: "0.125rem",
+        xs: "0.25rem",
+        sm: "0.375rem",
+        md: "0.5rem",
+        lg: "0.75rem",
+        xl: "1rem",
+        "2xl": "1.25rem",
+        "3xl": "1.5rem",
+        "4xl": "2rem",
+        "5xl": "2.5rem",
+        "6xl": "3rem",
+        "7xl": "4rem",
+        "8xl": "5rem",
+        "9xl": "6rem",
+        "10xl": "8rem",
+        "11xl": "10rem",
+      },
+      width: {
+        xxs: "20rem",
+        xs: "24rem",
+        sm: "30rem",
+        md: "35rem",
+        lg: "40rem",
+        xl: "48rem",
+        "2xl": "64rem",
+        "3xl": "80rem",
+        "4xl": "90rem",
+        "5xl": "100rem",
+        "6xl": "120rem",
+      },
+      screens: {
+        xs: "480px", // Small devices
+        sm: "640px", // Default Tailwind 'sm'
+        md: "768px", // Default Tailwind 'md' (Tablets)
+        lg: "1024px", // Default Tailwind 'lg' (Laptops)
+        xl: "1280px", // Default Tailwind 'xl' (Desktops)
+        "2xl": "1536px", // Large desktops
+      },
+      boxShadow: {
+        "custom-1": "0px 2px 4px -2px #1018280F, 0px 4px 8px -2px #1018281A",
+        "custom-2": "0px 8px 8px -4px #10182808, 0px 20px 24px -4px #10182814",
+        "custom-3": "0px 4px 6px -2px #10182808, 0px 12px 16px -4px #10182814",
+        icon: "0px 1px 2px 0px #1018280D, 0px -2px 0px 0px #1018280D inset, 0px 0px 0px 1px #1018282E inset",
+      },
+      keyframes: {
+        "accordion-down": {
+          from: { height: "0" },
+          to: { height: "var(--radix-accordion-content-height)" },
+        },
+        "accordion-up": {
+          from: { height: "var(--radix-accordion-content-height)" },
+          to: { height: "0" },
+        },
+        "caret-blink": {
+          "0%,70%,100%": { opacity: "1" },
+          "20%,50%": { opacity: "0" },
+        },
+        "gradient-x": {
+          "0%, 100%": { "background-position": "0% 50%" },
+          "50%": { "background-position": "100% 50%" },
+        },
+      },
+      animation: {
+        "caret-blink": "caret-blink 1.25s ease-out infinite",
+        "accordion-down": "accordion-down 0.2s ease-out",
+        "accordion-up": "accordion-up 0.2s ease-out",
+        "gradient-x": "gradient-x 8s ease infinite",
+      },
+    },
+  },
+
+  plugins: [
+    require("@tailwindcss/forms"), // Ensures form elements work well in RTL
+    require("tailwindcss-rtl"),
+    typography, // Enables automatic RTL support
+  ],
+};
 export default config;
