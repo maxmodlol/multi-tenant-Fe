@@ -1,20 +1,21 @@
+// utils/detectTenant.ts
+import { headers as _headers } from "next/headers";
+
+const RESERVED = ["www", "api", "admin", "auth"];
+
 export async function detectTenant(): Promise<string> {
-  // ✅ Client-side
+  // 1️⃣ Client side
   if (typeof window !== "undefined") {
-    const host = window.location.hostname;
-    console.log("[detectTenant] client host =", host);
-    return host.includes(".") ? host.split(".")[0] : "main";
+    const sub = window.location.hostname.split(".")[0];
+    return sub === "localhost" || RESERVED.includes(sub) ? "main" : sub;
   }
 
-  // ❗️Fallback for server-side (used only in Next.js server components)
-  try {
-    const { headers } = await import("next/headers");
-    const hdrList = await headers();
-    const host = hdrList.get("host") ?? "";
-    console.log("[detectTenant] SSR host =", host);
-    const hostname = host.split(":")[0];
-    return hostname.includes(".") ? hostname.split(".")[0] : "main";
-  } catch {
-    return "main";
-  }
+  // 2️⃣ Server side
+  const hdrList = await _headers(); // <-- await here
+  const rawHost = (hdrList.get("x-forwarded-host") || hdrList.get("host") || "")
+    .split(":")[0]
+    .toLowerCase();
+
+  const [first, ...rest] = rawHost.split(".");
+  return rest.length === 0 || RESERVED.includes(first) ? "main" : first;
 }
