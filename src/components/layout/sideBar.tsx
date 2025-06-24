@@ -86,7 +86,7 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         >
           <div className="relative">
             <Image
-              src={session?.user?.image || "/icons/author-avatar.png"}
+              src={session?.user?.image || "/icons/author-avatar.svg"}
               alt="avatar"
               width={44}
               height={44}

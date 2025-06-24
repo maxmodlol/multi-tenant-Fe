@@ -73,7 +73,7 @@ export default function BlogFooterMeta({
       <div className="flex items-center gap-3 text-right">
         <div className="w-12 h-12 hidden md:block rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800">
           <Image
-            src="/icons/author-avatar.png"
+            src="/icons/author-avatar.svg"
             alt={author?.name ? `صورة ${author.name}` : "مؤلف مجهول"}
             width={48}
             height={48}
