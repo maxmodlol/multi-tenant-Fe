@@ -13,7 +13,7 @@ export const authOptions: NextAuthOptions = {
       credentials: { email: { type: "email" }, password: { type: "password" } },
       async authorize(creds) {
         const tenant = await detectTenant();
-        const res = await fetch(`${process.env.API_URL}/api/auth/login`, {
+        const res = await fetch(`${process.env.API_URL}/auth/login`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
