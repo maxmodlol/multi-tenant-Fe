@@ -1,35 +1,22 @@
 // utils/detectTenant.ts
 
-const RESERVED = ["www", "api", "admin", "auth"];
+import { parseTenant } from "../lib/tenant";
 
 export async function detectTenant(): Promise<string> {
-  // ── 1. Client-side ─────────────────────────────────────────
+  /* ── 1. Client side ───────────────────────────────────── */
   if (typeof window !== "undefined") {
-    const [sub] = window.location.hostname.split(".");
-    if (sub === "localhost" || RESERVED.includes(sub)) {
-      return "main";
-    }
-    return sub;
+    return parseTenant(window.location.hostname);
   }
 
-  // ── 2. Server-side ─────────────────────────────────────────
+  /* ── 2. Server side (Next 13/14 app dir) ──────────────── */
   try {
     const { headers } = await import("next/headers");
     const hdrs = await headers();
+    const hostHeader = hdrs.get("x-forwarded-host") || hdrs.get("host") || undefined;
 
-    // prefer x-forwarded-host if you’re behind a proxy/CDN
-    const raw = (hdrs.get("x-forwarded-host") || hdrs.get("host") || "")
-      .split(":")[0]
-      .toLowerCase()
-      .trim();
-
-    const [sub] = raw.split(".");
-    // if localhost, a reserved name, or no subdomain → “main”
-    if (sub === "localhost" || RESERVED.includes(sub) || raw.split(".").length < 2) {
-      return "main";
-    }
-    return sub;
+    return parseTenant(hostHeader);
   } catch {
+    // build time or edge cases
     return "main";
   }
 }
