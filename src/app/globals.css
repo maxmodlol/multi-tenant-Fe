@@ -781,22 +781,16 @@
     background-size: 200% 100%;
     animation: shimmer 2.5s infinite;
   }
-  p
-  /* in globals.css */
-  .ProseMirror {
-    /* remove any unwanted outline/border */
-    border: none !important;
-    /* or replace it with your custom style: */
-    /* border: 1px solid #e5e7eb; */
-    /* padding already comes from your wrapper, so maybe skip it here */
-  }
 
-  .ProseMirror:focus {
-    outline: none !important;
-    border: none !important;
-    /* you can also add a focus ring here if you like: */
-    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+  /* in globals.css */
+
+  @layer utilities {
+    .whitespace-break {
+      white-space: normal !important;
+      word-break: break-word;
+    }
   }
+  /* Editor frame ---------------------------------------------------- */
 
   [data-stop-animation] {
     animation: scroll-left 20s infinite linear;

@@ -8,7 +8,7 @@ export const RESERVED = ["www", "api", "admin", "auth"] as const;
  *   3. fallback literal "alnashra.co"
  */
 export const MAIN_DOMAIN =
-  process.env.MAIN_DOMAIN ?? process.env.NEXT_PUBLIC_MAIN_DOMAIN ?? "alnashra.co";
+  process.env.MAIN_DOMAIN ?? process.env.NEXT_PUBLIC_MAIN_DOMAIN ?? "localhost";
 
 export type Tenant = "main" | string;
 

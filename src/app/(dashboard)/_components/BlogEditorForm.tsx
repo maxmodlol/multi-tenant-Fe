@@ -5,7 +5,6 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import BlockquoteExtension from "@tiptap/extension-blockquote";
-import ImageExtension from "@tiptap/extension-image";
 import Placeholder from "@tiptap/extension-placeholder";
 import TextAlign from "@tiptap/extension-text-align";
 import TextStyle from "@tiptap/extension-text-style";
@@ -40,7 +39,6 @@ import {
 } from "lucide-react";
 import { Quote } from "lucide-react";
 import Heading from "@tiptap/extension-heading";
-import Image from "@tiptap/extension-image";
 import ImageResize from "tiptap-extension-resize-image"; // ← our new extension
 
 import { useUploadBlogImage } from "@/src/hooks/dashboard/mutations/useUploadMutations";
@@ -129,7 +127,7 @@ export function BlogEditorForm({
       Color,
       LinkExtension.configure({ openOnClick: false }),
       HorizontalRule,
-      ImageExtension.configure({
+      ImageResize.configure({
         inline: false,
         HTMLAttributes: {
           style: "max-width: 100%; height: auto;", // ensure responsiveness
@@ -138,14 +136,13 @@ export function BlogEditorForm({
       Placeholder.configure({ placeholder: "Start writing…" }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Heading.configure({ levels: [1, 2, 3, 4, 5] }),
-      Image, // renders <img>
-      ImageResize,
     ],
     content: html,
     editorProps: {
       attributes: {
         class:
-          "prose max-w-none p-lg bg-background-primary " +
+          "pm-editor whitespace-break max-w-none" +
+          "p-lg bg-background-primary " +
           "border border-gray-200 rounded-md " +
           "focus:outline-none focus:ring-3 focus:color-brand-400",
       },
@@ -654,7 +651,7 @@ export function BlogEditorForm({
       <div className="border border-border-secondary rounded-b-md">
         <EditorContent
           editor={editor}
-          className="prose max-w-none [&_ul]:list-disc [&_ol]:list-decimal p-lg text-text-primary"
+          className=" [&_ul]:list-disc [&_ol]:list-decimal p-lg text-text-primary"
         />
       </div>
     </div>

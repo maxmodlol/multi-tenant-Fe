@@ -1,6 +1,7 @@
 // middleware.ts
 import { NextResponse, type NextRequest } from "next/server";
 import { getToken } from "next-auth/jwt";
+import { parseTenant } from "./src/lib/tenant";
 
 const SECRET = process.env.NEXTAUTH_SECRET!;
 const PUBLIC_PATHS = ["/login", "/api/auth"]; // public routes
@@ -19,10 +20,8 @@ export async function middleware(req: NextRequest) {
   }
 
   // 2️⃣ Tenant detection from the Host header (x-forwarded-host if behind CF)
-  const host = req.headers.get("x-forwarded-host") || req.headers.get("host")!;
-  const hostname = host.split(":")[0];
-  const parts = hostname.split(".");
-  const tenant = hostname === "localhost" || parts.length < 3 ? "main" : parts[0];
+  const hostHeader = req.headers.get("x-forwarded-host") || req.headers.get("host") || undefined;
+  const tenant = parseTenant(hostHeader);
 
   // 3️⃣ Attach the tenant as a cookie & header so your app code can read it
   const res = NextResponse.next();

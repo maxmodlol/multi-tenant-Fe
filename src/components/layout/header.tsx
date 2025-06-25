@@ -121,7 +121,7 @@ export default function Header({ logoLightUrl, logoDarkUrl }: HeaderProps) {
             width={50} // adjust to your actual logo dimensions
             height={50}
             priority // mark as LCP if this is critical
-            className="object-contain h-[50px] w-[50px] "
+            className="object-contain h-[60px] w-[60px] "
           />
         </Link>
 

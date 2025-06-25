@@ -3,7 +3,7 @@
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
 
 import { Input } from "@explore/components/ui/input";
@@ -18,6 +18,9 @@ type FormData = z.infer<typeof schema>;
 
 export default function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams(); // ← from next/navigation
+  const next = searchParams.get("next") ?? "/dashboard";
+
   const {
     register,
     handleSubmit,
@@ -31,7 +34,8 @@ export default function LoginForm() {
     });
 
     if (res?.ok) {
-      router.replace("/dashboard");
+      router.replace(next);
+      router.refresh(); // ⬅️ tells the App Router to re-fetch with the new cookie :contentReference[oaicite:1]{index=1}
     } else {
       toast.error(
         res?.status === 401
