@@ -15,36 +15,40 @@ export default function BlogCard({ blog, type }: BlogCardProps) {
   if (type === "slider") {
     return (
       <div className="relative w-full h-[500px] rounded-3xl overflow-hidden">
-        <Image
-          src={blog.coverPhoto ?? "/placeholder-image.jpg"}
-          alt={blog.title}
-          width={1200}
-          height={500}
-          priority
-          className="object-cover object-center w-full h-full"
-        />
+        <Link href={blog.url ?? `/blogs/${blog.id}`}>
+          <Image
+            src={blog.coverPhoto ?? "/placeholder-image.jpg"}
+            alt={blog.title}
+            width={1200}
+            height={500}
+            priority
+            className="object-cover object-center w-full h-full"
+          />
 
-        <div className="absolute bottom-10 left-6 right-6 text-text-white z-10 space-y-3 rtl:text-right text-left custom-1">
-          <h2 className="text-2xl font-bold drop-shadow">{blog.title}</h2>
-          <p className="text-base text-gray-500  drop-shadow">
-            {blog.description
-              ? blog.description
-              : " كيف يمكنك إنشاء عروض تقديمية مثيرة تدهش زملاءك وتبهر مديرك"}
-          </p>
-          <div className="flex gap-2 flex-wrap">
-            {(blog.tags ?? []).slice(0, 3).map((tag, idx) => (
-              <span
-                key={tag}
-                className={clsx(
-                  "px-3 py-1 text-xs font-medium rounded-full",
-                  getTagColorClass(idx),
-                )}
-              >
-                {tag}
-              </span>
-            ))}
+          <div className="absolute inset-x-0 bottom-0 h-[150px] pointer-events-none bg-figma-black-card" />
+
+          <div className="absolute bottom-10 left-6 right-6 text-text-white z-10 space-y-3 rtl:text-right text-left custom-1">
+            <h2 className="text-2xl font-bold drop-shadow">{blog.title}</h2>
+            <p className="text-base text-gray-500  drop-shadow">
+              {blog.description
+                ? blog.description
+                : " كيف يمكنك إنشاء عروض تقديمية مثيرة تدهش زملاءك وتبهر مديرك"}
+            </p>
+            <div className="flex gap-2 flex-wrap">
+              {(blog.tags ?? []).slice(0, 3).map((tag, idx) => (
+                <span
+                  key={tag}
+                  className={clsx(
+                    "px-3 py-1 text-xs font-medium rounded-full",
+                    getTagColorClass(idx),
+                  )}
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
           </div>
-        </div>
+        </Link>
       </div>
     );
   }

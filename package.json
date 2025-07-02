@@ -33,6 +33,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "debounce": "^2.2.0",
+    "framer-motion": "^12.19.2",
     "html-react-parser": "^5.2.3",
     "jose": "^6.0.10",
     "jwt-decode": "^4.0.0",

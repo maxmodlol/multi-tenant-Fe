@@ -17,14 +17,22 @@ const SearchIcon = dynamic(() => import("lucide-react").then((mod) => mod.Search
 interface HeaderProps {
   logoLightUrl: string;
   logoDarkUrl: string;
+  headerStyle: "gradient" | "solid";
+  headerColor: string | undefined;
 }
 
-export default function Header({ logoLightUrl, logoDarkUrl }: HeaderProps) {
+export default function Header({
+  logoLightUrl,
+  logoDarkUrl,
+  headerStyle,
+  headerColor,
+}: HeaderProps) {
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const gradientOn = headerStyle === "gradient";
 
   useEffect(() => {
     // (A) Theme initialization
@@ -79,9 +87,9 @@ export default function Header({ logoLightUrl, logoDarkUrl }: HeaderProps) {
   return (
     <div className="fixed inset-x-0 top-0 z-50">
       {/* Optional “neon gradient” backdrop */}
-      {!isMobile && (
+      {gradientOn && !isMobile && (
         <div
-          aria-hidden="true"
+          aria-hidden
           className="
             absolute inset-0
             bg-gradient-to-r from-indigo-200 via-brand-300 to-blue-400
@@ -96,10 +104,20 @@ export default function Header({ logoLightUrl, logoDarkUrl }: HeaderProps) {
         className="
           relative flex items-center justify-between
           px-4 py-3 md:px-8 md:py-4
-          backdrop-blur-lg bg-black/20 dark:bg-white/10
+            backdrop-blur-lg bg-black/20 dark:bg-white/10
           border-b border-brand-400/30 dark:border-brand-400/30
           shadow-lg
+          transition-colors
         "
+        style={
+          gradientOn
+            ? undefined
+            : {
+                // light & dark both get the same hue; tweak if you prefer different tints
+                backgroundColor: `hsl(${headerColor})`,
+                borderBottom: `1px solid hsla(${headerColor},0.3)`,
+              }
+        }
       >
         {/* MENU BUTTON */}
         <Button

@@ -88,7 +88,7 @@ export default function BlogDetailClient({ blog }: { blog: Blog }) {
   if (adsError) {
     console.error("Error loading ad settings:", adsError);
   }
-
+  const isSingle = total === 1;
   return (
     <div className="bg-white dark:bg-black text-gray-900 dark:text-gray-100">
       {/* ─── Hero including ABOVE_TAGS & UNDER_DATE ─── */}
@@ -96,11 +96,13 @@ export default function BlogDetailClient({ blog }: { blog: Blog }) {
 
       <div className="max-w-3xl mx-auto px-4">
         {/* ─── Pagination (Top) ─── */}
-        <PaginationBar
-          currentPage={page}
-          totalPages={total}
-          onPageChange={(newPage) => setPage(newPage)}
-        />
+        {!isSingle && (
+          <PaginationBar
+            currentPage={page}
+            totalPages={total}
+            onPageChange={(newPage) => setPage(newPage)}
+          />
+        )}
 
         {/* ─── Page Content with INLINE ─── */}
         <div className="space-y-8 py-6">
@@ -127,11 +129,13 @@ export default function BlogDetailClient({ blog }: { blog: Blog }) {
         </div>
 
         {/* ─── Pagination (Bottom) ─── */}
-        <PaginationBar
-          currentPage={page}
-          totalPages={total}
-          onPageChange={(newPage) => setPage(newPage)}
-        />
+        {!isSingle && (
+          <PaginationBar
+            currentPage={page}
+            totalPages={total}
+            onPageChange={(newPage) => setPage(newPage)}
+          />
+        )}
 
         {/* ─── Footer Meta ─── */}
         <BlogFooterMeta

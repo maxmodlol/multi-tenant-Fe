@@ -526,7 +526,7 @@ const config: Config = {
         "gradient-1-dark": "linear-gradient(45deg, #161B26 14.16%, #7F56D9 100%)",
         "gradient-brand-60050090-deg": "linear-gradient(90deg, #7F56D9 0%, #9E77ED 100%)",
         "overlay-black-t": "linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0))",
-        "figma-black-card": "linear-gradient(180deg, rgba(0, 0, 0, 0) -125.57%, #000000 100%)",
+        "figma-black-card": "linear-gradient(180deg, rgba(0,0,0,0.8), rgba(34, 31, 31, 0.11) 100%)",
       },
       spacing: {
         none: "0",

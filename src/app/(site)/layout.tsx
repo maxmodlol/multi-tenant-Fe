@@ -7,7 +7,7 @@ import AdHeaderInjector from "@explore/components/AdHeaderInjector";
 import { fetchSiteSetting } from "@explore/services/settingService";
 import type { Metadata } from "next";
 
-/** static tags merged for every page under (site) */
+/* ───────────── static meta (unchanged) ───────────── */
 export const metadata: Metadata = {
   title: "الموارد والرؤى — مدونة الموقع",
   description: "أحدث أخبار الصناعة، المقالات، الإرشادات، والنصائح.",
@@ -37,21 +37,51 @@ export const metadata: Metadata = {
 };
 
 export default async function SiteLayout({ children }: { children: ReactNode }) {
+  /* ---------- defaults that work even if API fails ---------- */
   let logoLight = "/logo.svg";
   let logoDark = "/logo.svg";
+  let headerStyle: "gradient" | "solid" = "gradient";
+  let headerColor: string | undefined; // only when solid
 
   try {
-    const s = await fetchSiteSetting();
+    /* fetch + inline-fallback → keeps your original style */
+    const s = await fetchSiteSetting().catch(() => ({
+      logoLightUrl: "/logo.svg",
+      logoDarkUrl: "/logo.svg",
+      baseColor: "240 20% 50%",
+      brandScale: {}, // satisfy the type
+      headerStyle: "gradient" as const,
+      headerColor: null,
+    }));
+
+    /* logos */
     if (s.logoLightUrl) logoLight = s.logoLightUrl;
     if (s.logoDarkUrl) logoDark = s.logoDarkUrl;
-  } catch {}
+
+    /* header style / colour */
+    headerStyle = s.headerStyle;
+    if (s.headerStyle === "solid") {
+      headerColor = s.headerColor ?? s.baseColor;
+    }
+  } catch {
+    /* swallow → keep defaults */
+  }
 
   return (
     <>
       <AdHeaderInjector />
-      <Header logoLightUrl={logoLight} logoDarkUrl={logoDark} />
+
+      <Header
+        logoLightUrl={logoLight}
+        logoDarkUrl={logoDark}
+        headerStyle={headerStyle}
+        headerColor={headerColor}
+      />
+
       <main className="mt-20">{children}</main>
+
       <Footer logoLightUrl={logoLight} logoDarkUrl={logoDark} />
+
       <Toaster position="bottom-center" toastOptions={{ duration: 3000 }} />
     </>
   );

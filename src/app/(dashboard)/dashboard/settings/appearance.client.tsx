@@ -1,8 +1,9 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
-import { useState, useRef, ChangeEvent, FormEvent, useEffect } from "react";
+import { useState, useRef, useEffect, ChangeEvent, FormEvent } from "react";
+import { motion } from "framer-motion";
 import { Button } from "@explore/components/ui/button";
-import { Input } from "@explore/components/ui/input";
 import { useSiteSetting } from "@/src/hooks/public/useSetting";
 import { useUploadLogo } from "@/src/hooks/dashboard/useUploadLogo";
 import { SiteSetting } from "@/src/types/siteSetting";
@@ -10,124 +11,138 @@ import { useUpdateSiteSetting } from "@/src/hooks/dashboard/mutations/useSiteMut
 
 const PRESET_COLORS = ["#4B5563", "#047857", "#1D4ED8", "#4F46E5", "#7C3AED", "#DB2777", "#EA580C"];
 
+/**
+ * A single reusable card row (label + description on the right, body on the left)
+ */
+function Row({
+  label,
+  description,
+  children,
+}: {
+  label: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="grid grid-cols-12 gap-6 items-start py-6 first:pt-0 last:pb-0">
+      <div className="col-span-12 md:col-span-4 text-sm">
+        <h3 className="font-medium text-gray-700 dark:text-gray-300 mb-1">{label}</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 leading-5">{description}</p>
+      </div>
+      <div className="col-span-12 md:col-span-8 flex flex-col md:flex-row md:items-center gap-4">
+        {children}
+      </div>
+    </section>
+  );
+}
+
 export default function AppearanceForm() {
-  // 1) Fetch current settings
+  /* ────────────────────────────────────────────────────────── */
+  /* 1) Fetch & upload hooks                                    */
+  /* ────────────────────────────────────────────────────────── */
   const { data: setting, isLoading } = useSiteSetting();
   const updateMutation = useUpdateSiteSetting();
-
-  // 2) Upload hooks for logos
   const uploadLogoMutation = useUploadLogo();
 
-  // 3) Local state for logo URLs & previews
+  /* ────────────────────────────────────────────────────────── */
+  /* 2) Local state                                             */
+  /* ────────────────────────────────────────────────────────── */
   const [logoLightUrl, setLogoLightUrl] = useState<string | null>(null);
   const [logoDarkUrl, setLogoDarkUrl] = useState<string | null>(null);
   const [logoLightPreview, setLogoLightPreview] = useState<string | null>(null);
   const [logoDarkPreview, setLogoDarkPreview] = useState<string | null>(null);
 
-  // 4) Local state for color (hex)
-  const [selectedColor, setSelectedColor] = useState<string>(PRESET_COLORS[0]);
-  const [customColor, setCustomColor] = useState<string>("");
+  const [selectedColorHex, setSelectedColorHex] = useState<string>(PRESET_COLORS[0]);
+  const [headerStyle, setHeaderStyle] = useState<"gradient" | "solid">("gradient");
+  const [headerColorHex, setHeaderColorHex] = useState<string>("");
 
-  // Refs to file inputs
   const lightFileRef = useRef<HTMLInputElement>(null);
   const darkFileRef = useRef<HTMLInputElement>(null);
 
-  // 5) Prefill when `setting` arrives
+  /* ────────────────────────────────────────────────────────── */
+  /* 3) Prefill from DB                                         */
+  /* ────────────────────────────────────────────────────────── */
   useEffect(() => {
-    if (setting) {
-      // a) Logos
-      if (setting.logoLightUrl) {
-        setLogoLightUrl(setting.logoLightUrl);
-        setLogoLightPreview(setting.logoLightUrl);
-      }
-      if (setting.logoDarkUrl) {
-        setLogoDarkUrl(setting.logoDarkUrl);
-        setLogoDarkPreview(setting.logoDarkUrl);
-      }
+    if (!setting) return;
 
-      // b) Convert stored baseColor (H S% L%) → hex
-      const toHex = (hsl: string): string => {
-        const parts = hsl.split(" ");
-        if (parts.length !== 3) return PRESET_COLORS[0];
-        const h = parseFloat(parts[0]) / 360;
-        const s = parseFloat(parts[1].replace("%", "")) / 100;
-        const l = parseFloat(parts[2].replace("%", "")) / 100;
-        let r: number, g: number, b: number;
-        if (s === 0) {
-          r = g = b = l;
-        } else {
-          const hue2rgb = (p: number, q: number, t: number) => {
-            if (t < 0) t += 1;
-            if (t > 1) t -= 1;
-            if (t < 1 / 6) return p + (q - p) * 6 * t;
-            if (t < 1 / 2) return q;
-            if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-            return p;
-          };
-          const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-          const p = 2 * l - q;
-          r = hue2rgb(p, q, h + 1 / 3);
-          g = hue2rgb(p, q, h);
-          b = hue2rgb(p, q, h - 1 / 3);
-        }
-        const toHexCh = (x: number) =>
-          Math.round(x * 255)
-            .toString(16)
-            .padStart(2, "0");
-        return `#${toHexCh(r)}${toHexCh(g)}${toHexCh(b)}`;
-      };
+    setLogoLightUrl(setting.logoLightUrl ?? null);
+    setLogoLightPreview(setting.logoLightUrl ?? null);
+    setLogoDarkUrl(setting.logoDarkUrl ?? null);
+    setLogoDarkPreview(setting.logoDarkUrl ?? null);
 
-      const initialHex = toHex(setting.baseColor);
-      setSelectedColor(initialHex);
-      setCustomColor("");
+    const toHex = (hsl: string): string => {
+      const [h, sP, lP] = hsl.split(" ");
+      const hNum = parseFloat(h) / 360;
+      const s = parseFloat(sP) / 100;
+      const l = parseFloat(lP) / 100;
+      let r: number, g: number, b: number;
+      if (s === 0) {
+        r = g = b = l;
+      } else {
+        const hue2rgb = (p: number, q: number, t: number) => {
+          if (t < 0) t += 1;
+          if (t > 1) t -= 1;
+          if (t < 1 / 6) return p + (q - p) * 6 * t;
+          if (t < 1 / 2) return q;
+          if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+          return p;
+        };
+        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+        const p = 2 * l - q;
+        r = hue2rgb(p, q, hNum + 1 / 3);
+        g = hue2rgb(p, q, hNum);
+        b = hue2rgb(p, q, hNum - 1 / 3);
+      }
+      const toHexCh = (x: number) =>
+        Math.round(x * 255)
+          .toString(16)
+          .padStart(2, "0");
+      return `#${toHexCh(r)}${toHexCh(g)}${toHexCh(b)}`;
+    };
+
+    const baseHex = toHex(setting.baseColor);
+    setSelectedColorHex(baseHex);
+
+    setHeaderStyle(setting.headerStyle);
+    if (setting.headerStyle === "solid") {
+      setHeaderColorHex(setting.headerColor ? toHex(setting.headerColor) : baseHex);
+    } else {
+      setHeaderColorHex("");
     }
   }, [setting]);
 
-  // 6) Handle light‐logo selection → immediate upload
-  function handleLightLogoChange(e: ChangeEvent<HTMLInputElement>) {
+  /* ────────────────────────────────────────────────────────── */
+  /* 4) Handlers                                                */
+  /* ────────────────────────────────────────────────────────── */
+  const handleLogoChange = (type: "light" | "dark") => (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     uploadLogoMutation.mutate(file, {
-      onSuccess(url) {
-        setLogoLightUrl(url);
-        setLogoLightPreview(url);
-      },
-      onError(err) {
-        console.error("Light logo upload failed", err);
-      },
-    });
-  }
-
-  // 7) Handle dark‐logo selection → upload
-  function handleDarkLogoChange(e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    uploadLogoMutation.mutate(file, {
-      onSuccess(url) {
-        setLogoDarkUrl(url);
-        setLogoDarkPreview(url);
-      },
-      onError(err) {
-        console.error("Dark logo upload failed", err);
+      onSuccess: (url) => {
+        if (type === "light") {
+          setLogoLightUrl(url);
+          setLogoLightPreview(url);
+        } else {
+          setLogoDarkUrl(url);
+          setLogoDarkPreview(url);
+        }
       },
     });
-  }
+  };
 
-  // 8) Color picker handlers
-  function handleColorSelect(c: string) {
-    setSelectedColor(c);
-    setCustomColor("");
-  }
-  function handleCustomColor(e: ChangeEvent<HTMLInputElement>) {
+  const handleColorClick = (hex: string) => {
+    if (headerStyle === "solid") setHeaderColorHex(hex);
+    else setSelectedColorHex(hex);
+  };
+
+  const handleCustomColor = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
-    setCustomColor(val);
     if (/^#([0-9A-Fa-f]{6})$/.test(val)) {
-      setSelectedColor(val);
+      headerStyle === "solid" ? setHeaderColorHex(val) : setSelectedColorHex(val);
     }
-  }
+  };
 
-  // 9) Convert hex → HSL string
-  function hexToHslString(hex: string): string {
+  const hexToHslString = (hex: string): string => {
     const c = hex.replace("#", "");
     const r = parseInt(c.substring(0, 2), 16) / 255;
     const g = parseInt(c.substring(2, 4), 16) / 255;
@@ -153,185 +168,145 @@ export default function AppearanceForm() {
       }
       h /= 6;
     }
-    const H = Math.round(h * 360);
-    const S = Math.round(s * 100);
-    const L = Math.round(l * 100);
-    return `${H} ${S}% ${L}%`;
-  }
+    return `${Math.round(h * 360)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+  };
 
-  // 10) On form submit → send JSON to updateSiteSetting
-  async function handleSubmit(e: FormEvent) {
+  /* ────────────────────────────────────────────────────────── */
+  /* 5) Submit                                                 */
+  /* ────────────────────────────────────────────────────────── */
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!setting) return;
 
-    const hsl = hexToHslString(selectedColor);
+    const baseHsl = hexToHslString(selectedColorHex);
+    const headerHsl =
+      headerStyle === "solid" ? hexToHslString(headerColorHex || selectedColorHex) : null;
 
     const dto: SiteSetting = {
       ...setting,
-      logoLightUrl: logoLightUrl || "",
-      logoDarkUrl: logoDarkUrl || "",
-      baseColor: hsl,
+      logoLightUrl: logoLightUrl ?? "",
+      logoDarkUrl: logoDarkUrl ?? "",
+      baseColor: baseHsl,
+      headerStyle,
+      headerColor: headerHsl,
     };
 
     await updateMutation.mutateAsync(dto);
-    // Optionally: show a toast
-  }
+  };
 
-  // 11) Loading state
   if (isLoading) {
     return (
-      <div className="p-6 text-center text-gray-500 dark:text-gray-400">
+      <div className="p-6 text-center text-gray-500 dark:text-gray-400 animate-pulse">
         Loading appearance settings…
       </div>
     );
   }
 
+  /* ────────────────────────────────────────────────────────── */
+  /* 6) Render                                                 */
+  /* ────────────────────────────────────────────────────────── */
   return (
-    <div className="max-w-3xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
-      <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow p-10"
+    >
+      <h2 className="text-3xl font-semibold mb-10 text-center text-gray-900 dark:text-gray-100">
         Appearance Settings
       </h2>
-      <form onSubmit={handleSubmit} className="space-y-8">
-        {/* ===== LIGHT LOGO ===== */}
-        <div className="grid grid-cols-3 gap-4 items-center">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Light Logo
-            </label>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Upload the logo used on light backgrounds.
-            </p>
-          </div>
-          <div className="col-span-2 flex items-center space-x-4">
-            {/* Preview */}
-            <div className="h-20 w-20 bg-gray-50 dark:bg-gray-700 rounded-md border overflow-hidden flex items-center justify-center">
-              {logoLightPreview ? (
-                <img
-                  src={logoLightPreview}
-                  alt="Light Logo Preview"
-                  className="h-full w-full object-contain"
-                />
-              ) : (
-                <span className="text-gray-400 dark:text-gray-500">Preview</span>
-              )}
-            </div>
 
-            {/* Button + overlay input */}
-            <div className="relative">
-              <Button variant="outline" size="sm" type="button">
-                {logoLightPreview ? "Replace Light Logo" : "Upload Light Logo"}
-              </Button>
-              <input
-                ref={lightFileRef}
-                type="file"
-                accept="image/*"
-                onChange={handleLightLogoChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+      <form onSubmit={handleSubmit}>
+        {/* Logos -------------------------------------------------- */}
+        <Row label="Light Logo" description="Shown on light backgrounds.">
+          <LogoUploader
+            previewUrl={logoLightPreview}
+            fileRef={lightFileRef}
+            placeholderBg="bg-gray-50 dark:bg-gray-700"
+            onChange={handleLogoChange("light")}
+            uploading={uploadLogoMutation.isPending}
+            cta={logoLightPreview ? "Replace" : "Upload"}
+          />
+        </Row>
+
+        <Row label="Dark Logo" description="Shown on dark backgrounds.">
+          <LogoUploader
+            previewUrl={logoDarkPreview}
+            fileRef={darkFileRef}
+            placeholderBg="bg-gray-800 dark:bg-gray-900"
+            onChange={handleLogoChange("dark")}
+            uploading={uploadLogoMutation.isPending}
+            cta={logoDarkPreview ? "Replace" : "Upload"}
+          />
+        </Row>
+
+        <hr className="my-6 border-gray-200 dark:border-gray-700" />
+
+        {/* Brand colour ------------------------------------------- */}
+        <Row label="Brand Colour" description="Primary hue for your brand.">
+          <div className="flex items-center gap-3 flex-wrap">
+            {PRESET_COLORS.map((hex) => (
+              <ColorSwatch
+                key={hex}
+                hex={hex}
+                selected={selectedColorHex.toLowerCase() === hex.toLowerCase()}
+                onClick={() => handleColorClick(hex)}
               />
-            </div>
-
-            {/* Spinner if uploading */}
-            {uploadLogoMutation.isPending && (
-              <span className="text-gray-500 dark:text-gray-400 text-sm">Uploading…</span>
-            )}
+            ))}
+            <input
+              type="color"
+              value={selectedColorHex}
+              onChange={handleCustomColor}
+              className="h-9 w-9 rounded-full cursor-pointer border-none p-0"
+            />
           </div>
-        </div>
+        </Row>
 
-        {/* ===== DARK LOGO ===== */}
-        <div className="grid grid-cols-3 gap-4 items-center">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Dark Logo
-            </label>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Upload the logo used on dark backgrounds.
-            </p>
-          </div>
-          <div className="col-span-2 flex items-center space-x-4">
-            {/* Preview */}
-            <div className="h-20 w-20 bg-gray-800 dark:bg-gray-900 rounded-md border overflow-hidden flex items-center justify-center">
-              {logoDarkPreview ? (
-                <img
-                  src={logoDarkPreview}
-                  alt="Dark Logo Preview"
-                  className="h-full w-full object-contain"
-                />
-              ) : (
-                <span className="text-gray-500 dark:text-gray-600">Preview</span>
-              )}
-            </div>
-
-            {/* Button + overlay input */}
-            <div className="relative">
-              <Button variant="outline" size="sm" type="button">
-                {logoDarkPreview ? "Replace Dark Logo" : "Upload Dark Logo"}
-              </Button>
-              <input
-                ref={darkFileRef}
-                type="file"
-                accept="image/*"
-                onChange={handleDarkLogoChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              />
-            </div>
-
-            {uploadLogoMutation.isPending && (
-              <span className="text-gray-500 dark:text-gray-400 text-sm">Uploading…</span>
-            )}
-          </div>
-        </div>
-
-        <hr className="border-gray-200 dark:border-gray-700" />
-
-        {/* ===== BRAND COLOR ===== */}
-        <div className="grid grid-cols-3 gap-4 items-center">
-          <div>
-            <div className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Brand Color
-            </div>
-            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-              Select or customize your primary brand color.
-            </p>
-          </div>
-          <div className="col-span-2 space-y-4">
-            {/* Preset Swatches + Color Input */}
-            <div className="flex items-center space-x-3">
-              {PRESET_COLORS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => handleColorSelect(c)}
-                  className={`h-8 w-8 rounded-full border-2 ${
-                    selectedColor.toLowerCase() === c.toLowerCase()
-                      ? "border-gray-900 dark:border-gray-100"
-                      : "border-transparent"
-                  }`}
-                  style={{ backgroundColor: c }}
-                />
+        {/* Header style ------------------------------------------ */}
+        <Row label="Header Style" description="Toggle between animated gradient or a solid bar.">
+          <div className="flex flex-col gap-4 w-full">
+            <div className="flex items-center gap-6">
+              {(["gradient", "solid"] as const).map((style) => (
+                <label key={style} className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    value={style}
+                    checked={headerStyle === style}
+                    onChange={() => setHeaderStyle(style)}
+                  />
+                  <span className="capitalize">{style}</span>
+                </label>
               ))}
+            </div>
 
-              {/* Always‐visible hex color input */}
-              <div className="h-8 w-8 rounded-full overflow-hidden border border-gray-300 dark:border-gray-600">
+            {headerStyle === "solid" && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25 }}
+                className="flex items-center gap-3 flex-wrap"
+              >
+                {PRESET_COLORS.map((hex) => (
+                  <ColorSwatch
+                    key={hex}
+                    hex={hex}
+                    selected={headerColorHex.toLowerCase() === hex.toLowerCase()}
+                    onClick={() => setHeaderColorHex(hex)}
+                  />
+                ))}
                 <input
                   type="color"
-                  value={selectedColor}
-                  onChange={handleCustomColor}
-                  className="h-full w-full border-none p-0"
+                  value={headerColorHex || selectedColorHex}
+                  onChange={(e) => setHeaderColorHex(e.target.value)}
+                  className="h-9 w-9 rounded-full cursor-pointer border-none p-0"
                 />
-              </div>
-            </div>
-
-            {/* Show current HSL value */}
-            <div>
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                Current HSL: <span className="font-mono text-sm">{setting?.baseColor || "—"}</span>
-              </p>
-            </div>
+              </motion.div>
+            )}
           </div>
-        </div>
+        </Row>
 
-        {/* ===== ACTION BUTTONS ===== */}
-        <div className="flex justify-end space-x-2">
+        {/* Action buttons ---------------------------------------- */}
+        <div className="flex justify-end mt-10 gap-3">
           <Button variant="outline" size="sm" type="button">
             Cancel
           </Button>
@@ -340,6 +315,77 @@ export default function AppearanceForm() {
           </Button>
         </div>
       </form>
+    </motion.div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────────────
+ * Reusable sub‑components
+ * ───────────────────────────────────────────────────────────── */
+function LogoUploader({
+  previewUrl,
+  placeholderBg,
+  fileRef,
+  onChange,
+  uploading,
+  cta,
+}: {
+  previewUrl: string | null;
+  placeholderBg: string;
+  fileRef: React.RefObject<HTMLInputElement | null>;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  uploading: boolean;
+  cta: string;
+}) {
+  return (
+    <div className="flex items-center gap-5 flex-wrap">
+      <div
+        className={`h-24 w-24 rounded-lg border overflow-hidden flex items-center justify-center ${placeholderBg}`}
+      >
+        {previewUrl ? (
+          <img src={previewUrl} alt="Preview" className="h-full w-full object-contain" />
+        ) : (
+          <span className="text-xs text-gray-400 dark:text-gray-500">Preview</span>
+        )}
+      </div>
+
+      <div className="relative">
+        <Button variant="outline" size="sm" type="button">
+          {uploading ? "Uploading…" : cta + " Logo"}
+        </Button>
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          onChange={onChange}
+          className="absolute inset-0 opacity-0 cursor-pointer"
+        />
+      </div>
     </div>
+  );
+}
+
+function ColorSwatch({
+  hex,
+  selected,
+  onClick,
+}: {
+  hex: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <motion.button
+      type="button"
+      onClick={onClick}
+      initial={false}
+      animate={{ scale: selected ? 1.15 : 1 }}
+      className={`h-9 w-9 rounded-full border-2 transition shadow-sm focus:outline-none ${
+        selected
+          ? "ring-2 ring-offset-2 ring-gray-800 dark:ring-gray-200 border-white"
+          : "border-transparent"
+      }`}
+      style={{ backgroundColor: hex }}
+    />
   );
 }

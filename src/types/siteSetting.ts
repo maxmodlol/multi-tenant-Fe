@@ -7,4 +7,6 @@ export interface SiteSetting {
   logoDarkUrl?: string | null;
   baseColor: string; // "216 56% 45%"
   brandScale: BrandScale;
+  headerStyle: "gradient" | "solid";
+  headerColor?: string | null;
 }

@@ -14,7 +14,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   let cssVars = "";
   try {
     const tenant = await detectTenantServerOnly();
-    console.log("at root", tenant); // ✅ now returns tenant from cookie
     const s = await fetchSiteSetting(tenant);
 
     for (const [lvl, hsl] of Object.entries(s.brandScale ?? {})) {
