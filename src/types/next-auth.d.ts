@@ -13,6 +13,8 @@ declare module "next-auth" {
       token: string;
       /** your database user id */
       id: string;
+      /** user avatar URL */
+      avatarUrl?: string | null;
     };
     status: "authenticated" | "unauthenticated" | "loading";
   }

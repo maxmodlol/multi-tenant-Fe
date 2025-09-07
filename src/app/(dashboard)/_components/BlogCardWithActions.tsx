@@ -9,6 +9,9 @@ import {
 } from "@explore/components/ui/dropdown-menu";
 import { Button } from "@/src/components/ui/button";
 import { BlogCardData } from "@explore/types/blogs";
+import { useRouter } from "next/navigation";
+import { useDeleteBlog } from "@/src/hooks/dashboard/mutations/useBlogMutations";
+import { toast } from "react-hot-toast";
 
 export default function BlogCardWithActions({
   blog,
@@ -18,6 +21,8 @@ export default function BlogCardWithActions({
   type: "grid" | "related";
 }) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+  const deleteMut = useDeleteBlog();
 
   return (
     <div className="relative group">
@@ -45,14 +50,24 @@ export default function BlogCardWithActions({
         <DropdownMenuContent className="z-30 w-32">
           <DropdownMenuItem
             onClick={() => {
-              /* edit */
+              router.push(`/dashboard/blogs/editor/${blog.id}`);
+              setOpen(false);
             }}
           >
             Edit
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
-              /* delete */
+              deleteMut.mutate(blog.id, {
+                onSuccess: () => {
+                  toast.success("تم الحذف بنجاح");
+                  setOpen(false);
+                },
+                onError: (e) => {
+                  toast.error((e as Error).message);
+                  setOpen(false);
+                },
+              });
             }}
           >
             Delete

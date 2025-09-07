@@ -57,19 +57,7 @@ export function AddMemberModal({
     }
     const d = (domain || "").trim().toLowerCase();
     if (!d) {
-      setDomainError("النطاق الفرعي مطلوب");
-      return;
-    }
-    if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(d)) {
-      setDomainError("صيغة النطاق غير صحيحة");
-      return;
-    }
-    if (RESERVED.includes(d)) {
-      setDomainError("هذا النطاق محجوز");
-      return;
-    }
-    if (tenants.some((t) => t.domain.toLowerCase() === d)) {
-      setDomainError("النطاق مستخدم مسبقًا");
+      setDomainError("يرجى اختيار نطاق فرعي");
       return;
     }
     setDomainError(null);
@@ -175,13 +163,18 @@ export function AddMemberModal({
           {/* Domain / Tenant Selector */}
           {role === "PUBLISHER" ? (
             <div>
-              <label className="block text-sm font-medium">Sub-domain</label>
-              <Input
+              <label className="block text-sm font-medium">Tenant (sub-domain)</label>
+              <Select
                 value={domain}
-                onChange={(e) => setDomain(e.target.value)}
-                placeholder="Enter new sub-domain"
-                required
-              />
+                onChange={(val) => setDomain(val as string)}
+                className="w-full"
+              >
+                {tenants.map((t: TenantDTO) => (
+                  <Select.Item key={t.id} value={t.domain}>
+                    {t.domain}
+                  </Select.Item>
+                ))}
+              </Select>
               {domainError && <p className="mt-1 text-xs text-red-500">{domainError}</p>}
             </div>
           ) : role === "ADMIN_HELPER" ? (

@@ -38,7 +38,7 @@ export default async function SearchPage(props: Props) {
   return (
     <main className="max-w-6xl mx-auto p-6">
       {/* Search Top Ad */}
-      <SearchTopAd tenantId="main" />
+      <SearchTopAd />
 
       <h1 className="text-2xl font-bold mb-4">نتائج البحث عن «{q}»</h1>
       {results.length === 0 ? (
@@ -68,7 +68,7 @@ export default async function SearchPage(props: Props) {
 
       {/* Search Bottom Ad */}
       <div className="mt-8">
-        <SearchBottomAd tenantId="main" />
+        <SearchBottomAd />
       </div>
     </main>
   );
