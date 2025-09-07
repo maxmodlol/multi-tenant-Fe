@@ -1,7 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // produce a standalone server bundle that Plesk / Passenger can run directly
-  output: "standalone",
+  // Only use standalone in production and when not on Windows
+  ...(process.env.NODE_ENV === "production" &&
+    process.platform !== "win32" && { output: "standalone" }),
 
   reactStrictMode: true,
   eslint: {

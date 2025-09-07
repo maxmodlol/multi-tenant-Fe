@@ -21,10 +21,30 @@ import { useSession } from "next-auth/react";
 import type { Role } from "../settings/settings-config";
 import { toast } from "react-hot-toast";
 import { AddMemberModal } from "../../_components/AddMemberModal";
+import { Select } from "@/src/components/ui/select";
+import { useTenants } from "@/src/hooks/dashboard/useTenants";
 
 export default function UsersAndTeamsForm() {
-  const { data: members = [], isLoading, refetch } = useMembers();
   const { data: session } = useSession();
+  const isAdmin = session?.user?.role === "ADMIN";
+  const currentTenant = session?.user?.tenant ?? "main";
+
+  // Admin can filter by tenant; default "all". Publishers/editors locked to their tenant.
+  // Seed from URL ?tenant=slug to deep-link from admin dashboard quick actions
+  const url = typeof window !== "undefined" ? new URL(window.location.href) : null;
+  const seedTenant = url?.searchParams.get("tenant") || undefined;
+  const [tenantFilter, setTenantFilter] = useState<string>(
+    isAdmin ? seedTenant || "all" : currentTenant,
+  );
+
+  const { data: tenants = [] } = useTenants();
+  const {
+    data: members = [],
+    isLoading,
+    refetch,
+  } = useMembers({
+    tenant: isAdmin ? (tenantFilter === "all" ? "all" : tenantFilter) : undefined,
+  });
   const deleteMember = useDeleteMember();
   const createMember = useCreateMember();
   const updateMember = useUpdateMember();
@@ -66,22 +86,44 @@ export default function UsersAndTeamsForm() {
 
   return (
     <div className="space-y-6">
-      <Button
-        onClick={() => {
-          setEditingMember(null);
-          setAddOpen(true);
-        }}
-        variant="primary"
-        size="sm"
-      >
-        + Add team member
-      </Button>
+      <div className="flex items-center justify-between gap-4 bg-background-secondary/60 border border-border-secondary rounded-lg p-3">
+        {isAdmin && (
+          <Select
+            value={tenantFilter}
+            onChange={(v) => {
+              setTenantFilter(v);
+              refetch();
+            }}
+            className="w-64"
+          >
+            <Select.Item value="all">All tenants</Select.Item>
+            {tenants.map((t) => (
+              <Select.Item key={t.domain} value={t.domain}>
+                {t.domain}
+              </Select.Item>
+            ))}
+          </Select>
+        )}
+
+        {session?.user?.role !== "EDITOR" && (
+          <Button
+            onClick={() => {
+              setEditingMember(null);
+              setAddOpen(true);
+            }}
+            variant="primary"
+            size="sm"
+          >
+            + Add team member
+          </Button>
+        )}
+      </div>
 
       <AddMemberModal
         open={isAddOpen}
         onOpenChange={setAddOpen}
-        currentDomain={session?.user?.tenant ?? "main"}
-        isMainAdmin={session?.user?.role === "ADMIN"}
+        currentDomain={currentTenant}
+        isMainAdmin={isAdmin}
         onCreate={handleSave}
         initialData={
           editingMember
@@ -123,26 +165,35 @@ export default function UsersAndTeamsForm() {
       </Dialog>
 
       {/* Members table */}
-      <div className="bg-white rounded-xl shadow-md">
+      <div className="rounded-xl border border-border-secondary bg-background-secondary shadow-custom-1">
         <table className="min-w-full">
           <thead>
-            <tr className="border-b border-gray-200">
-              <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Name</th>
-              <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Email</th>
-              <th className="px-6 py-4 text-right text-sm font-medium text-gray-600">Date added</th>
-              <th className="px-6 py-4 text-center text-sm font-medium text-gray-600">Actions</th>
+            <tr className="border-b border-border-secondary bg-background-primary/40">
+              <th className="px-6 py-4 text-right text-xs font-medium text-text-secondary">Name</th>
+              <th className="px-6 py-4 text-right text-xs font-medium text-text-secondary">
+                Email
+              </th>
+              <th className="px-6 py-4 text-right text-xs font-medium text-text-secondary">
+                Date added
+              </th>
+              <th className="px-6 py-4 text-right text-xs font-medium text-text-secondary">
+                Tenant
+              </th>
+              <th className="px-6 py-4 text-center text-xs font-medium text-text-secondary">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               <tr>
-                <td colSpan={4} className="p-8 text-center">
-                  <Loader2 className="mx-auto h-8 w-8 animate-spin text-gray-400" />
+                <td colSpan={5} className="p-8 text-center">
+                  <Loader2 className="mx-auto h-8 w-8 animate-spin text-text-tertiary" />
                 </td>
               </tr>
             ) : members.length === 0 ? (
               <tr>
-                <td colSpan={4} className="p-6 text-center text-gray-500">
+                <td colSpan={5} className="p-6 text-center text-text-tertiary">
                   No team members yet.
                 </td>
               </tr>
@@ -168,11 +219,14 @@ export default function UsersAndTeamsForm() {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {new Date(m.dateAdded).toLocaleDateString()}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                    {m.tenant ?? m.domain}
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
                     <div className="inline-flex items-center space-x-4">
                       <Edit2
                         size={18}
-                        className="text-gray-400 hover:text-gray-600 cursor-pointer"
+                        className="text-text-tertiary hover:text-text-primary cursor-pointer"
                         onClick={() => {
                           setEditingMember(m);
                           setAddOpen(true);

@@ -1,143 +1,295 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useSession } from "next-auth/react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@explore/components/ui/button";
 import { Input } from "@explore/components/ui/input";
+import { getApiPrivate } from "@/src/config/axiosPrivate";
+import { toast } from "react-hot-toast";
+import clsx from "clsx";
+
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  avatarUrl?: string | null;
+  bio?: string | null;
+}
 
 export default function AccountSettingsForm() {
-  const [currentPwd, setCurrentPwd] = useState("");
-  const [newPwd, setNewPwd] = useState("");
-  const [confirmPwd, setConfirmPwd] = useState("");
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [submitting, setSubmitting] = useState(false);
+  const { data: session } = useSession();
+  const [name, setName] = useState(session?.user?.name || "");
+  const [bio, setBio] = useState("");
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [showPasswords, setShowPasswords] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  async function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setSuccess(null);
+  // Load user profile data when component mounts
+  useEffect(() => {
+    async function loadUserProfile() {
+      try {
+        setLoading(true);
+        const api = await getApiPrivate();
+        const { data } = await api.get<UserProfile>("/auth/me/profile");
 
-    if (newPwd !== confirmPwd) {
-      setError("كلمة المرور الجديدة وتأكيدها غير متطابقين.");
-      return;
+        console.log("Loaded user profile:", data);
+
+        // Initialize form with existing user data
+        setName(data.name || "");
+        setBio(data.bio || "");
+
+        // Set avatar preview to existing avatar if available
+        if (data.avatarUrl) {
+          setAvatarPreview(data.avatarUrl);
+        }
+      } catch (error) {
+        console.error("Failed to load user profile:", error);
+        toast.error("فشل في تحميل بيانات الملف الشخصي");
+      } finally {
+        setLoading(false);
+      }
     }
-    if (newPwd.length < 8) {
-      setError("يجب أن تكون كلمة المرور الجديدة 8 أحرف على الأقل.");
-      return;
-    }
 
-    setSubmitting(true);
+    if (session?.user) {
+      loadUserProfile();
+    }
+  }, [session?.user]);
+
+  useEffect(() => {
+    return () => {
+      if (avatarPreview && avatarPreview.startsWith("blob:")) {
+        URL.revokeObjectURL(avatarPreview);
+      }
+    };
+  }, [avatarPreview]);
+
+  const passwordStrength = useMemo(() => {
+    let score = 0;
+    if (newPassword.length >= 8) score++;
+    if (/[A-Z]/.test(newPassword)) score++;
+    if (/[a-z]/.test(newPassword)) score++;
+    if (/[0-9]/.test(newPassword)) score++;
+    if (/[^A-Za-z0-9]/.test(newPassword)) score++;
+    return score; // 0..5
+  }, [newPassword]);
+
+  async function saveProfile() {
     try {
-      const res = await fetch("/settings/account/password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          currentPassword: currentPwd,
-          newPassword: newPwd,
-        }),
-      });
-      if (!res.ok) throw new Error("فشل في تحديث كلمة المرور.");
-      setSuccess("تم تحديث كلمة المرور بنجاح.");
-      setCurrentPwd("");
-      setNewPwd("");
-      setConfirmPwd("");
-    } catch (err: any) {
-      setError(err.message || "حدث خطأ غير متوقع.");
+      setSaving(true);
+      const api = await getApiPrivate();
+      let avatarUrl: string | null | undefined;
+
+      if (avatarFile) {
+        // Upload new avatar
+        const fd = new FormData();
+        fd.append("file", avatarFile);
+        const { data } = await api.post<{ url: string }>("/auth/me/avatar", fd, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        avatarUrl = data.url;
+      } else if (avatarPreview === null) {
+        // User wants to remove avatar
+        avatarUrl = null;
+      } else if (avatarPreview && !avatarPreview.startsWith("blob:")) {
+        // Keep existing avatar
+        avatarUrl = avatarPreview;
+      }
+
+      await api.put("/auth/me/profile", { name, bio, avatarUrl });
+      toast.success("تم حفظ الملف الشخصي");
+
+      // Update the avatar preview with the new URL
+      if (avatarUrl) {
+        setAvatarPreview(avatarUrl);
+      } else {
+        setAvatarPreview(null);
+      }
+      setAvatarFile(null); // Clear the file since it's now uploaded
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || e?.message || "فشل الحفظ");
     } finally {
-      setSubmitting(false);
+      setSaving(false);
+    }
+  }
+
+  async function changePassword() {
+    try {
+      setSaving(true);
+      const api = await getApiPrivate();
+      await api.post("/auth/me/change-password", { oldPassword, newPassword });
+      toast.success("تم تغيير كلمة المرور");
+      setOldPassword("");
+      setNewPassword("");
+    } catch (e: any) {
+      toast.error(e?.response?.data?.error || e?.message || "فشل التغيير");
+    } finally {
+      setSaving(false);
     }
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="
-        max-w-lg 
-        space-y-6 
-        bg-background-secondary 
-        p-6 
-        rounded-lg 
-        shadow-custom-2
-      "
-    >
-      <h3 className="text-lg font-medium text-text-primary">تغيير كلمة المرور</h3>
-
-      {error && (
-        <div className="rounded-md bg-error-50 border border-error p-3">
-          <p className="text-sm text-error">{error}</p>
+    <div className="space-y-8">
+      {loading ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-2"></div>
+            <p className="text-sm text-gray-600">جاري تحميل البيانات...</p>
+          </div>
         </div>
+      ) : (
+        <>
+          <div className="rounded-lg border border-border-secondary bg-background-secondary p-4 space-y-3">
+            <div className="text-sm text-text-tertiary">الملف الشخصي</div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm mb-1">الاسم</label>
+                <Input value={name} onChange={(e) => setName(e.target.value)} />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">السيرة</label>
+                <Input value={bio} onChange={(e) => setBio(e.target.value)} />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm mb-1">الصورة الشخصية</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
+                    <img
+                      src={
+                        avatarPreview || (session?.user as any)?.avatarUrl || "/author-avatar.png"
+                      }
+                      alt="avatar"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        // Fallback to default avatar if image fails to load
+                        (e.target as HTMLImageElement).src = "/author-avatar.png";
+                      }}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <div
+                      className={clsx(
+                        "border border-dashed rounded-lg p-3 text-sm cursor-pointer",
+                        "border-gray-300 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800",
+                      )}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const f = e.dataTransfer.files?.[0];
+                        if (f) {
+                          setAvatarFile(f);
+                          const url = URL.createObjectURL(f);
+                          setAvatarPreview((prev) => {
+                            if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+                            return url;
+                          });
+                        }
+                      }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <input
+                          id="avatar-input"
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const f = e.target.files?.[0] || null;
+                            setAvatarFile(f);
+                            if (f) {
+                              const url = URL.createObjectURL(f);
+                              setAvatarPreview((prev) => {
+                                if (prev && prev.startsWith("blob:")) URL.revokeObjectURL(prev);
+                                return url;
+                              });
+                            } else {
+                              setAvatarPreview(null);
+                            }
+                          }}
+                        />
+                        <label htmlFor="avatar-input" className="underline cursor-pointer">
+                          اختر صورة
+                        </label>
+                        <span className="text-gray-500">أو اسحبها وأفلتها هنا</span>
+                      </div>
+                    </div>
+                    {(avatarPreview || (session?.user as any)?.avatarUrl) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAvatarFile(null);
+                          setAvatarPreview(null);
+                        }}
+                        className="text-sm text-red-600 hover:text-red-800 underline"
+                      >
+                        إزالة الصورة
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={saveProfile}
+                disabled={saving}
+                className="bg-background-brand-solid text-text-primary-brand hover:bg-background-brand-solid-hover"
+              >
+                حفظ
+              </Button>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-border-secondary bg-background-secondary p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-text-tertiary">تغيير كلمة المرور</div>
+              <Button variant="ghost" size="sm" onClick={() => setShowPasswords((s) => !s)}>
+                {showPasswords ? "إخفاء" : "إظهار"}
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-sm mb-1">كلمة المرور الحالية</label>
+                <Input
+                  type={showPasswords ? "text" : "password"}
+                  value={oldPassword}
+                  onChange={(e) => setOldPassword(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm mb-1">كلمة المرور الجديدة</label>
+                <Input
+                  type={showPasswords ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="h-2 rounded bg-gray-200 dark:bg-gray-800 overflow-hidden">
+              <div
+                className={clsx(
+                  "h-full transition-all",
+                  passwordStrength <= 2 && "bg-error-400",
+                  passwordStrength === 3 && "bg-warning-400",
+                  passwordStrength >= 4 && "bg-success-400",
+                )}
+                style={{ width: `${(passwordStrength / 5) * 100}%` }}
+              />
+            </div>
+            <div className="flex justify-end">
+              <Button
+                onClick={changePassword}
+                disabled={saving}
+                className="bg-background-brand-solid text-text-primary-brand hover:bg-background-brand-solid-hover"
+              >
+                تغيير
+              </Button>
+            </div>
+          </div>
+        </>
       )}
-      {success && (
-        <div className="rounded-md bg-success-50 border border-success p-3">
-          <p className="text-sm text-success">{success}</p>
-        </div>
-      )}
-
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">
-          كلمة المرور الحالية
-        </label>
-        <Input
-          type="password"
-          value={currentPwd}
-          onChange={(e) => setCurrentPwd(e.target.value)}
-          required
-          placeholder="••••••••"
-          className="w-full"
-        />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">
-          كلمة المرور الجديدة
-        </label>
-        <Input
-          type="password"
-          value={newPwd}
-          onChange={(e) => setNewPwd(e.target.value)}
-          required
-          minLength={8}
-          placeholder="••••••••"
-          className="w-full"
-        />
-        <p className="mt-1 text-xs text-text-secondary">يجب أن تكون 8 أحرف على الأقل.</p>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-text-primary mb-1">
-          تأكيد كلمة المرور الجديدة
-        </label>
-        <Input
-          type="password"
-          value={confirmPwd}
-          onChange={(e) => setConfirmPwd(e.target.value)}
-          required
-          minLength={8}
-          placeholder="••••••••"
-          className="w-full"
-        />
-      </div>
-
-      <div className="flex justify-end space-x-2 pt-4 border-t border-border-secondary">
-        <Button
-          variant="outline"
-          size="sm"
-          type="button"
-          onClick={() => {
-            setCurrentPwd("");
-            setNewPwd("");
-            setConfirmPwd("");
-            setError(null);
-            setSuccess(null);
-          }}
-          disabled={submitting}
-        >
-          إلغاء
-        </Button>
-        <Button size="sm" type="submit" disabled={submitting}>
-          {submitting ? "جاري الحفظ..." : "حفظ التغييرات"}
-        </Button>
-      </div>
-    </form>
+    </div>
   );
 }

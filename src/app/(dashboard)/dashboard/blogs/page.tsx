@@ -32,6 +32,47 @@ import { useRouter } from "next/navigation";
 export default function BlogsPage() {
   const { status, data: session } = useSession();
   const router = useRouter();
+  const url = typeof window !== "undefined" ? new URL(window.location.href) : null;
+  const seedTenant = url?.searchParams.get("tenant") || undefined;
+
+  // Move all hooks to the top before any conditional returns
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [previewId, setPreviewId] = useState<string | null>(null);
+  const [openMenuFor, setOpenMenuFor] = useState<string | null>(null);
+
+  const debouncedSearch = useMemo(() => search.trim(), [search]);
+  const tableRef = useRef<HTMLDivElement>(null);
+
+  // Compute tenant filter
+  const tenantFilter =
+    session?.user?.role === "ADMIN" ? seedTenant || "all" : session?.user?.tenant;
+
+  // Move all hooks to the top
+  const { data, isError, isLoading } = useDashboardBlogs({
+    tenant: tenantFilter,
+    page,
+    limit: 9,
+    search: debouncedSearch || undefined,
+    category: categoryFilter === "all" ? undefined : categoryFilter,
+    status: statusFilter === "all" ? undefined : (statusFilter as BlogStatus),
+  });
+
+  const approveMut = useApproveBlog();
+  const declineMut = useDeclineBlog();
+  const deleteMut = useDeleteBlog();
+
+  useEffect(() => {
+    function onClickOutside(evt: MouseEvent) {
+      if (openMenuFor && tableRef.current && !tableRef.current.contains(evt.target as Node)) {
+        setOpenMenuFor(null);
+      }
+    }
+    document.addEventListener("click", onClickOutside);
+    return () => document.removeEventListener("click", onClickOutside);
+  }, [openMenuFor]);
 
   // wait for auth
   if (status === "loading") {
@@ -46,27 +87,10 @@ export default function BlogsPage() {
   }
 
   // only now compute tenant
-  const tenantFilter = session.user.role === "ADMIN" ? "all" : session.user.tenant;
-
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [previewId, setPreviewId] = useState<string | null>(null);
-  const [openMenuFor, setOpenMenuFor] = useState<string | null>(null);
-
-  const debouncedSearch = useMemo(() => search.trim(), [search]);
-  const tableRef = useRef<HTMLDivElement>(null);
-
-  // ↓ AFTER
-  const { data, isError, isLoading } = useDashboardBlogs({
-    tenant: tenantFilter,
-    page,
-    limit: 9,
-    search: debouncedSearch || undefined,
-    category: categoryFilter === "all" ? undefined : categoryFilter,
-    status: statusFilter === "all" ? undefined : (statusFilter as BlogStatus),
-  });
+  // Admin sees "all" blogs across tenants; publisher sees tenant blogs; editor is redirected
+  if (session.user.role === "EDITOR") {
+    return <div className="p-4 text-center">غير مصرح</div>;
+  }
 
   const categories =
     data?.blogs
@@ -76,26 +100,13 @@ export default function BlogsPage() {
         return acc;
       }, [])
       .map((c) => ({ value: c.id, label: c.name })) ?? [];
-
-  const approveMut = useApproveBlog();
-  const declineMut = useDeclineBlog();
-  const deleteMut = useDeleteBlog();
-  useEffect(() => {
-    function onClickOutside(evt: MouseEvent) {
-      if (openMenuFor && tableRef.current && !tableRef.current.contains(evt.target as Node)) {
-        setOpenMenuFor(null);
-      }
-    }
-    document.addEventListener("mousedown", onClickOutside);
-    return () => document.removeEventListener("mousedown", onClickOutside);
-  }, [openMenuFor]);
   if (isError) return <div className="p-4 text-center">حدث خطأ أثناء جلب البيانات.</div>;
   if (data?.blogs.length === 0)
     return <div className="p-4 text-center">لا توجد مدونات لعرضها.</div>;
   return (
     <div dir="rtl" className="space-y-4 text-right text-sm">
       {/* — Top Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-background-secondary/60 border border-border-secondary rounded-lg p-3">
         <div className="flex items-center gap-2">
           <Select
             value={statusFilter}
@@ -129,22 +140,24 @@ export default function BlogsPage() {
             placeholder="بحث…"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-48 text-xs"
+            className="w-48 text-xs bg-background-primary border-border-secondary"
           />
         </div>
 
-        <Button
-          className="bg-red-600 hover:bg-brand-700 px-3 py-1 text-white text-xs"
-          onClick={() => router.push("/dashboard/blogs/editor/new")}
-        >
-          إضافة مدونة
-        </Button>
+        {session.user.role !== "ADMIN" && (
+          <Button
+            className="px-3 py-1 text-xs bg-background-brand-solid text-text-primary-brand hover:bg-background-brand-solid-hover"
+            onClick={() => router.push("/dashboard/blogs/editor/new")}
+          >
+            إضافة مدونة
+          </Button>
+        )}
       </div>
 
       {/* — Table */}
       <div
         ref={tableRef}
-        className="relative overflow-visible rounded-lg border border-gray-300 bg-background"
+        className="relative overflow-visible rounded-lg border border-border-secondary bg-background-secondary"
       >
         <Table>
           <TableHeader>

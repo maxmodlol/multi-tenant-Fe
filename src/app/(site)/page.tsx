@@ -3,12 +3,22 @@ export const revalidate = 0;
 
 import { blogService } from "@explore/services/blogService";
 import { fetchCategories } from "@explore/services/categoryService";
+import { fetchSiteSetting } from "@explore/services/settingService";
+import { detectTenantServerOnly } from "@/src/lib/tenantFromServer";
 import HomeClient from "./HomeClient";
 
 export default async function Home() {
-  const [blogsData, categories] = await Promise.all([
+  const tenant = await detectTenantServerOnly();
+  const [blogsData, categories, siteSetting] = await Promise.all([
     blogService.getAllBlogs("all", 1, 11),
     fetchCategories(),
+    fetchSiteSetting(tenant).catch(
+      () =>
+        ({
+          siteTitle: "الموارد والرؤى",
+          siteDescription: "أحدث أخبار الصناعة، المقالات، الإرشادات، والنصائح",
+        }) as any,
+    ),
   ]);
 
   return (
@@ -16,10 +26,10 @@ export default async function Home() {
       {/* Top Section */}
       <header className="max-w-screen-xl mx-auto">
         <h1 className="text-right text-4xl font-bold text-gray-800 dark:text-gray-200">
-          الموارد والرؤى
+          {siteSetting.siteTitle || "الموارد والرؤى"}
         </h1>
         <p className="mt-2 text-right text-gray-600 dark:text-gray-300">
-          أحدث أخبار الصناعة، المقالات، الإرشادات، والنصائح
+          {siteSetting.siteDescription || ""}
         </p>
       </header>
       <div className="my-8" />

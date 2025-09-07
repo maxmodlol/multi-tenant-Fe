@@ -6,14 +6,17 @@ import { useRelatedBlogs } from "@/src/hooks/public/useRelatedBlogs";
 
 export default function RelatedBlogs({ currentBlog }: { currentBlog: Blog }) {
   const { data: related = [] } = useRelatedBlogs(currentBlog.id);
+  const sameCategory = related.filter((b) =>
+    b.categories?.some((c) => currentBlog.categories?.some((cc) => cc.id === c.id)),
+  );
 
   // Keep only the first 4 if even, otherwise 2
   const adjusted =
-    related.length === 0
+    sameCategory.length === 0
       ? []
-      : related.length % 2 === 0
-        ? related.slice(0, 4)
-        : related.slice(0, 2);
+      : sameCategory.length % 2 === 0
+        ? sameCategory.slice(0, 4)
+        : sameCategory.slice(0, 2);
 
   if (!adjusted.length) return null;
 

@@ -67,13 +67,12 @@ export default function LoginForm() {
           <input type="checkbox" className="h-4 w-4 rounded border-gray-300" />
           Remember for 30&nbsp;days
         </label>
-        <button
-          type="button"
+        <a
+          href="/forgot-password"
           className="font-medium text-brand-700 hover:underline"
-          onClick={() => toast("Password reset coming soon!")}
         >
           Forgot password
-        </button>
+        </a>
       </div>
 
       {/* submit */}

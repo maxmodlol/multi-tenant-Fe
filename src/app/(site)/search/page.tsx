@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { blogService } from "@explore/services/blogService";
 import BlogCard from "@explore/components/BlogCard";
+import { SearchTopAd, SearchBottomAd } from "@/src/components/TenantAdInjector";
 
 interface Props {
   searchParams: Promise<{ q?: string }>;
@@ -36,6 +37,9 @@ export default async function SearchPage(props: Props) {
 
   return (
     <main className="max-w-6xl mx-auto p-6">
+      {/* Search Top Ad */}
+      <SearchTopAd tenantId="main" />
+
       <h1 className="text-2xl font-bold mb-4">نتائج البحث عن «{q}»</h1>
       {results.length === 0 ? (
         <p className="text-gray-600">لم نعثر على شيئٍ يطابق بحثك.</p>
@@ -51,7 +55,9 @@ export default async function SearchPage(props: Props) {
                   createdAt: r.createdAt,
                   author: r.author ?? { id: "", name: "غير معروف" },
                   tags: r.tags ?? [],
+                  // Pass through url + tenant; BlogCard will resolve to correct domain/subdomain and keep local port during dev
                   url: r.url,
+                  tenant: r.tenant,
                 }}
                 type="grid"
               />
@@ -59,6 +65,11 @@ export default async function SearchPage(props: Props) {
           ))}
         </ul>
       )}
+
+      {/* Search Bottom Ad */}
+      <div className="mt-8">
+        <SearchBottomAd tenantId="main" />
+      </div>
     </main>
   );
 }

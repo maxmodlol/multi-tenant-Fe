@@ -7,7 +7,7 @@ import ThemeToggle from "./ThemeToggle";
 
 export default function DashboardShell({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col lg:flex-row bg-background">
+    <div className="flex min-h-screen flex-col lg:flex-row bg-background-primary">
       <Toaster
         position="top-center"
         toastOptions={{
@@ -33,7 +33,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
 
       <SidebarProvider>
         {/* Mobile top bar */}
-        <header className="lg:hidden flex items-center justify-between gap-3 border-b px-4 py-3">
+        <header className="lg:hidden flex items-center justify-between gap-3 border-b border-border-secondary bg-background-secondary px-4 py-3">
           <div className="flex items-center gap-3">
             <DrawerToggle />
             <span className="font-bold">Dashboard</span>
@@ -43,7 +43,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
 
         {/* Main content layout */}
         <div className="flex flex-1 overflow-hidden">
-          <main className="flex-1 overflow-y-auto p-4">{children}</main>
+          <main className="flex-1 overflow-y-auto p-4 bg-background-primary">{children}</main>
         </div>
       </SidebarProvider>
     </div>

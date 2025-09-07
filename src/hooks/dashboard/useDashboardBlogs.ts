@@ -39,5 +39,9 @@ export function useDashboardBlogs({
         category,
         status, // ← renamed
       }),
+    retry(failureCount, error) {
+      if (error.message?.includes("Unauthorized")) return false;
+      return failureCount < 2;
+    },
   });
 }

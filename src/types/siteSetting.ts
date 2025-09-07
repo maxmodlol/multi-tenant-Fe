@@ -3,6 +3,9 @@ interface BrandScale {
 }
 export interface SiteSetting {
   id: string;
+  siteTitle: string;
+  siteDescription?: string | null;
+  siteIconUrl?: string | null;
   logoLightUrl?: string | null;
   logoDarkUrl?: string | null;
   baseColor: string; // "216 56% 45%"
