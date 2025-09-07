@@ -4,6 +4,7 @@ import { Blog } from "@explore/types/blogs";
 import Image from "next/image";
 import clsx from "clsx";
 import { formatDate, getTagColorClass } from "@explore/lib/utils";
+import { getAvatarUrl, handleAvatarError } from "@/src/utils/avatarUtils";
 
 /**
  * Renders the hero section of a blog, plus optional ads:
@@ -47,25 +48,41 @@ export default function BlogHero({
 
       {/* Description */}
       {blog.description && (
-        <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">{blog.description}</p>
+        <p className="text-gray-500 dark:text-gray-400 text-lg mb-2 line-clamp-3 md:line-clamp-none max-w-4xl mx-auto px-4">
+          {blog.description}
+        </p>
       )}
 
-      {/* Author + Bio small under name instead of date */}
-      <div className="flex items-center justify-center gap-3 mb-2 w-full px-4">
-        <Image
-          src={(blog as any).author?.avatarUrl || "/icons/author-avatar.svg"}
-          alt={blog.author?.name || ""}
-          width={32}
-          height={32}
-          className="rounded-full object-cover"
-        />
-        <div className="text-left min-w-0 max-w-[80vw] md:max-w-md">
-          <div className="text-base font-semibold">{blog.author?.name ?? "كاتب"}</div>
-          {(blog as any).author?.bio && (
-            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
-              {(blog as any).author.bio}
+      {/* Author - Desktop: Simple name only */}
+      <div className="hidden md:block mb-2">
+        <div className="text-base font-semibold text-gray-700 dark:text-gray-300">
+          {blog.author?.name ?? "كاتب"}
+        </div>
+      </div>
+
+      {/* Author + Bio - Mobile: Full card design */}
+      <div className="md:hidden mb-4 w-full px-4">
+        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mx-auto max-w-sm">
+          <div className="flex items-center gap-3">
+            <Image
+              src={getAvatarUrl((blog as any).author?.avatarUrl)}
+              alt={blog.author?.name || ""}
+              width={40}
+              height={40}
+              className="rounded-full object-cover flex-shrink-0"
+              onError={handleAvatarError}
+            />
+            <div className="text-left min-w-0 flex-1">
+              <div className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                {blog.author?.name ?? "كاتب"}
+              </div>
+              {(blog as any).author?.bio && (
+                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                  {(blog as any).author.bio}
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </div>
       </div>
       {/* Date in grey */}

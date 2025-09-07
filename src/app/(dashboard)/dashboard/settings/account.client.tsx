@@ -7,6 +7,7 @@ import { Input } from "@explore/components/ui/input";
 import { getApiPrivate } from "@/src/config/axiosPrivate";
 import { toast } from "react-hot-toast";
 import clsx from "clsx";
+import { getAvatarUrl, handleAvatarError } from "@/src/utils/avatarUtils";
 
 interface UserProfile {
   id: string;
@@ -158,15 +159,10 @@ export default function AccountSettingsForm() {
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100">
                     <img
-                      src={
-                        avatarPreview || (session?.user as any)?.avatarUrl || "/author-avatar.png"
-                      }
+                      src={getAvatarUrl(avatarPreview || session?.user?.avatarUrl)}
                       alt="avatar"
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        // Fallback to default avatar if image fails to load
-                        (e.target as HTMLImageElement).src = "/author-avatar.png";
-                      }}
+                      onError={handleAvatarError}
                     />
                   </div>
                   <div className="flex flex-col gap-2">

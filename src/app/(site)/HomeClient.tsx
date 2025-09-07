@@ -29,7 +29,7 @@ export default function HomeClient({
   return (
     <>
       {/* Hero Ad - Above the featured slider */}
-      <HomeHeroAd tenantId="main" />
+      <HomeHeroAd />
 
       <section className="">
         <FeaturedSlider
@@ -40,7 +40,7 @@ export default function HomeClient({
       </section>
 
       {/* Below Hero Ad - Between featured slider and blog list */}
-      <HomeBelowHeroAd tenantId="main" />
+      <HomeBelowHeroAd />
 
       <section>
         <BlogsList

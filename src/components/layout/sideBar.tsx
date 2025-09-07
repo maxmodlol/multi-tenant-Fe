@@ -17,6 +17,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import ThemeToggle from "@/src/app/(dashboard)/_components/ThemeToggle";
+import { getAvatarUrl, handleAvatarError } from "@/src/utils/avatarUtils";
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
@@ -127,11 +128,12 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
         >
           <div className="relative">
             <Image
-              src={session?.user?.image || "/icons/author-avatar.svg"}
+              src={getAvatarUrl(session?.user?.avatarUrl)}
               alt="avatar"
               width={44}
               height={44}
               className="h-11 w-11 rounded-full object-cover"
+              onError={handleAvatarError}
             />
             <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white dark:ring-gray-950" />
           </div>

@@ -92,7 +92,7 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
 
       {/* Footer Ad - Above the footer */}
       <div className="w-full">
-        <FooterAd pageType="home" tenantId="main" />
+        <FooterAd pageType="home" />
       </div>
 
       <Footer

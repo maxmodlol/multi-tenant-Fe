@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Spinner } from "@/src/components/ui/spinner";
 import { BlogEditorForm } from "../../../../_components/BlogEditorForm";
-import { useSingleBlog } from "@/src/hooks/public/useSingleBlog";
+import { useDashboardBlogById } from "@/src/hooks/dashboard/mutations/useBlogMutations";
 
 export default function BlogEditorPage() {
   const { id } = useParams();
@@ -13,7 +13,7 @@ export default function BlogEditorPage() {
 
   const { data: session, status } = useSession();
 
-  const { data: blog, isLoading, isError } = useSingleBlog(blogId);
+  const { data: blog, isLoading, isError } = useDashboardBlogById(blogId);
 
   if (status === "loading") {
     return (

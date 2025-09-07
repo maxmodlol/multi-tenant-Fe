@@ -56,7 +56,7 @@ export default async function CategoryPage(props: PageProps) {
       <div className="my-8" />
 
       {/* Category Top Ad */}
-      <CategoryTopAd pageType="category" tenantId="main" />
+      <CategoryTopAd pageType="category" />
 
       <BlogsList
         initialBlogs={blogsData.blogs}
@@ -67,7 +67,7 @@ export default async function CategoryPage(props: PageProps) {
 
       {/* Category Bottom Ad */}
       <div className="mt-8">
-        <CategoryBottomAd pageType="category" tenantId="main" />
+        <CategoryBottomAd pageType="category" />
       </div>
     </main>
   );

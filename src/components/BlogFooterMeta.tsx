@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import Image from "next/image";
+import { getAvatarUrl, handleAvatarError } from "@/src/utils/avatarUtils";
 
 const platforms = [
   {
@@ -73,11 +74,12 @@ export default function BlogFooterMeta({
       <div className="flex items-center gap-3 text-right w-full md:w-auto">
         <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-800 md:block">
           <Image
-            src={author?.avatarUrl || "/icons/author-avatar.svg"}
+            src={getAvatarUrl(author?.avatarUrl)}
             alt={author?.name ? `صورة ${author.name}` : "مؤلف مجهول"}
             width={48}
             height={48}
             className="object-cover"
+            onError={handleAvatarError}
           />
         </div>
         <div className="">

@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useCallback } from "react";
 import { useTenantAds } from "@/src/hooks/public/useTenantAds";
+import { useCurrentTenant } from "@/src/hooks/public/useCurrentTenant";
 import { TenantAdPlacement } from "@/src/types/tenantAds";
 import type { PageType } from "@/src/types/tenantAds";
 
@@ -19,9 +20,17 @@ function TenantAdInjector({
   tenantId,
 }: TenantAdInjectorProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const { data: adsByPlacement, isLoading, error } = useTenantAds(pageType, [placement], tenantId);
+  const currentTenant = useCurrentTenant();
+  const effectiveTenantId = tenantId || currentTenant;
 
-  useEffect(() => {
+  const {
+    data: adsByPlacement,
+    isLoading,
+    error,
+  } = useTenantAds(pageType, [placement], effectiveTenantId);
+
+  // Debounced ad injection to prevent rapid re-renders
+  const injectAds = useCallback(() => {
     if (!adsByPlacement || !containerRef.current) return;
 
     const ads = adsByPlacement[placement] || [];
@@ -31,13 +40,14 @@ function TenantAdInjector({
     containerRef.current.innerHTML = "";
 
     // Inject each ad
-    ads.forEach((ad) => {
+    ads.forEach((ad, index) => {
       if (ad.isEnabled && ad.codeSnippet) {
         const adContainer = document.createElement("div");
         adContainer.className = `tenant-ad ${className}`;
         adContainer.setAttribute("data-ad-id", ad.id);
         adContainer.setAttribute("data-ad-placement", ad.placement);
         adContainer.setAttribute("data-ad-appearance", ad.appearance);
+        adContainer.setAttribute("data-ad-index", index.toString());
 
         // Apply appearance classes
         switch (ad.appearance) {
@@ -62,31 +72,56 @@ function TenantAdInjector({
         adContainer.innerHTML = ad.codeSnippet;
         containerRef.current!.appendChild(adContainer);
 
-        // Execute any scripts in the ad code
+        // Execute any scripts in the ad code with proper scoping
         const scripts = adContainer.querySelectorAll("script");
-        scripts.forEach((script) => {
+        scripts.forEach((script, scriptIndex) => {
           const newScript = document.createElement("script");
+
           if (script.src) {
             newScript.src = script.src;
-          } else {
-            newScript.textContent = script.textContent;
+          } else if (script.textContent) {
+            // Wrap the script content in an IIFE to avoid variable conflicts
+            const wrappedScript = `
+              (function() {
+                try {
+                  ${script.textContent}
+                } catch (error) {
+                  console.warn('Ad script error:', error);
+                }
+              })();
+            `;
+            newScript.textContent = wrappedScript;
           }
+
+          // Add unique attributes to prevent conflicts
+          newScript.setAttribute("data-ad-script", `${ad.id}-${scriptIndex}`);
           adContainer.appendChild(newScript);
         });
       }
     });
   }, [adsByPlacement, placement, className]);
 
-  // Show loading spinner
+  // Use debounced injection to prevent rapid re-renders
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      injectAds();
+    }, 100); // 100ms debounce
+
+    return () => clearTimeout(timeoutId);
+  }, [injectAds]);
+
+  // Cleanup effect to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (containerRef.current) {
+        containerRef.current.innerHTML = "";
+      }
+    };
+  }, []);
+
+  // Don't show loading spinner - just return empty container
   if (isLoading) {
-    return (
-      <div className={`tenant-ad-loading ${className}`}>
-        <div className="flex items-center justify-center p-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          <span className="ml-2 text-sm text-gray-500">جاري تحميل الإعلان...</span>
-        </div>
-      </div>
-    );
+    return <div ref={containerRef} className={`tenant-ad-container ${className}`} />;
   }
 
   // Show error state

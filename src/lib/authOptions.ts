@@ -50,6 +50,25 @@ export const authOptions: NextAuthOptions = {
         session.user.role = token.role as Role;
         session.user.tenant = token.tenant as string;
         session.user.token = token.raw as string;
+        
+        // Fetch user profile data including avatarUrl
+        if (token.raw) {
+          try {
+            const tenant = token.tenant as string;
+            const profileRes = await fetch(`${process.env.API_URL}/auth/me/profile`, {
+              headers: {
+                'Authorization': `Bearer ${token.raw}`,
+                'x-tenant': tenant,
+              },
+            });
+            if (profileRes.ok) {
+              const profile = await profileRes.json();
+              session.user.avatarUrl = profile.avatarUrl;
+            }
+          } catch (error) {
+            console.error('Failed to fetch user profile:', error);
+          }
+        }
       }
       return { ...session, token: token.raw as string };
     },

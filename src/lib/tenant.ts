@@ -18,17 +18,13 @@ export function parseTenant(hostname: string | undefined): Tenant {
   const host = hostname.split(":")[0].toLowerCase().trim();
   const parts = host.split(".");
 
-  // localhost  |  reserved names  |  no real sub-domain (only 1-2 parts)
-  if (
-    host === "localhost" ||
-    RESERVED.includes(parts[0] as (typeof RESERVED)[number]) ||
-    parts.length < 2
-  ) {
-    return "main";
+  // Special-case localhost dev: support {sub}.localhost and {sub}.localhost.localdomain
+  if (host === "localhost" || host.endsWith(".localhost")) {
+    return parts.length >= 2 ? parts[0] : "main";
   }
 
-  // Production domain check: www.alnashra.co should be main (3 parts, www is reserved)
-  if (parts.length === 3 && RESERVED.includes(parts[0] as (typeof RESERVED)[number])) {
+  // Reserved names or no real sub-domain (only 1-2 parts)
+  if (RESERVED.includes(parts[0] as (typeof RESERVED)[number]) || parts.length < 3) {
     return "main";
   }
 
