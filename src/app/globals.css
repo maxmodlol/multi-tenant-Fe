@@ -636,10 +636,10 @@
     --text-placeholder: var(--gray-400);
     --text-placeholder-subtle: var(--gray-700);
 
-    --text-brand-primary: var(--brand-50);
+    --text-brand-primary: var(--brand-500);
     --text-brand-secondary: var(--brand-300);
     --text-brand-tertiary: var(--brand-400);
-    --text-brand-tertiary-alt: var(--brand-50);
+    --text-brand-tertiary-alt: var(--brand-500);
 
     --text-error-primary: var(--error-400);
     --text-warning-primary: var(--warning-400);
@@ -782,6 +782,143 @@
     animation: shimmer 2.5s infinite;
   }
 
+  /* subtle animated horizontal gradient utility */
+  @keyframes gradient-x {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+  .animate-gradient-x {
+    background-size: 300% 300%;
+    animation: gradient-x 8s ease-in-out infinite;
+  }
+
+  /* slow rotation utility for subtle ambient effects */
+  @keyframes spin-slow {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  /* floating particles animation */
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0px) translateX(0px);
+    }
+    25% {
+      transform: translateY(-10px) translateX(5px);
+    }
+    50% {
+      transform: translateY(-5px) translateX(-5px);
+    }
+    75% {
+      transform: translateY(-15px) translateX(3px);
+    }
+  }
+
+  /* elegant shimmer effect */
+  @keyframes shimmer-elegant {
+    0% {
+      background-position: -200% 0;
+      opacity: 0.3;
+    }
+    50% {
+      opacity: 0.6;
+    }
+    100% {
+      background-position: 200% 0;
+      opacity: 0.3;
+    }
+  }
+
+  /* gentle wave animation */
+  @keyframes wave {
+    0%,
+    100% {
+      transform: translateX(0) scaleY(1);
+    }
+    50% {
+      transform: translateX(10px) scaleY(1.1);
+    }
+  }
+
+  /* futuristic animated background */
+  @keyframes futuristic-flow {
+    0% {
+      background-position: 0% 0%;
+    }
+    25% {
+      background-position: 100% 0%;
+    }
+    50% {
+      background-position: 100% 100%;
+    }
+    75% {
+      background-position: 0% 100%;
+    }
+    100% {
+      background-position: 0% 0%;
+    }
+  }
+
+  /* futuristic pulse effect */
+  @keyframes futuristic-pulse {
+    0%,
+    100% {
+      opacity: 0.4;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.8;
+      transform: scale(1.05);
+    }
+  }
+
+  /* futuristic glow effect */
+  @keyframes glow-pulse {
+    0%,
+    100% {
+      opacity: 0.6;
+      filter: blur(1px);
+    }
+    50% {
+      opacity: 1;
+      filter: blur(0px);
+    }
+  }
+  .animate-spin-slow {
+    animation: spin-slow 40s linear infinite;
+  }
+
+  /* organic floating blobs for ambient color motion */
+  @keyframes blob {
+    0% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+    33% {
+      transform: translate3d(20%, -10%, 0) scale(1.05);
+    }
+    66% {
+      transform: translate3d(-25%, 10%, 0) scale(0.95);
+    }
+    100% {
+      transform: translate3d(0, 0, 0) scale(1);
+    }
+  }
+  .animate-blob-slow {
+    animation: blob 36s ease-in-out infinite;
+  }
+  .animate-blob-slower {
+    animation: blob 52s ease-in-out infinite reverse;
+  }
+
   /* in globals.css */
 
   @layer utilities {
@@ -810,5 +947,137 @@
 @keyframes scroll-left {
   to {
     transform: translate3d(calc(-100% - 90px), 0, 0);
+  }
+}
+
+/* Tenant Ad Styles */
+.tenant-ad-container {
+  margin: 1rem 0;
+}
+
+.tenant-ad {
+  margin: 0.5rem 0;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  background-color: hsl(var(--bg-secondary));
+  border: 1px solid hsl(var(--border));
+}
+
+.tenant-ad-loading {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: hsl(var(--bg-secondary));
+  border: 1px solid hsl(var(--border));
+}
+
+.tenant-ad-error {
+  margin: 1rem 0;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: hsl(var(--bg-secondary));
+  border: 1px solid hsl(var(--border));
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Specific placement styles */
+.header-ad {
+  margin-bottom: 1rem;
+}
+
+.footer-ad {
+  margin-top: 1rem;
+}
+
+.home-hero-ad {
+  margin: 1rem 0;
+}
+
+.home-below-hero-ad {
+  margin: 1rem 0;
+}
+
+.category-top-ad {
+  margin-bottom: 1rem;
+}
+
+.category-bottom-ad {
+  margin-top: 1rem;
+}
+
+.search-top-ad {
+  margin-bottom: 1rem;
+}
+
+.search-bottom-ad {
+  margin-top: 1rem;
+}
+
+.blog-list-top-ad {
+  margin-bottom: 1rem;
+}
+
+.blog-list-bottom-ad {
+  margin-top: 1rem;
+}
+
+/* Appearance-based styles */
+.tenant-ad-full_width {
+  width: 100%;
+}
+
+.tenant-ad-left_aligned {
+  text-align: left;
+}
+
+.tenant-ad-right_aligned {
+  text-align: right;
+}
+
+.tenant-ad-centered {
+  text-align: center;
+}
+
+.tenant-ad-sticky {
+  position: sticky;
+  top: 80px; /* Below header */
+  z-index: 10;
+}
+
+.tenant-ad-popup {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  background: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .tenant-ad-container {
+    margin: 0.5rem 0;
+  }
+
+  .tenant-ad-sticky {
+    position: static;
+  }
+
+  .tenant-ad-popup {
+    width: 90%;
+    max-width: 400px;
   }
 }

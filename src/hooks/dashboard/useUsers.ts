@@ -11,14 +11,16 @@ export interface MemberDTO {
   dateAdded: string;
   role: string;
   domain: string;
-  tenant?: string;
+  tenant?: string; // backend sends either domain or tenant; keep both for compatibility
 }
 
 /* ─────────────────────── CRUD fetchers ─────────────────────── */
 
-const fetchMembers = async (): Promise<MemberDTO[]> => {
+const fetchMembers = async (options?: { tenant?: string }): Promise<MemberDTO[]> => {
   const api = await getApiPrivate();
-  const { data } = await api.get<{ members: MemberDTO[] }>("/settings/users");
+  const { data } = await api.get<{ members: MemberDTO[] }>("/settings/users", {
+    params: options?.tenant ? { tenant: options.tenant } : undefined,
+  });
   return data.members;
 };
 
@@ -35,8 +37,13 @@ const createMember = async (input: {
   domain?: string;
 }): Promise<MemberDTO> => {
   const api = await getApiPrivate();
-  const member = await api.post<typeof input, MemberDTO>("/settings/users", input);
-  return member;
+  try {
+    const { data } = await api.post<unknown, { data: MemberDTO }>("/settings/users", input);
+    return data as unknown as MemberDTO;
+  } catch (err: any) {
+    const message = err?.response?.data?.error || err?.message || "Failed to create member";
+    throw new Error(message);
+  }
 };
 
 const updateMember = async (input: {
@@ -48,16 +55,24 @@ const updateMember = async (input: {
   domain?: string;
 }): Promise<MemberDTO> => {
   const api = await getApiPrivate();
-  const member = await api.put<typeof input, MemberDTO>(`/settings/users/${input.id}`, input);
-  return member;
+  try {
+    const { data } = await api.put<unknown, { data: MemberDTO }>(
+      `/settings/users/${input.id}`,
+      input,
+    );
+    return data as unknown as MemberDTO;
+  } catch (err: any) {
+    const message = err?.response?.data?.error || err?.message || "Failed to update member";
+    throw new Error(message);
+  }
 };
 
 /* ───────────────────── React-Query hooks ───────────────────── */
 
-export function useMembers() {
+export function useMembers(options?: { tenant?: string }) {
   return useQuery<MemberDTO[], Error>({
-    queryKey: ["members"],
-    queryFn: fetchMembers,
+    queryKey: ["members", options?.tenant ?? "current"],
+    queryFn: () => fetchMembers(options),
   });
 }
 
@@ -83,4 +98,12 @@ export function useUpdateMember() {
     mutationFn: updateMember,
     onSuccess: () => qc.invalidateQueries({ queryKey: ["members"] }),
   });
+}
+
+export async function checkEmailAvailable(email: string): Promise<boolean> {
+  const api = await getApiPrivate();
+  const { data } = await api.get<{ available: boolean }>("/settings/users/check", {
+    params: { email },
+  });
+  return data.available;
 }

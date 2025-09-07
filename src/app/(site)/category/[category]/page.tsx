@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { blogService } from "@explore/services/blogService";
 import { fetchCategories } from "@explore/services/categoryService";
 import BlogsList from "@explore/components/BlogList";
+import { CategoryTopAd, CategoryBottomAd } from "@/src/components/TenantAdInjector";
 
 export const revalidate = 60;
 export const dynamic = "force-static";
@@ -54,12 +55,20 @@ export default async function CategoryPage(props: PageProps) {
 
       <div className="my-8" />
 
+      {/* Category Top Ad */}
+      <CategoryTopAd pageType="category" tenantId="main" />
+
       <BlogsList
         initialBlogs={blogsData.blogs}
         initialTotalPages={blogsData.totalPages}
         initialCategories={categories}
         initialCategory={categoryName}
       />
+
+      {/* Category Bottom Ad */}
+      <div className="mt-8">
+        <CategoryBottomAd pageType="category" tenantId="main" />
+      </div>
     </main>
   );
 }

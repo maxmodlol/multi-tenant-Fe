@@ -110,5 +110,7 @@ export const Select: React.FC<SelectProps> & {
   );
 };
 
-Select.Item = ({ children }: SelectItemProps) => <>{children}</>;
+const SelectItem = ({ children }: SelectItemProps) => <>{children}</>;
+SelectItem.displayName = "SelectItem";
+Select.Item = SelectItem;
 Select.displayName = "Select";

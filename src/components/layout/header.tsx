@@ -1,12 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import clsx from "clsx";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { Button } from "@explore/components/ui/button";
 import ResponsiveMenu from "./ResponsiveMenu";
 import SearchOverlay from "@explore/components/SearchOverlay";
+import { HeaderAd } from "@/src/components/TenantAdInjector";
+import type { PageType } from "@/src/types/tenantAds";
 
 // Dynamically import Lucide icons so they don’t bloat the initial JS bundle:
 const MenuIcon = dynamic(() => import("lucide-react").then((mod) => mod.Menu), { ssr: false });
@@ -21,12 +25,26 @@ interface HeaderProps {
   headerColor: string | undefined;
 }
 
+// Helper function to detect page type from pathname
+function getPageTypeFromPathname(pathname: string): PageType {
+  if (pathname === "/" || pathname === "/home") return "home";
+  if (pathname.startsWith("/category/")) return "category";
+  if (pathname.startsWith("/search")) return "search";
+  if (pathname.startsWith("/blog/")) return "blog";
+  if (pathname.startsWith("/blogs")) return "blog-list";
+  if (pathname.startsWith("/about")) return "about";
+  if (pathname.startsWith("/contact")) return "contact";
+  return "home"; // default fallback
+}
+
 export default function Header({
   logoLightUrl,
   logoDarkUrl,
   headerStyle,
   headerColor,
 }: HeaderProps) {
+  const pathname = usePathname();
+  const pageType = getPageTypeFromPathname(pathname);
   const [mounted, setMounted] = useState(false);
   const [isDark, setIsDark] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -76,17 +94,13 @@ export default function Header({
     setIsDark(next);
   };
 
-  // (C) Choose which logo to render
-  let logoUrl = logoLightUrl;
-  if (isDark && logoDarkUrl) {
-    logoUrl = logoDarkUrl;
-  } else if (!isDark && logoLightUrl) {
-    logoUrl = logoLightUrl;
-  }
+  // (C) Determine header visual mode and logo
+  const isColoredHeader = !isDark && headerStyle === "solid" && Boolean(headerColor);
+  let logoUrl = isDark && logoDarkUrl ? logoDarkUrl : logoLightUrl;
 
   return (
     <div className="fixed inset-x-0 top-0 z-50">
-      {/* Optional “neon gradient” backdrop */}
+      {/* Subtle gradient backdrop */}
       {gradientOn && !isMobile && (
         <div
           aria-hidden
@@ -101,25 +115,71 @@ export default function Header({
 
       <header
         role="banner"
-        className="
-          relative flex items-center justify-between
-          px-4 py-3 md:px-8 md:py-4
-            backdrop-blur-lg bg-black/20 dark:bg-white/10
-          border-b border-brand-400/30 dark:border-brand-400/30
-          shadow-lg
-          transition-colors
-        "
+        className={clsx(
+          "relative flex flex-row items-center justify-between px-4 py-3 md:px-8 md:py-4 transition-colors",
+          // Transparent base; keep a subtle shadow under header in all cases
+          "shadow-md",
+          // If gradient style and desktop: show gradient layer via the backdrop element above
+          gradientOn && !isColoredHeader && "bg-transparent",
+          // If not colored (transparent), avoid tint and blur
+          !isColoredHeader && "bg-transparent",
+        )}
         style={
-          gradientOn
-            ? undefined
-            : {
-                // light & dark both get the same hue; tweak if you prefer different tints
-                backgroundColor: `hsl(${headerColor})`,
-                borderBottom: `1px solid hsla(${headerColor},0.3)`,
+          isColoredHeader
+            ? {
+                // Slight transparency so the solid header isn't too strong
+                backgroundColor: `hsla(${headerColor} / 0.85)`,
               }
+            : undefined
         }
       >
-        {/* MENU BUTTON */}
+        {/* DESKTOP ACTIONS - LEFT SIDE */}
+        {!isMobile && (
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={clsx(
+                isColoredHeader
+                  ? "text-white hover:opacity-80"
+                  : "text-black hover:opacity-70 dark:text-white",
+                "transition",
+              )}
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+              onClick={toggleDark}
+            >
+              <MoonIcon className="w-6 h-6" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={clsx(
+                isColoredHeader
+                  ? "text-white hover:opacity-80"
+                  : "text-black hover:opacity-70 dark:text-white",
+                "transition",
+              )}
+              aria-label="Search"
+              onClick={() => setSearchOpen(true)}
+            >
+              <SearchIcon className="w-6 h-6" />
+            </Button>
+          </div>
+        )}
+
+        {/* LOGO - CENTER */}
+        <Link href="/" aria-label="Home" className="flex-1 flex justify-center">
+          <Image
+            src={logoUrl}
+            alt="Logo"
+            width={80}
+            height={40}
+            priority
+            className="object-contain h-[40px] w-[80px]"
+          />
+        </Link>
+
+        {/* MENU BUTTON - RIGHT SIDE */}
         <Button
           type="button"
           variant="ghost"
@@ -130,42 +190,6 @@ export default function Header({
         >
           {menuOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
         </Button>
-
-        {/* LOGO (Next.js <Image> for explicit sizing) */}
-        <Link href="/" aria-label="Home">
-          <Image
-            src={logoUrl}
-            alt="Logo"
-            width={50} // adjust to your actual logo dimensions
-            height={50}
-            priority // mark as LCP if this is critical
-            className="object-contain h-[60px] w-[60px] "
-          />
-        </Link>
-
-        {/* DESKTOP ACTIONS */}
-        {!isMobile && (
-          <div className="flex items-center space-x-4">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:text-brand-200 transition"
-              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-              onClick={toggleDark}
-            >
-              <MoonIcon className="w-6 h-6" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="text-white hover:text-brand-200 transition"
-              aria-label="Search"
-              onClick={() => setSearchOpen(true)}
-            >
-              <SearchIcon className="w-6 h-6" />
-            </Button>
-          </div>
-        )}
       </header>
 
       {/* MOBILE MENU */}
@@ -182,7 +206,7 @@ export default function Header({
 
       {/* DESKTOP DROPDOWN */}
       {menuOpen && !isMobile && (
-        <nav className="absolute top-[64px] right-6 bg-black/40 dark:bg-white/20 backdrop-blur-lg rounded-lg p-4 shadow-lg z-40">
+        <nav className="absolute top-[64px] left-6 bg-black/40 dark:bg-white/20 backdrop-blur-lg rounded-lg p-4 shadow-lg z-40">
           <ResponsiveMenu
             isDark={isDark}
             toggleDarkMode={toggleDark}
@@ -191,6 +215,9 @@ export default function Header({
           />
         </nav>
       )}
+
+      {/* Header Ad - Below the main header */}
+      <HeaderAd pageType={pageType} />
 
       {/* SEARCH OVERLAY */}
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}

@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import type { Blog } from "@explore/types/blogs";
 import type { Category } from "@explore/types/category";
+import { HomeHeroAd, HomeBelowHeroAd } from "@/src/components/TenantAdInjector";
 
 // dynamically load & only on client
 const FeaturedSlider = dynamic(() => import("@explore/components/FeaturedSlider"), {
@@ -27,6 +28,9 @@ export default function HomeClient({
 }: HomeClientProps) {
   return (
     <>
+      {/* Hero Ad - Above the featured slider */}
+      <HomeHeroAd tenantId="main" />
+
       <section className="">
         <FeaturedSlider
           initialBlogs={initialBlogs}
@@ -34,6 +38,10 @@ export default function HomeClient({
           initialTotalBlogs={initialBlogs.length}
         />
       </section>
+
+      {/* Below Hero Ad - Between featured slider and blog list */}
+      <HomeBelowHeroAd tenantId="main" />
+
       <section>
         <BlogsList
           initialBlogs={initialBlogs}

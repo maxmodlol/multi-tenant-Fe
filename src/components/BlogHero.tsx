@@ -43,16 +43,33 @@ export default function BlogHero({
       ))}
 
       {/* Title */}
-      <h1 className="text-3xl md:text-4xl font-bold mb-2">{blog.title}</h1>
+      <h1 className="text-4xl md:text-5xl font-extrabold mb-3">{blog.title}</h1>
 
       {/* Description */}
       {blog.description && (
         <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">{blog.description}</p>
       )}
 
-      {/* Date + Author */}
-      <p className="text-sm text-brand-600 font-medium dark:text-gray-400">
-        نشر بتاريخ{" "}
+      {/* Author + Bio small under name instead of date */}
+      <div className="flex items-center justify-center gap-3 mb-2 w-full px-4">
+        <Image
+          src={(blog as any).author?.avatarUrl || "/icons/author-avatar.svg"}
+          alt={blog.author?.name || ""}
+          width={32}
+          height={32}
+          className="rounded-full object-cover"
+        />
+        <div className="text-left min-w-0 max-w-[80vw] md:max-w-md">
+          <div className="text-base font-semibold">{blog.author?.name ?? "كاتب"}</div>
+          {(blog as any).author?.bio && (
+            <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+              {(blog as any).author.bio}
+            </div>
+          )}
+        </div>
+      </div>
+      {/* Date in grey */}
+      <p className="text-xs text-gray-400">
         <time dateTime={new Date(blog.createdAt).toISOString()}>{formatDate(blog.createdAt)}</time>
       </p>
 
@@ -67,7 +84,7 @@ export default function BlogHero({
 
       {/* Cover Image */}
       {blog.coverPhoto && (
-        <div className="mt-6 max-w-6xl mx-auto rounded-xl overflow-hidden">
+        <div className="mt-4 md:mt-6 max-w-6xl mx-auto rounded-xl overflow-hidden">
           <div className="relative aspect-[3/2] w-full">
             <Image
               src={blog.coverPhoto}

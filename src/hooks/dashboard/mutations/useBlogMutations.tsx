@@ -97,7 +97,7 @@ export function useDashboardBlogs(opts: {
   page?: number;
   limit?: number;
   category?: string;
-  statuses?: BlogStatus;
+  status?: BlogStatus;
   search?: string;
 }) {
   return useQuery<{

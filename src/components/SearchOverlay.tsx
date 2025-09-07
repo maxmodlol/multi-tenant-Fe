@@ -35,7 +35,13 @@ export default function SearchOverlay({ onClose }: { onClose: () => void }) {
   const submit = () => {
     const q = query.trim();
     if (q.length > 1) {
-      router.push(`/search?q=${encodeURIComponent(q)}`);
+      // Force a full page navigation to clear any previously injected third-party scripts
+      const url = `/search?q=${encodeURIComponent(q)}`;
+      if (typeof window !== "undefined") {
+        window.location.assign(url);
+      } else {
+        router.push(url);
+      }
       onClose();
     }
   };

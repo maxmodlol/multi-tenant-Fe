@@ -2,6 +2,7 @@
 import { getServerSession } from "next-auth/next";
 import { redirect } from "next/navigation";
 import SettingsTabs from "./tabs.client";
+import { headers } from "next/headers";
 import { SETTINGS_TABS, type Role } from "./settings-config";
 import { authOptions } from "@/src/lib/authOptions";
 
@@ -17,6 +18,11 @@ export default async function SettingsPage() {
   // now session.user.role will be populated
   const role = session.user.role as Role;
   const allowedTabs = SETTINGS_TABS.filter((tab) => tab.allowedRoles.includes(role));
+
+  // Read ?tab and ?tenant on server to set initial tab and pass through query
+  const h = await headers();
+  const url = new URL(h.get("x-url") || "http://local/" + (h.get("x-pathname") || "/"));
+  const initialTab = url.searchParams.get("tab") || undefined;
 
   return (
     <section className="max-w-5xl space-y-8">

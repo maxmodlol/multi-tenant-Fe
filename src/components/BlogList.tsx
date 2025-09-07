@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import BlogCard from "./BlogCard";
 import { useBlogs } from "@/src/hooks/public/useBlogs";
 import { useCategories } from "@/src/hooks/public/useCategories";
@@ -53,10 +53,48 @@ export default function BlogsList({
     setCurrentPage(1);
   };
 
+  // Drag-to-scroll for categories row (desktop + mobile)
+  const categoriesScrollRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const scrollLeftRef = useRef(0);
+
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    const container = categoriesScrollRef.current;
+    if (!container) return;
+    isDraggingRef.current = true;
+    container.setPointerCapture(e.pointerId);
+    startXRef.current = e.clientX;
+    scrollLeftRef.current = container.scrollLeft;
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const container = categoriesScrollRef.current;
+    if (!container || !isDraggingRef.current) return;
+    const dx = e.clientX - startXRef.current;
+    container.scrollLeft = scrollLeftRef.current - dx;
+  };
+
+  const onPointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    const container = categoriesScrollRef.current;
+    if (!container) return;
+    isDraggingRef.current = false;
+    try {
+      container.releasePointerCapture(e.pointerId);
+    } catch {}
+  };
+
   return (
-    <div className="container mx-auto py-10 space-y-6">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
       {/* Category Filters */}
-      <div className="flex gap-3 overflow-x-hidden pb-2 rtl:flex-row">
+      <div
+        ref={categoriesScrollRef}
+        className="flex gap-3 overflow-x-auto pb-2 rtl:flex-row select-none cursor-grab active:cursor-grabbing"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerUp}
+      >
         <Button
           variant="primary"
           onClick={() => handleCategoryChange("all")}
@@ -83,15 +121,15 @@ export default function BlogsList({
         ))}
       </div>
 
-      {/* Blogs Grid */}
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      {/* Blogs Grid (equal height cards) */}
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 items-stretch">
         {blogs.slice(0, 9).map((blog) => (
           <BlogCard key={blog.id} blog={blog} type="grid" />
         ))}
       </div>
 
       {/* Wide Blog Cards */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 items-stretch">
         {blogs.slice(9).map((blog) => (
           <BlogCard key={blog.id} blog={blog} type="grid" />
         ))}

@@ -11,12 +11,20 @@ import UsersAndTeamsForm from "./users.client";
 import AccountSettingsForm from "./account.client";
 import AdsSettingsForm from "./ads.client";
 import HeaderSettingsForm from "./header.client";
+import TenantAdsClient from "./tenant-ads/TenantAdsClient";
 
 interface SettingsTabsProps {
   tabs: TabConfig[];
 }
 
 export default function SettingsTabs({ tabs }: SettingsTabsProps) {
+  // 2) Initialize the first tab as "active" (moved before conditional return)
+  const [activeKey, setActiveKey] = useState<string>(() => {
+    if (typeof window === "undefined") return tabs[0]?.key || "";
+    const params = new URLSearchParams(window.location.search);
+    return params.get("tab") || tabs[0]?.key || "";
+  });
+
   // 1) If there are no tabs, show a friendly message
   if (!tabs.length) {
     return (
@@ -25,9 +33,6 @@ export default function SettingsTabs({ tabs }: SettingsTabsProps) {
       </p>
     );
   }
-
-  // 2) Otherwise, initialize the first tab as “active”
-  const [activeKey, setActiveKey] = useState<string>(tabs[0].key);
 
   // 3) Find the currently‐active tab’s config
   const activeTab = tabs.find((t) => t.key === activeKey)!;
@@ -56,7 +61,8 @@ export default function SettingsTabs({ tabs }: SettingsTabsProps) {
         {activeTab.key === "users" && <UsersAndTeamsForm />}
         {activeTab.key === "account" && <AccountSettingsForm />}
         {activeTab.key === "ads" && <AdsSettingsForm />}
-        {activeKey === "header" && <HeaderSettingsForm />}
+        {activeTab.key === "header" && <HeaderSettingsForm />}
+        {activeTab.key === "tenant-ads" && <TenantAdsClient />}
       </div>
     </div>
   );

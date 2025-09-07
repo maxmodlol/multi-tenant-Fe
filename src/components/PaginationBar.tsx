@@ -45,7 +45,7 @@ export default function PaginationBar({ currentPage, totalPages, onPageChange }:
           value={currentPage}
           onChange={(e) => onPageChange(Number(e.target.value))}
           aria-label="اختر رقم الصفحة"
-          className="appearance-none px-4 py-1.5 pr-10 rounded-md border text-sm border-gray-300 dark:border-gray-700 bg-gray-200 dark:bg-black text-gray-700 dark:text-gray-800"
+          className="appearance-none px-4 py-1.5 pr-10 rounded-md border text-sm border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-black text-gray-700 dark:text-gray-300"
         >
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
             <option key={pageNum} value={pageNum}>

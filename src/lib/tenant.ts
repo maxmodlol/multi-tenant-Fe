@@ -5,10 +5,10 @@ export const RESERVED = ["www", "api", "admin", "auth"] as const;
  * MAIN_DOMAIN is read in this order:
  *   1. process.env.MAIN_DOMAIN               (SSR only)
  *   2. process.env.NEXT_PUBLIC_MAIN_DOMAIN   (bundled to the browser)
- *   3. fallback literal "alnashra.co"
+ *   3. fallback literal "localhost"
  */
 export const MAIN_DOMAIN =
-  process.env.MAIN_DOMAIN ?? process.env.NEXT_PUBLIC_MAIN_DOMAIN ?? "localhost";
+  process.env.MAIN_DOMAIN ?? process.env.NEXT_PUBLIC_MAIN_DOMAIN ?? "alnashra.co";
 
 export type Tenant = "main" | string;
 
@@ -22,8 +22,13 @@ export function parseTenant(hostname: string | undefined): Tenant {
   if (
     host === "localhost" ||
     RESERVED.includes(parts[0] as (typeof RESERVED)[number]) ||
-    parts.length < 3
+    parts.length < 2
   ) {
+    return "main";
+  }
+
+  // Production domain check: www.alnashra.co should be main (3 parts, www is reserved)
+  if (parts.length === 3 && RESERVED.includes(parts[0] as (typeof RESERVED)[number])) {
     return "main";
   }
 

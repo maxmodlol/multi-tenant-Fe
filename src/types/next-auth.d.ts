@@ -1,6 +1,6 @@
 // next-auth.d.ts
 import NextAuth, { DefaultSession, DefaultUser } from "next-auth";
-import { Role } from "../../app/(dashboard)/settings/settings-config";
+import { Role } from "../../app/(dashboard)/dashboard/settings/settings-config";
 
 declare module "next-auth" {
   interface Session {

@@ -49,8 +49,12 @@ export default function AppearanceForm() {
   /* ────────────────────────────────────────────────────────── */
   const [logoLightUrl, setLogoLightUrl] = useState<string | null>(null);
   const [logoDarkUrl, setLogoDarkUrl] = useState<string | null>(null);
+  const [siteTitle, setSiteTitle] = useState<string>("");
+  const [siteDescription, setSiteDescription] = useState<string>("");
+  const [siteIconUrl, setSiteIconUrl] = useState<string | null>(null);
   const [logoLightPreview, setLogoLightPreview] = useState<string | null>(null);
   const [logoDarkPreview, setLogoDarkPreview] = useState<string | null>(null);
+  const [siteIconPreview, setSiteIconPreview] = useState<string | null>(null);
 
   const [selectedColorHex, setSelectedColorHex] = useState<string>(PRESET_COLORS[0]);
   const [headerStyle, setHeaderStyle] = useState<"gradient" | "solid">("gradient");
@@ -58,6 +62,7 @@ export default function AppearanceForm() {
 
   const lightFileRef = useRef<HTMLInputElement>(null);
   const darkFileRef = useRef<HTMLInputElement>(null);
+  const iconFileRef = useRef<HTMLInputElement>(null);
 
   /* ────────────────────────────────────────────────────────── */
   /* 3) Prefill from DB                                         */
@@ -69,6 +74,11 @@ export default function AppearanceForm() {
     setLogoLightPreview(setting.logoLightUrl ?? null);
     setLogoDarkUrl(setting.logoDarkUrl ?? null);
     setLogoDarkPreview(setting.logoDarkUrl ?? null);
+
+    setSiteTitle(setting.siteTitle || "");
+    setSiteDescription(setting.siteDescription || "");
+    setSiteIconUrl(setting.siteIconUrl ?? null);
+    setSiteIconPreview(setting.siteIconUrl ?? null);
 
     const toHex = (hsl: string): string => {
       const [h, sP, lP] = hsl.split(" ");
@@ -114,31 +124,63 @@ export default function AppearanceForm() {
   /* ────────────────────────────────────────────────────────── */
   /* 4) Handlers                                                */
   /* ────────────────────────────────────────────────────────── */
-  const handleLogoChange = (type: "light" | "dark") => (e: ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    uploadLogoMutation.mutate(file, {
-      onSuccess: (url) => {
-        if (type === "light") {
-          setLogoLightUrl(url);
-          setLogoLightPreview(url);
-        } else {
-          setLogoDarkUrl(url);
-          setLogoDarkPreview(url);
-        }
-      },
-    });
+  /* 4) Handlers */
+  const handleLogoChange =
+    (type: "light" | "dark" | "icon") => (e: ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      // 👉 1. immediate local preview
+      const tmpUrl = URL.createObjectURL(file);
+      if (type === "light") setLogoLightPreview(tmpUrl);
+      else if (type === "dark") setLogoDarkPreview(tmpUrl);
+      else setSiteIconPreview(tmpUrl);
+
+      // 👉 2. upload
+      uploadLogoMutation.mutate(file, {
+        onSuccess: (remoteUrl) => {
+          // keep the blob on screen while we test-load the remote file
+          const probe = new Image();
+          probe.onload = () => {
+            // remote is good – switch preview & clean up
+            if (type === "light") setLogoLightPreview(remoteUrl);
+            else if (type === "dark") setLogoDarkPreview(remoteUrl);
+            else setSiteIconPreview(remoteUrl);
+            URL.revokeObjectURL(tmpUrl);
+          };
+          probe.onerror = () => {
+            // remote not accessible yet – keep blob; try again in 3 s
+            setTimeout(() => (probe.src = remoteUrl), 3000);
+          };
+          probe.src = remoteUrl;
+
+          // store the final URL for saving even if we’re still showing the blob
+          if (type === "light") setLogoLightUrl(remoteUrl);
+          else if (type === "dark") setLogoDarkUrl(remoteUrl);
+          else setSiteIconUrl(remoteUrl);
+        },
+      });
+    };
+
+  const handleBrandColorClick = (hex: string) => {
+    setSelectedColorHex(hex);
   };
 
-  const handleColorClick = (hex: string) => {
-    if (headerStyle === "solid") setHeaderColorHex(hex);
-    else setSelectedColorHex(hex);
+  const handleHeaderColorClick = (hex: string) => {
+    setHeaderColorHex(hex);
   };
 
-  const handleCustomColor = (e: ChangeEvent<HTMLInputElement>) => {
+  const handleBrandCustomColor = (e: ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     if (/^#([0-9A-Fa-f]{6})$/.test(val)) {
-      headerStyle === "solid" ? setHeaderColorHex(val) : setSelectedColorHex(val);
+      setSelectedColorHex(val);
+    }
+  };
+
+  const handleHeaderCustomColor = (e: ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    if (/^#([0-9A-Fa-f]{6})$/.test(val)) {
+      setHeaderColorHex(val);
     }
   };
 
@@ -184,6 +226,9 @@ export default function AppearanceForm() {
 
     const dto: SiteSetting = {
       ...setting,
+      siteTitle: siteTitle.trim() || setting.siteTitle,
+      siteDescription: siteDescription.trim() || null,
+      siteIconUrl: siteIconUrl ?? null,
       logoLightUrl: logoLightUrl ?? "",
       logoDarkUrl: logoDarkUrl ?? "",
       baseColor: baseHsl,
@@ -210,15 +255,47 @@ export default function AppearanceForm() {
       initial={{ opacity: 0, y: 24 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35 }}
-      className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow p-10"
+      className="max-w-4xl mx-auto rounded-2xl shadow p-8 border border-border-secondary bg-background-secondary"
     >
-      <h2 className="text-3xl font-semibold mb-10 text-center text-gray-900 dark:text-gray-100">
-        Appearance Settings
-      </h2>
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-text-primary">مظهر الموقع</h2>
+        <p className="text-xs text-text-tertiary">عدل الشعارات والألوان والمظهر العام.</p>
+      </div>
 
       <form onSubmit={handleSubmit}>
+        {/* Site meta -------------------------------------------------- */}
+        <Row label="اسم الموقع" description="سيظهر في شريط العنوان ونتائج البحث.">
+          <input
+            type="text"
+            value={siteTitle}
+            onChange={(e) => setSiteTitle(e.target.value)}
+            className="w-full h-9 rounded-md border px-3 bg-background-primary"
+            placeholder="مثال: مدونة شركتنا"
+          />
+        </Row>
+        <Row label="سطر الوصف" description="وصف قصير لمحركات البحث والصفحة الرئيسية.">
+          <textarea
+            value={siteDescription}
+            onChange={(e) => setSiteDescription(e.target.value)}
+            className="w-full min-h-16 rounded-md border p-3 bg-background-primary"
+            placeholder="في سطور قليلة، اشرح ما يدور حوله هذا الموقع"
+          />
+        </Row>
+        <Row
+          label="أيقونة الموقع"
+          description="تظهر في تبويب المتصفح وعلى الأجهزة. مستطيلة أو مربعة 512×512 مفضلة."
+        >
+          <LogoUploader
+            previewUrl={siteIconPreview}
+            fileRef={iconFileRef}
+            placeholderBg="bg-gray-50 dark:bg-gray-700"
+            onChange={handleLogoChange("icon")}
+            uploading={uploadLogoMutation.isPending}
+            cta={siteIconPreview ? "Replace" : "Upload"}
+          />
+        </Row>
         {/* Logos -------------------------------------------------- */}
-        <Row label="Light Logo" description="Shown on light backgrounds.">
+        <Row label="Light Logo" description="شعار يظهر على الخلفيات الفاتحة.">
           <LogoUploader
             previewUrl={logoLightPreview}
             fileRef={lightFileRef}
@@ -229,7 +306,7 @@ export default function AppearanceForm() {
           />
         </Row>
 
-        <Row label="Dark Logo" description="Shown on dark backgrounds.">
+        <Row label="Dark Logo" description="شعار يظهر على الخلفيات الداكنة.">
           <LogoUploader
             previewUrl={logoDarkPreview}
             fileRef={darkFileRef}
@@ -243,27 +320,27 @@ export default function AppearanceForm() {
         <hr className="my-6 border-gray-200 dark:border-gray-700" />
 
         {/* Brand colour ------------------------------------------- */}
-        <Row label="Brand Colour" description="Primary hue for your brand.">
+        <Row label="Brand Colour" description="اللون الأساسي للعلامة.">
           <div className="flex items-center gap-3 flex-wrap">
             {PRESET_COLORS.map((hex) => (
               <ColorSwatch
                 key={hex}
                 hex={hex}
                 selected={selectedColorHex.toLowerCase() === hex.toLowerCase()}
-                onClick={() => handleColorClick(hex)}
+                onClick={() => handleBrandColorClick(hex)}
               />
             ))}
             <input
               type="color"
               value={selectedColorHex}
-              onChange={handleCustomColor}
+              onChange={handleBrandCustomColor}
               className="h-9 w-9 rounded-full cursor-pointer border-none p-0"
             />
           </div>
         </Row>
 
         {/* Header style ------------------------------------------ */}
-        <Row label="Header Style" description="Toggle between animated gradient or a solid bar.">
+        <Row label="Header Style" description="التبديل بين تدرج متحرك أو شريط ثابت.">
           <div className="flex flex-col gap-4 w-full">
             <div className="flex items-center gap-6">
               {(["gradient", "solid"] as const).map((style) => (
@@ -291,13 +368,13 @@ export default function AppearanceForm() {
                     key={hex}
                     hex={hex}
                     selected={headerColorHex.toLowerCase() === hex.toLowerCase()}
-                    onClick={() => setHeaderColorHex(hex)}
+                    onClick={() => handleHeaderColorClick(hex)}
                   />
                 ))}
                 <input
                   type="color"
                   value={headerColorHex || selectedColorHex}
-                  onChange={(e) => setHeaderColorHex(e.target.value)}
+                  onChange={handleHeaderCustomColor}
                   className="h-9 w-9 rounded-full cursor-pointer border-none p-0"
                 />
               </motion.div>
@@ -307,11 +384,21 @@ export default function AppearanceForm() {
 
         {/* Action buttons ---------------------------------------- */}
         <div className="flex justify-end mt-10 gap-3">
-          <Button variant="outline" size="sm" type="button">
-            Cancel
+          <Button
+            variant="outline"
+            size="sm"
+            type="button"
+            className="border-border-secondary text-text-secondary"
+          >
+            إلغاء
           </Button>
-          <Button size="sm" type="submit" disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? "Saving…" : "Save Changes"}
+          <Button
+            size="sm"
+            type="submit"
+            disabled={updateMutation.isPending}
+            className="bg-background-brand-solid text-text-primary-brand hover:bg-background-brand-solid-hover"
+          >
+            {updateMutation.isPending ? "جارٍ الحفظ…" : "حفظ التغييرات"}
           </Button>
         </div>
       </form>
@@ -356,7 +443,7 @@ function LogoUploader({
         <input
           ref={fileRef}
           type="file"
-          accept="image/*"
+          accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml,image/x-icon,.ico"
           onChange={onChange}
           className="absolute inset-0 opacity-0 cursor-pointer"
         />

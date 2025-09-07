@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { useAdHeader } from "@/src/hooks/dashboard/useAdHeader";
 import type { AdHeaderSetting } from "@/src/types/ads";
 
@@ -10,12 +11,25 @@ import type { AdHeaderSetting } from "@/src/types/ads";
  * and injects it into document.head so that all <script> nodes actually execute.
  */
 export default function AdHeaderInjector() {
+  const pathname = usePathname();
   const { data: headerData, isLoading, error } = useAdHeader();
+  const nodesRef = useRef<Node[]>([]);
 
   useEffect(() => {
-    if (isLoading || error || !headerData) {
-      return;
+    // Always remove any previously inserted nodes before deciding what to do
+    if (nodesRef.current.length > 0) {
+      nodesRef.current.forEach((n) => {
+        if (n.parentNode === document.head) {
+          document.head.removeChild(n);
+        }
+      });
+      nodesRef.current = [];
     }
+
+    // Avoid injecting on search page to prevent third-party scripts from hijacking navigation
+    if (pathname?.startsWith("/search")) return;
+
+    if (isLoading || error || !headerData) return;
 
     if (headerData.isEnabled && headerData.headerSnippet) {
       const snippetHtml = headerData.headerSnippet;
@@ -58,6 +72,9 @@ export default function AdHeaderInjector() {
         }
       });
 
+      // Track nodes globally for route changes and unmount cleanup
+      nodesRef.current = insertedNodes;
+
       // 4) Cleanup: when this component unmounts or headerData changes, remove those nodes
       return () => {
         insertedNodes.forEach((n) => {
@@ -65,9 +82,10 @@ export default function AdHeaderInjector() {
             document.head.removeChild(n);
           }
         });
+        nodesRef.current = [];
       };
     }
-  }, [isLoading, error, headerData]);
+  }, [isLoading, error, headerData, pathname]);
 
   return null;
 }

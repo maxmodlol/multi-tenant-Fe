@@ -4,7 +4,7 @@ import React from "react";
 type TableProps = React.HTMLAttributes<HTMLTableElement>;
 export function Table({ children, ...props }: TableProps) {
   return (
-    <table className="min-w-full divide-y divide-gray-200" {...props}>
+    <table className="min-w-full text-sm" {...props}>
       {children}
     </table>
   );
@@ -13,7 +13,7 @@ export function Table({ children, ...props }: TableProps) {
 type TableHeaderProps = React.HTMLAttributes<HTMLTableSectionElement>;
 export function TableHeader({ children, ...props }: TableHeaderProps) {
   return (
-    <thead className="bg-gray-50" {...props}>
+    <thead className="bg-background-primary/40 border-b border-border-secondary" {...props}>
       {children}
     </thead>
   );
@@ -22,7 +22,7 @@ export function TableHeader({ children, ...props }: TableHeaderProps) {
 type TableBodyProps = React.HTMLAttributes<HTMLTableSectionElement>;
 export function TableBody({ children, ...props }: TableBodyProps) {
   return (
-    <tbody className="bg-white divide-y divide-gray-200" {...props}>
+    <tbody className="bg-background-secondary" {...props}>
       {children}
     </tbody>
   );
@@ -38,7 +38,7 @@ export function TableHead({ children, className = "", ...props }: TableHeadProps
   return (
     <th
       className={
-        "px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right " +
+        "px-4 py-2 text-xs font-medium text-text-secondary uppercase tracking-wider text-right " +
         className
       }
       {...props}
@@ -51,7 +51,10 @@ export function TableHead({ children, className = "", ...props }: TableHeadProps
 type TableCellProps = React.TdHTMLAttributes<HTMLTableDataCellElement>;
 export function TableCell({ children, className = "", ...props }: TableCellProps) {
   return (
-    <td className={"px-6 py-4 whitespace-nowrap " + className} {...props}>
+    <td
+      className={"px-4 py-2 whitespace-nowrap border-t border-border-secondary " + className}
+      {...props}
+    >
       {children}
     </td>
   );

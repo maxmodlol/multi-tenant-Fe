@@ -1,7 +1,17 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Briefcase, BookOpen, LayoutGrid, Settings, ChevronDown, LogOut, Plus } from "lucide-react";
+import {
+  Briefcase,
+  BookOpen,
+  LayoutGrid,
+  Home,
+  Settings,
+  ChevronDown,
+  LogOut,
+  Plus,
+  Building2,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -27,50 +37,81 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
     return () => document.removeEventListener("mousedown", onClick);
   }, [menuOpen]);
 
+  const role = session?.user?.role;
   const nav = [
-    { href: "/dashboard/blogs", label: "المدونات", icon: Briefcase },
-    { href: "/dashboard/my-blog", label: "مدونتي", icon: BookOpen },
-    { href: "/dashboard/categories", label: "التصنيفات", icon: LayoutGrid },
-    { href: "/dashboard/settings", label: "الإعدادات", icon: Settings },
+    { href: "/dashboard", label: "الرئيسية", icon: Home, show: true },
+    // All Blogs (approvals) → only ADMIN or ADMIN_HELPER
+    {
+      href: "/dashboard/blogs",
+      label: "المدونات",
+      icon: Briefcase,
+      show: role === "ADMIN" || role === "ADMIN_HELPER",
+    },
+    // My Blog + categories → only Publisher/Editor teams
+    { href: "/dashboard/reports", label: "التقارير", show: role !== "EDITOR", icon: Briefcase },
+    {
+      href: "/dashboard/my-blog",
+      label: "مدونتي",
+      icon: BookOpen,
+      show: role === "PUBLISHER" || role === "EDITOR",
+    },
+    {
+      href: "/dashboard/categories",
+      label: "التصنيفات",
+      icon: LayoutGrid,
+      show: role === "PUBLISHER" || role === "EDITOR",
+    },
+    { href: "/dashboard/settings", label: "الإعدادات", icon: Settings, show: true },
+    // Admin-only: Tenant Management
+    {
+      href: "/dashboard/tenants",
+      label: "إدارة المستأجرين",
+      icon: Building2,
+      show: role === "ADMIN",
+    },
   ];
 
   return (
-    <aside className="flex h-full w-[260px] shrink-0 flex-col border-r bg-background px-6 py-8 shadow-lg dark:shadow-black/30">
-      {/* Logo */}
-      <Link href="/dashboard/settings" className="-mx-2 mb-12 flex items-center gap-2">
+    <aside className="flex h-full w-[260px] shrink-0 flex-col border-r border-border-secondary bg-background-secondary px-6 py-8 shadow-lg dark:shadow-black/30 dark:bg-gradient-1-dark">
+      {/* Logo links to dashboard home */}
+      <Link href="/dashboard" className="-mx-2 mb-12 flex items-center gap-2">
         <Image src="/logo.svg" alt="Logo" width={120} height={28} priority className="h-8 w-auto" />
       </Link>
 
       {/* Navigation */}
-      <nav className="flex flex-col gap-6 text-[17px] font-medium">
-        {nav.map(({ href, label, icon: Icon }) => {
-          const active = pathname.startsWith(href);
-          return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClose}
-              className={`flex items-center gap-3 rounded-lg px-4 py-2 transition ${
-                active
-                  ? "bg-muted font-semibold text-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <Icon className="h-5 w-5 shrink-0 opacity-70" />
-              <span>{label}</span>
-            </Link>
-          );
-        })}
+      <nav className="flex flex-col gap-2 text-[15px] font-medium">
+        {nav
+          .filter((n) => n.show)
+          .map(({ href, label, icon: Icon }) => {
+            const active = pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={onClose}
+                className={`flex items-center gap-3 rounded-lg px-3 py-2 transition border ${
+                  active
+                    ? "bg-background-primary/70 border-border-secondary text-text-primary"
+                    : "bg-background-secondary/60 border-transparent text-text-secondary hover:bg-background-secondary/80 hover:text-text-primary"
+                }`}
+              >
+                <Icon className="h-5 w-5 shrink-0 opacity-70" />
+                <span>{label}</span>
+              </Link>
+            );
+          })}
 
-        {/* ➕ Add New Blog Button */}
-        <Link
-          href="/dashboard/blogs/editor/new"
-          onClick={onClose}
-          className="mt-2 flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2 text-white hover:bg-brand-600 transition"
-        >
-          <Plus className="h-4 w-4" />
-          <span>إنشاء تدوينة جديدة</span>
-        </Link>
+        {/* ➕ Add New Blog Button (hidden for ADMIN) */}
+        {(role === "PUBLISHER" || role === "EDITOR") && (
+          <Link
+            href="/dashboard/blogs/editor/new"
+            onClick={onClose}
+            className="mt-3 flex items-center justify-center gap-2 rounded-lg bg-background-brand-solid px-4 py-2 text-text-primary-brand hover:bg-background-brand-solid-hover transition"
+          >
+            <Plus className="h-4 w-4" />
+            <span>إنشاء تدوينة جديدة</span>
+          </Link>
+        )}
 
         {/* 🌓 Theme Toggle */}
         <div className="mt-2 px-2">

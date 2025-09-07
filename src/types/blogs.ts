@@ -29,6 +29,8 @@ export interface Blog {
   author?: {
     id: string;
     name: string;
+    bio?: string | null;
+    avatarUrl?: string | null;
   }; // 👈 Add this
   status: BlogStatus;
   createdAt: string;
@@ -80,6 +82,7 @@ export interface BlogCardData {
   title: string;
   coverPhoto?: string;
   createdAt: string;
+  tenant?: string;
   author?: {
     name: string;
     id: string;

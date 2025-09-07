@@ -76,7 +76,7 @@ export default function MyBlogPage() {
           <h1 className="text-3xl font-bold">My Blog</h1>
           <p className="text-sm text-gray-500">Add and manage your blogs effectively.</p>
         </div>
-        <Link href="/dashboard/my-blog/new">
+        <Link href="/dashboard/blogs/editor/new">
           <Button variant="primary">Add new blog</Button>
         </Link>
       </div>

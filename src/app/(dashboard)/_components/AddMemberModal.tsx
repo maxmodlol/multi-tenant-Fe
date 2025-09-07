@@ -6,6 +6,7 @@ import { Input } from "@explore/components/ui/input";
 import { Button } from "@explore/components/ui/button";
 import { Select } from "@explore/components/ui/select";
 import { useTenants, TenantDTO } from "@/src/hooks/dashboard/useTenants";
+import { checkEmailAvailable } from "@/src/hooks/dashboard/useUsers";
 import { Role } from "../dashboard/settings/settings-config";
 
 interface MemberInput {
@@ -36,11 +37,43 @@ export function AddMemberModal({
   const [name, setName] = useState(initialData.name || "");
   const [email, setEmail] = useState(initialData.email || "");
   const [password, setPassword] = useState(initialData.password || "");
-  const [role, setRole] = useState<Role>(initialData.role || "EDITOR");
+  const [role, setRole] = useState<Role>(
+    initialData.role || (isMainAdmin ? "PUBLISHER" : "EDITOR"),
+  );
   const [domain, setDomain] = useState(initialData.domain || currentDomain);
+  const [error, setError] = useState<string | null>(null);
+  const [domainError, setDomainError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
 
   // fetch existing tenants for Editor role
   const { data: tenants = [], isLoading: tenantsLoading } = useTenants();
+
+  const RESERVED = ["www", "api", "admin", "auth", "main"];
+
+  useEffect(() => {
+    if (role !== "PUBLISHER") {
+      setDomainError(null);
+      return;
+    }
+    const d = (domain || "").trim().toLowerCase();
+    if (!d) {
+      setDomainError("النطاق الفرعي مطلوب");
+      return;
+    }
+    if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(d)) {
+      setDomainError("صيغة النطاق غير صحيحة");
+      return;
+    }
+    if (RESERVED.includes(d)) {
+      setDomainError("هذا النطاق محجوز");
+      return;
+    }
+    if (tenants.some((t) => t.domain.toLowerCase() === d)) {
+      setDomainError("النطاق مستخدم مسبقًا");
+      return;
+    }
+    setDomainError(null);
+  }, [role, domain, tenants]);
 
   useEffect(() => {
     if (!open) return;
@@ -54,8 +87,33 @@ export function AddMemberModal({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    await onCreate({ name, email, password, role, domain });
-    onOpenChange(false);
+    try {
+      setError(null);
+      if (!name || !email || (!initialData.name && !password)) {
+        setError("الاسم والإيميل مطلوبان وكلمة السر مطلوبة عند الإنشاء");
+        return;
+      }
+      if (!initialData.name) {
+        const available = await checkEmailAvailable(email);
+        if (!available) {
+          setEmailError("هذا الإيميل مستخدم مسبقًا");
+          return;
+        }
+      }
+      if (role === "PUBLISHER" && !domain) {
+        setError("يرجى إدخال نطاق فرعي صالح");
+        return;
+      }
+      if (domainError) {
+        setError(domainError);
+        return;
+      }
+      await onCreate({ name, email, password, role, domain });
+      onOpenChange(false);
+    } catch (err: any) {
+      const msg = err?.response?.data?.error || err?.message || "Operation failed";
+      setError(msg);
+    }
   }
 
   return (
@@ -87,6 +145,7 @@ export function AddMemberModal({
               placeholder="Enter your email"
               required
             />
+            {emailError && <p className="mt-1 text-xs text-red-500">{emailError}</p>}
           </div>
 
           {/* Password */}
@@ -98,7 +157,7 @@ export function AddMemberModal({
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Create a password"
               minLength={8}
-              required
+              required={!initialData.name}
             />
             <p className="mt-1 text-xs text-gray-500">Must be at least 8 characters.</p>
           </div>
@@ -107,8 +166,9 @@ export function AddMemberModal({
           <div>
             <label className="block text-sm font-medium">Role</label>
             <Select value={role} onChange={(val) => setRole(val as Role)} className="w-full">
-              <Select.Item value="PUBLISHER">Publisher</Select.Item>
+              {isMainAdmin && <Select.Item value="PUBLISHER">Publisher</Select.Item>}
               <Select.Item value="EDITOR">Editor</Select.Item>
+              {isMainAdmin && <Select.Item value="ADMIN_HELPER">Admin Helper</Select.Item>}
             </Select>
           </div>
 
@@ -122,8 +182,14 @@ export function AddMemberModal({
                 placeholder="Enter new sub-domain"
                 required
               />
+              {domainError && <p className="mt-1 text-xs text-red-500">{domainError}</p>}
             </div>
-          ) : (
+          ) : role === "ADMIN_HELPER" ? (
+            <div>
+              <label className="block text-sm font-medium">Tenant</label>
+              <Input value="main" disabled />
+            </div>
+          ) : isMainAdmin ? (
             <div>
               <label className="block text-sm font-medium">Tenant (sub-domain)</label>
               <Select
@@ -138,8 +204,11 @@ export function AddMemberModal({
                 ))}
               </Select>
             </div>
+          ) : (
+            <></>
           )}
 
+          {error && <div className="text-xs text-red-500">{error}</div>}
           {/* Submit */}
           <div className="pt-4 flex justify-end space-x-2">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
