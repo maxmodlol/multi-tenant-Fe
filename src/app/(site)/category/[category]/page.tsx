@@ -14,19 +14,23 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const params = await props.params;
   const raw = decodeURIComponent(params.category);
+
+  console.log("Metadata - Raw params:", params.category);
+  console.log("Metadata - Decoded category:", raw);
+
   const title = `تصنيف: ${raw} — مدونة الموقع`;
   return {
     title,
-    description: `عرض المقالات في تصنيف ${params.category}`,
+    description: `عرض المقالات في تصنيف ${raw}`,
     openGraph: {
       title,
-      description: `عرض المقالات في تصنيف ${params.category}`,
+      description: `عرض المقالات في تصنيف ${raw}`,
       siteName: "مدونة الموقع",
       locale: "ar_AR",
     },
     twitter: {
       title,
-      description: `عرض المقالات في تصنيف ${params.category}`,
+      description: `عرض المقالات في تصنيف ${raw}`,
     },
   };
 }
@@ -40,7 +44,17 @@ export default async function CategoryPage(props: PageProps) {
   const categoryName = decodeURIComponent(params.category);
 
   console.log("Category page - Raw params:", params.category);
+  console.log("Category page - Raw params length:", params.category.length);
+  console.log(
+    "Category page - Raw params char codes:",
+    Array.from(params.category).map((c) => c.charCodeAt(0)),
+  );
   console.log("Category page - Decoded category:", categoryName);
+  console.log("Category page - Decoded category length:", categoryName.length);
+  console.log(
+    "Category page - Decoded category char codes:",
+    Array.from(categoryName).map((c) => c.charCodeAt(0)),
+  );
 
   try {
     // Fetch page 1 of this category
