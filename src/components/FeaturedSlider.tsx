@@ -54,7 +54,7 @@ export default function FeaturedSlider({
   if (!blogs.length) return null;
 
   return (
-    <section className="relative w-full md:max-w-[1140px] mx-auto h-[400px] md:h-[600px] rounded-2xl overflow-hidden">
+    <section className="relative w-full max-w-screen-xl mx-auto h-[400px] md:h-[600px] rounded-2xl overflow-hidden px-4 md:px-14">
       <Swiper
         dir="rtl"
         modules={[Navigation, Autoplay, EffectCreative]}

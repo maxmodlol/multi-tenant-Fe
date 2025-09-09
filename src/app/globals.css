@@ -823,6 +823,10 @@
     }
   }
 
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
   /* elegant shimmer effect */
   @keyframes shimmer-elegant {
     0% {

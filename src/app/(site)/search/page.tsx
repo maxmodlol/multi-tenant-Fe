@@ -25,7 +25,7 @@ export default async function SearchPage(props: Props) {
   // if q is short, show nothing
   if (q.length < 2) {
     return (
-      <main className="max-w-6xl mx-auto p-6">
+      <main className="max-w-screen-xl mx-auto px-4 md:px-14 py-10">
         <h1 className="text-2xl font-bold mb-4">ابحث في المدونة</h1>
         <p className="text-gray-600">الرجاء إدخال كلمتين على الأقل للبحث.</p>
       </main>
@@ -36,7 +36,7 @@ export default async function SearchPage(props: Props) {
   const results = await blogService.searchBlogs(q);
 
   return (
-    <main className="max-w-6xl mx-auto p-6">
+    <main className="max-w-screen-xl mx-auto px-4 md:px-14 py-10">
       {/* Search Top Ad */}
       <SearchTopAd />
 
