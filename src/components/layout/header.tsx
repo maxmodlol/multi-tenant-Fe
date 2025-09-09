@@ -96,11 +96,16 @@ export default function Header({
 
   // (C) Determine header visual mode and logo
   const isColoredHeader = !isDark && headerStyle === "solid" && Boolean(headerColor);
+  const isColoredHeaderDark = isDark && headerStyle === "solid" && Boolean(headerColor);
+  const isSolidHeader = headerStyle === "solid";
+  const brandHsl = headerColor ?? undefined;
+  const isColoredLight = !isDark && Boolean(brandHsl);
+  const isColoredLightDark = isDark && Boolean(brandHsl);
   let logoUrl = isDark && logoDarkUrl ? logoDarkUrl : logoLightUrl;
 
   return (
     <div className="fixed inset-x-0 top-0 z-50">
-      {/* Subtle gradient backdrop */}
+      {/* Gradient backdrop with brand colors */}
       {gradientOn && !isMobile && (
         <div
           aria-hidden
@@ -113,62 +118,115 @@ export default function Header({
         />
       )}
 
+      {/* Brand gradient backdrop for gradient headers */}
+      {gradientOn && brandHsl && (
+        <div
+          aria-hidden
+          className="
+            absolute inset-0
+            bg-[length:300%_300%] animate-gradient-x
+            opacity-70 blur-2xl pointer-events-none
+          "
+          style={{
+            background: `linear-gradient(90deg, hsla(${brandHsl} / 0.8), hsla(${brandHsl} / 0.6), hsla(${brandHsl} / 0.8))`,
+          }}
+        />
+      )}
+
       <header
         role="banner"
         className={clsx(
           "relative flex flex-row items-center justify-between px-4 py-3 md:px-8 md:py-4 transition-colors",
-          // Transparent base; keep a subtle shadow under header in all cases
-          "shadow-md",
-          // If gradient style and desktop: show gradient layer via the backdrop element above
-          gradientOn && !isColoredHeader && "bg-transparent",
-          // If not colored (transparent), avoid tint and blur
-          !isColoredHeader && "bg-transparent",
+          // Shadow styling based on header type
+          isColoredHeaderDark ? "shadow-md" : gradientOn && brandHsl ? "shadow-lg" : "shadow-md",
+          // Default background for non-colored headers
+          !isColoredHeader &&
+            !isColoredLight &&
+            !isColoredHeaderDark &&
+            !isColoredLightDark &&
+            !gradientOn &&
+            !isSolidHeader &&
+            "bg-white/95 dark:bg-gray-900/95",
         )}
         style={
           isColoredHeader
             ? {
-                // Slight transparency so the solid header isn't too strong
-                backgroundColor: `hsla(${headerColor} / 0.85)`,
+                // Light mode solid header with brand color
+                backgroundColor: `hsla(${headerColor} / 0.95)`,
               }
-            : undefined
+            : isColoredHeaderDark
+              ? {
+                  // Dark mode solid header with brand color - dark with subtle brand effect
+                  background: `radial-gradient(1200px 300px at 50% -5%, hsla(${headerColor} / 0.15), transparent 50%), linear-gradient(180deg, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.98))`,
+                }
+              : isSolidHeader && !headerColor
+                ? {
+                    // Solid header without brand color - use dark background for white icons
+                    backgroundColor: `${isDark ? "rgba(17, 24, 39, 0.95)" : "rgba(0, 0, 0, 0.95)"} !important`,
+                  }
+                : gradientOn && brandHsl
+                  ? {
+                      // Gradient header with strong brand colors
+                      background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.4), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.9), hsla(${brandHsl} / 0.95))`,
+                      boxShadow: `0 4px 6px -1px hsla(${brandHsl} / 0.4), 0 2px 4px -1px hsla(${brandHsl} / 0.3)`,
+                    }
+                  : !gradientOn && isColoredLight
+                    ? {
+                        // Light mode non-gradient header with brand colors
+                        background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.25), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.95), hsla(${brandHsl} / 0.97))`,
+                      }
+                    : !gradientOn && isColoredLightDark
+                      ? {
+                          // Dark mode non-gradient header with brand colors
+                          background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.25), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.95), hsla(${brandHsl} / 0.97))`,
+                        }
+                      : undefined
         }
       >
-        {/* DESKTOP ACTIONS - LEFT SIDE */}
+        {/* DESKTOP ACTIONS - LEFT SIDE (only on desktop) */}
         {!isMobile && (
           <div className="flex items-center space-x-4">
             <Button
               variant="ghost"
               size="icon"
               className={clsx(
-                isColoredHeader
-                  ? "text-white hover:opacity-80"
-                  : "text-black hover:opacity-70 dark:text-white",
+                isSolidHeader ? "hover:opacity-80" : "text-black hover:opacity-70 dark:text-white",
                 "transition",
               )}
+              style={isSolidHeader ? { color: "white !important" } : undefined}
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
               onClick={toggleDark}
             >
-              <MoonIcon className="w-6 h-6" />
+              <MoonIcon
+                className="w-6 h-6"
+                style={isSolidHeader ? { color: "white" } : undefined}
+              />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               className={clsx(
-                isColoredHeader
-                  ? "text-white hover:opacity-80"
-                  : "text-black hover:opacity-70 dark:text-white",
+                isSolidHeader ? "hover:opacity-80" : "text-black hover:opacity-70 dark:text-white",
                 "transition",
               )}
+              style={isSolidHeader ? { color: "white !important" } : undefined}
               aria-label="Search"
               onClick={() => setSearchOpen(true)}
             >
-              <SearchIcon className="w-6 h-6" />
+              <SearchIcon
+                className="w-6 h-6"
+                style={isSolidHeader ? { color: "white" } : undefined}
+              />
             </Button>
           </div>
         )}
 
-        {/* LOGO - CENTER */}
-        <Link href="/" aria-label="Home" className="flex-1 flex justify-center">
+        {/* LOGO - CENTER ON DESKTOP, LEFT ON MOBILE */}
+        <Link
+          href="/"
+          aria-label="Home"
+          className={clsx("flex", isMobile ? "justify-start" : "justify-center flex-1")}
+        >
           <Image
             src={logoUrl}
             alt="Logo"
@@ -179,16 +237,24 @@ export default function Header({
           />
         </Link>
 
-        {/* MENU BUTTON - RIGHT SIDE */}
+        {/* MENU BUTTON - RIGHT SIDE (both desktop and mobile) */}
         <Button
           type="button"
           variant="ghost"
           size="icon"
-          className="text-white hover:text-brand-200 transition"
+          className={clsx(
+            isSolidHeader ? "hover:opacity-80" : "text-black hover:opacity-70 dark:text-white",
+            "transition",
+          )}
+          style={isSolidHeader ? { color: "white !important" } : undefined}
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           onClick={() => setMenuOpen((o) => !o)}
         >
-          {menuOpen ? <XIcon className="w-6 h-6" /> : <MenuIcon className="w-6 h-6" />}
+          {menuOpen ? (
+            <XIcon className="w-6 h-6" style={isSolidHeader ? { color: "white" } : undefined} />
+          ) : (
+            <MenuIcon className="w-6 h-6" style={isSolidHeader ? { color: "white" } : undefined} />
+          )}
         </Button>
       </header>
 

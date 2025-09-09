@@ -9,6 +9,7 @@ import { Textarea } from "@/src/components/ui/textarea";
 import { Switch } from "@/src/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/src/components/ui/dialog";
 import { useGlobalBlogs } from "@/src/hooks/public/useGlobalBlogs";
+import { useTenants } from "@/src/hooks/dashboard/useTenants";
 import { useTenantAds } from "@/src/hooks/dashboard/useTenantAds";
 import { useTenantAdMutations } from "@/src/hooks/dashboard/mutations/useTenantAdMutations";
 import { TenantAdPlacement, TenantAdAppearance } from "@/src/types/tenantAds";
@@ -39,6 +40,10 @@ export default function TenantAdsClient() {
     errorGlobal,
   });
 
+  // Fetch all tenants directly
+  const { data: tenants, isLoading: loadingTenants, error: errorTenants } = useTenants();
+  console.log("🔍 TenantAdsClient: useTenants result:", { tenants, loadingTenants, errorTenants });
+
   // Fetch tenant ads using the proper hook
   const { data: tenantAds, isLoading: loadingAds, error: errorAds } = useTenantAds();
   console.log("🔍 TenantAdsClient: useTenantAds result:", { tenantAds, loadingAds, errorAds });
@@ -46,11 +51,11 @@ export default function TenantAdsClient() {
   // Get mutation hooks
   const { createMutation, updateMutation, deleteMutation } = useTenantAdMutations();
 
-  // Derive "unique tenant list" and "blogs for selected tenant" - reusing existing pattern
+  // Derive "unique tenant list" from tenants data instead of globalBlogs
   const tenantList = useMemo(() => {
-    if (!globalBlogs) return [];
-    return Array.from(new Set(globalBlogs.map((b) => b.tenant)));
-  }, [globalBlogs]);
+    if (!tenants) return [];
+    return tenants.map((t) => t.domain);
+  }, [tenants]);
 
   // Create tenant options from available tenants only
   const availableTenants = useMemo(() => {
@@ -141,7 +146,7 @@ export default function TenantAdsClient() {
   };
 
   // Show loading state
-  if (loadingGlobal || loadingAds) {
+  if (loadingGlobal || loadingTenants || loadingAds) {
     return (
       <div className="p-6">
         <div className="text-center">جاري التحميل...</div>
@@ -150,7 +155,7 @@ export default function TenantAdsClient() {
   }
 
   // Show error state
-  if (errorGlobal || errorAds) {
+  if (errorGlobal || errorTenants || errorAds) {
     return (
       <div className="p-6">
         <div className="text-center text-red-600">حدث خطأ في تحميل البيانات</div>

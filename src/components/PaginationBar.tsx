@@ -17,19 +17,21 @@ export default function PaginationBar({ currentPage, totalPages, onPageChange }:
       {/* Prev / Next */}
       <div className="flex gap-2">
         <button
+          type="button"
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           aria-label="الصفحة السابقة"
-          className="rounded-md border px-4 py-1.5 text-sm bg-white dark:bg-black border-gray-300 dark:border-gray-700 hover:opacity-80 transition disabled:opacity-50"
+          className="rounded-md border px-4 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:opacity-80 transition disabled:opacity-50"
         >
           السابق
         </button>
 
         <button
+          type="button"
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           aria-label="الصفحة التالية"
-          className="rounded-md border px-4 py-1.5 text-sm bg-white dark:bg-black border-gray-300 dark:border-gray-700 hover:opacity-80 transition disabled:opacity-50"
+          className="rounded-md border px-4 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600 hover:opacity-80 transition disabled:opacity-50"
         >
           التالي
         </button>
@@ -45,7 +47,7 @@ export default function PaginationBar({ currentPage, totalPages, onPageChange }:
           value={currentPage}
           onChange={(e) => onPageChange(Number(e.target.value))}
           aria-label="اختر رقم الصفحة"
-          className="appearance-none px-4 py-1.5 pr-10 rounded-md border text-sm border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-black text-gray-700 dark:text-gray-300"
+          className="appearance-none px-4 py-1.5 pr-10 rounded-md border text-sm border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-100"
         >
           {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNum) => (
             <option key={pageNum} value={pageNum}>

@@ -44,47 +44,32 @@ export default function BlogHero({
       ))}
 
       {/* Title */}
-      <h1 className="text-4xl md:text-5xl font-extrabold mb-3">{blog.title}</h1>
+      <h1 className="text-6xl md:text-7xl font-extrabold mb-3 line-clamp-3">{blog.title}</h1>
 
       {/* Description */}
       {blog.description && (
-        <p className="text-gray-500 dark:text-gray-400 text-lg mb-2 line-clamp-3 md:line-clamp-none max-w-4xl mx-auto px-4">
+        <p className="text-gray-500 dark:text-gray-400 text-lg mb-2 line-clamp-3 max-w-4xl mx-auto px-4">
           {blog.description}
         </p>
       )}
 
-      {/* Author - Desktop: Simple name only */}
-      <div className="hidden md:block mb-2">
+      {/* Author - Desktop: Avatar and name */}
+      <div className="hidden md:flex items-center justify-center gap-3 mb-2">
+        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+          <Image
+            src={getAvatarUrl(blog.author?.avatarUrl)}
+            alt={blog.author?.name ? `صورة ${blog.author.name}` : "كاتب"}
+            width={40}
+            height={40}
+            className="object-cover w-full h-full"
+            onError={handleAvatarError}
+          />
+        </div>
         <div className="text-base font-semibold text-gray-700 dark:text-gray-300">
           {blog.author?.name ?? "كاتب"}
         </div>
       </div>
 
-      {/* Author + Bio - Mobile: Full card design */}
-      <div className="md:hidden mb-4 w-full px-4">
-        <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mx-auto max-w-sm">
-          <div className="flex items-center gap-3">
-            <Image
-              src={getAvatarUrl((blog as any).author?.avatarUrl)}
-              alt={blog.author?.name || ""}
-              width={40}
-              height={40}
-              className="rounded-full object-cover flex-shrink-0"
-              onError={handleAvatarError}
-            />
-            <div className="text-left min-w-0 flex-1">
-              <div className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                {blog.author?.name ?? "كاتب"}
-              </div>
-              {(blog as any).author?.bio && (
-                <div className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
-                  {(blog as any).author.bio}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
       {/* Date in grey */}
       <p className="text-xs text-gray-400">
         <time dateTime={new Date(blog.createdAt).toISOString()}>{formatDate(blog.createdAt)}</time>

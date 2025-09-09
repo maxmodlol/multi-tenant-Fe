@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Moon, X } from "lucide-react";
+import Image from "next/image";
 import { useCategories } from "@/src/hooks/public/useCategories";
 import { Category } from "@explore/types/category";
 import { Input } from "@explore/components/ui/input";
@@ -86,16 +87,29 @@ const ResponsiveMenu: React.FC<ResponsiveMenuProps> = ({
       </div>
 
       {/* Social Media Icons */}
-      <div className="flex justify-center gap-2 pt-0 ">
+      <div className="flex justify-center gap-1.5 md:gap-2 pt-4 border-t border-gray-200 dark:border-gray-700 flex-wrap">
         {[
-          { name: "facebook", url: "/icons/facebook.svg" },
-          { name: "messenger", url: "/icons/instagram.svg" },
-          { name: "x", url: "/icons/X.svg" },
-          { name: "whatsapp", url: "/icons/whatsapp.svg" },
-          { name: "telegram", url: "/icons/telegram.svg" },
+          { name: "Facebook", url: "/icons/facebook.svg", href: "https://www.facebook.com/" },
+          { name: "Instagram", url: "/icons/instagram.svg", href: "https://www.instagram.com/" },
+          { name: "X", url: "/icons/X.svg", href: "https://x.com/" },
+          { name: "WhatsApp", url: "/icons/whatsapp.svg", href: "https://wa.me/" },
+          { name: "Telegram", url: "/icons/telegram.svg", href: "https://t.me/" },
         ].map((icon) => (
-          <a key={icon.name} href="#" aria-label={icon.name}>
-            <img src={icon.url} alt={icon.name} className=" hover:opacity-80 transition" />
+          <a
+            key={icon.name}
+            href={icon.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={icon.name}
+            className="group relative p-2 md:p-2.5 rounded-lg bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 hover:scale-102 hover:shadow-md border border-gray-200 dark:border-gray-600 w-9 h-9 md:w-10 md:h-10 flex items-center justify-center"
+          >
+            <Image
+              src={icon.url}
+              alt={icon.name}
+              width={16}
+              height={16}
+              className="object-contain text-gray-600 dark:text-gray-300 transition-transform duration-200 md:w-4 md:h-4"
+            />
           </a>
         ))}
       </div>

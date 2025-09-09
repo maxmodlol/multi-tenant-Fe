@@ -43,7 +43,7 @@ export default function BlogCard({ blog, type }: BlogCardProps) {
   // ─── Slider variant ───────────────────────────────────────────────────────
   if (type === "slider") {
     return (
-      <div className="relative w-full h-full min-h-[560px] rounded-3xl overflow-hidden">
+      <div className="relative w-full h-full rounded-3xl overflow-hidden">
         <Link href={resolveHref()}>
           <Image
             src={blog.coverPhoto ?? "/placeholder-image.jpg"}
@@ -51,11 +51,14 @@ export default function BlogCard({ blog, type }: BlogCardProps) {
             fill
             sizes="100vw"
             priority
-            className="object-cover object-center"
+            className="object-cover object-center w-full h-full"
           />
-          {/* Solid black box behind text (no blur, no gradient) */}
+          {/* Solid black/gray background behind text (no blur, no gradient) */}
           <div className="absolute inset-x-0 bottom-0 z-20">
-            <div className="w-full rounded-b-2xl bg-alphaBlack-90 dark:bg-alphaWhite-90 px-4 sm:px-6 md:px-10 py-4 sm:py-6 md:py-10 min-h-[150px] sm:min-h-[180px] md:min-h-[160px]">
+            <div
+              className="w-full rounded-b-2xl px-4 sm:px-6 md:px-10 py-4 sm:py-6 md:py-10 min-h-[150px] sm:min-h-[180px] md:min-h-[160px] dark:!bg-gray-900/95"
+              style={{ backgroundColor: "rgba(0, 0, 0, 0.95)" }}
+            >
               <h2 className="text-right text-2xl sm:text-3xl md:text-5xl font-extrabold leading-tight md:leading-[1.15] line-clamp-1 md:line-clamp-2 break-words text-text-white">
                 {blog.title}
               </h2>
@@ -95,7 +98,7 @@ export default function BlogCard({ blog, type }: BlogCardProps) {
       <div
         className={clsx(
           "relative w-full h-44 sm:h-52 md:h-56 rounded-t-lg overflow-hidden",
-          "border border-gray-200 dark:border-gray-700",
+          "border border-gray-200 dark:border-gray-600",
           "transition-transform duration-300 ease-out",
           "group-hover:scale-[1.02] group-hover:-translate-y-1 shadow-sm group-hover:shadow-lg",
           "shadow-sm group-hover:shadow-lg",
@@ -116,8 +119,8 @@ export default function BlogCard({ blog, type }: BlogCardProps) {
       {/* content + border on three sides */}
       <div
         className={clsx(
-          "p-4 bg-white dark:bg-gray-900 rounded-b-2xl",
-          "border border-t-0 border-gray-200 dark:border-gray-800",
+          "p-4 bg-white dark:bg-gray-800 rounded-b-2xl",
+          "border border-t-0 border-gray-200 dark:border-gray-700",
           "flex flex-1 flex-col",
         )}
       >

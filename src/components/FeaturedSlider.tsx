@@ -54,7 +54,7 @@ export default function FeaturedSlider({
   if (!blogs.length) return null;
 
   return (
-    <section className="relative w-full max-w-[1216px] mx-auto h-[520px] md:h-[600px] rounded-2xl overflow-hidden">
+    <section className="relative w-full md:max-w-[1140px] mx-auto h-[400px] md:h-[600px] rounded-2xl overflow-hidden">
       <Swiper
         dir="rtl"
         modules={[Navigation, Autoplay, EffectCreative]}
@@ -62,7 +62,7 @@ export default function FeaturedSlider({
         effect="creative"
         creativeEffect={{
           // In RTL, "prev" visually goes right and "next" goes left
-          prev: { translate: ["20%", 0, -1] },
+          prev: { translate: ["0%", 0, -1] },
           next: { translate: ["-100%", 0, 0] },
         }}
         speed={800}

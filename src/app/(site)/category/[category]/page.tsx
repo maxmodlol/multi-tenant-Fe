@@ -38,37 +38,57 @@ interface PageProps {
 export default async function CategoryPage(props: PageProps) {
   const params = await props.params;
   const categoryName = decodeURIComponent(params.category);
-  // Fetch page 1 of this category
-  const [blogsData, categories] = await Promise.all([
-    blogService.getAllBlogs(categoryName, 1, 11),
-    fetchCategories(),
-  ]);
 
-  return (
-    <main className="w-full min-h-screen px-4 md:px-14 py-10 bg-white dark:bg-gray-900">
-      <header className="max-w-screen-xl mx-auto text-right">
-        <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">
-          تصنيف: {categoryName}
-        </h1>
-        <p className="mt-2 text-gray-600 dark:text-gray-300">أحدث المقالات في هذا التصنيف</p>
-      </header>
+  console.log("Category page - Raw params:", params.category);
+  console.log("Category page - Decoded category:", categoryName);
 
-      <div className="my-8" />
+  try {
+    // Fetch page 1 of this category
+    const [blogsData, categories] = await Promise.all([
+      blogService.getAllBlogs(categoryName, 1, 11),
+      fetchCategories(),
+    ]);
 
-      {/* Category Top Ad */}
-      <CategoryTopAd pageType="category" />
+    return (
+      <main className="w-full min-h-screen px-4 md:px-14 py-10 bg-white dark:bg-gray-900">
+        <header className="max-w-screen-xl mx-auto text-right">
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200">
+            تصنيف: {categoryName}
+          </h1>
+          <p className="mt-2 text-gray-600 dark:text-gray-300">أحدث المقالات في هذا التصنيف</p>
+        </header>
 
-      <BlogsList
-        initialBlogs={blogsData.blogs}
-        initialTotalPages={blogsData.totalPages}
-        initialCategories={categories}
-        initialCategory={categoryName}
-      />
+        <div className="my-8" />
 
-      {/* Category Bottom Ad */}
-      <div className="mt-8">
-        <CategoryBottomAd pageType="category" />
-      </div>
-    </main>
-  );
+        {/* Category Top Ad */}
+        <CategoryTopAd pageType="category" />
+
+        <BlogsList
+          initialBlogs={blogsData.blogs}
+          initialTotalPages={blogsData.totalPages}
+          initialCategories={categories}
+          initialCategory={categoryName}
+        />
+
+        {/* Category Bottom Ad */}
+        <div className="mt-8">
+          <CategoryBottomAd pageType="category" />
+        </div>
+      </main>
+    );
+  } catch (error) {
+    console.error("Error loading category page:", error);
+    return (
+      <main className="w-full min-h-screen px-4 md:px-14 py-10 bg-white dark:bg-gray-900">
+        <div className="max-w-screen-xl mx-auto text-center">
+          <h1 className="text-4xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+            خطأ في تحميل التصنيف
+          </h1>
+          <p className="text-gray-600 dark:text-gray-300">
+            حدث خطأ أثناء تحميل صفحة التصنيف. يرجى المحاولة مرة أخرى.
+          </p>
+        </div>
+      </main>
+    );
+  }
 }

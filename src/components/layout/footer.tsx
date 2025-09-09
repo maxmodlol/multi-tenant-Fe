@@ -125,20 +125,42 @@ export default function Footer({
   const gradientOn = headerStyle === "gradient";
   const brandHsl = baseColor ?? headerColor ?? undefined;
   const isColoredFooter = !isDark && headerStyle === "solid" && Boolean(headerColor);
+  const isColoredFooterDark = isDark && headerStyle === "solid" && Boolean(headerColor);
   const isColoredLight = !isDark && Boolean(brandHsl);
+
+  // Debug logging
+  console.log("Footer Debug:", {
+    isDark,
+    headerStyle,
+    headerColor,
+    isColoredFooter,
+    isColoredFooterDark,
+    shouldBeWhite: isColoredFooter || isColoredFooterDark,
+  });
+
   return (
     <footer
       role="contentinfo"
-      className="relative overflow-hidden text-white dark:text-black pt-20 pb-10 dark:bg-white/5"
-      style={
-        isColoredFooter
-          ? { backgroundColor: `hsla(${headerColor} / 0.85)` }
-          : !gradientOn && isColoredLight
+      className={`relative overflow-hidden pt-20 pb-10 dark:bg-white/5 ${
+        isColoredFooter || isColoredFooterDark
+          ? "text-white [&_*]:!text-white"
+          : "text-white dark:text-black"
+      }`}
+      style={{
+        ...(isColoredFooter
+          ? { backgroundColor: `hsla(${headerColor} / 0.95)`, color: "white" }
+          : isColoredFooterDark
             ? {
-                background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.18), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.92), hsla(${brandHsl} / 0.94))`,
+                background: `radial-gradient(1200px 300px at 50% -5%, hsla(${headerColor} / 0.15), transparent 50%), linear-gradient(180deg, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.98))`,
+                color: "white",
               }
-            : undefined
-      }
+            : !gradientOn && isColoredLight
+              ? {
+                  background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.18), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.92), hsla(${brandHsl} / 0.94))`,
+                }
+              : {}),
+        ...(isColoredFooter || isColoredFooterDark ? { color: "white" } : {}),
+      }}
     >
       {/* Subtle gradient backdrop */}
       {gradientOn && !isMobile && (
@@ -150,6 +172,21 @@ export default function Footer({
             bg-[length:300%_300%] animate-gradient-x
             opacity-60 blur-2xl pointer-events-none
           "
+        />
+      )}
+
+      {/* Brand gradient backdrop for solid headers */}
+      {(isColoredFooter || isColoredFooterDark) && brandHsl && (
+        <div
+          aria-hidden
+          className="
+            absolute inset-0
+            bg-[length:300%_300%] animate-gradient-x
+            opacity-50 blur-2xl pointer-events-none
+          "
+          style={{
+            background: `linear-gradient(90deg, hsla(${brandHsl} / 0.6), hsla(${brandHsl} / 0.4), hsla(${brandHsl} / 0.6))`,
+          }}
         />
       )}
       {/* شريط التدرج النيون العلوي (only when not mirroring header gradient) */}

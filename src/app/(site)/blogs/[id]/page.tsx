@@ -33,8 +33,13 @@ export async function generateMetadata(props: {
   };
 }
 
-export default async function Page(props: { params: Promise<{ id: string }> }) {
+export default async function Page(props: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ page?: string }>;
+}) {
   const params = await props.params;
+  const searchParams = await props.searchParams;
+  const page = parseInt(searchParams.page || "1", 10);
   const blog = await blogService.getBlogById(params.id);
   if (!blog) return <div>Not Found</div>;
 
@@ -78,6 +83,7 @@ export default async function Page(props: { params: Promise<{ id: string }> }) {
         ...blog,
         pages: cleanPages,
       }}
+      initialPage={page}
     />
   );
 }
