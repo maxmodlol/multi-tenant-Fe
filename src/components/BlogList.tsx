@@ -1,5 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import BlogCard from "./BlogCard";
 import { useBlogs } from "@/src/hooks/public/useBlogs";
 import { useCategories } from "@/src/hooks/public/useCategories";
@@ -22,6 +23,7 @@ export default function BlogsList({
   initialCategories,
   initialCategory,
 }: BlogsListProps) {
+  const router = useRouter();
   const [activeCategory, setActiveCategory] = useState(initialCategory ?? "all");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 11; // 9 regular + 2 wide
@@ -49,8 +51,17 @@ export default function BlogsList({
   const totalPages = blogsResponse?.totalPages || initialTotalPages;
 
   const handleCategoryChange = (category: string) => {
-    setActiveCategory(category);
-    setCurrentPage(1);
+    console.log("BlogList - handleCategoryChange called with:", category);
+    if (category === "all") {
+      // For "all", just filter locally
+      console.log("BlogList - Filtering locally for 'all'");
+      setActiveCategory(category);
+      setCurrentPage(1);
+    } else {
+      // For specific categories, navigate to the category page
+      console.log("BlogList - Navigating to category page:", category);
+      router.push(`/category/${encodeURIComponent(category)}`);
+    }
   };
 
   // Drag-to-scroll for categories row (desktop + mobile)
@@ -62,10 +73,14 @@ export default function BlogsList({
   const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     const container = categoriesScrollRef.current;
     if (!container) return;
-    isDraggingRef.current = true;
-    container.setPointerCapture(e.pointerId);
-    startXRef.current = e.clientX;
-    scrollLeftRef.current = container.scrollLeft;
+
+    // Only start dragging if the target is the container itself, not a button
+    if (e.target === container) {
+      isDraggingRef.current = true;
+      container.setPointerCapture(e.pointerId);
+      startXRef.current = e.clientX;
+      scrollLeftRef.current = container.scrollLeft;
+    }
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
@@ -87,17 +102,15 @@ export default function BlogsList({
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 space-y-6">
       {/* Category Filters */}
-      <div
-        ref={categoriesScrollRef}
-        className="flex gap-3 overflow-x-auto pb-2 rtl:flex-row select-none cursor-grab active:cursor-grabbing"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerUp}
-      >
+      <div ref={categoriesScrollRef} className="flex gap-3 overflow-x-auto pb-2 rtl:flex-row">
         <Button
           variant="primary"
-          onClick={() => handleCategoryChange("all")}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log("BlogList - 'All' button clicked");
+            handleCategoryChange("all");
+          }}
           className={clsx(
             "px-4 py-2 rounded-lg font-semibold whitespace-nowrap",
             activeCategory === "all" ? "bg-red-500 text-text-white" : "bg-gray-100 text-gray-800",
@@ -108,7 +121,12 @@ export default function BlogsList({
         {categories.map((cat) => (
           <Button
             key={cat.id}
-            onClick={() => handleCategoryChange(cat.name)}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log("BlogList - Category button clicked:", cat.name);
+              handleCategoryChange(cat.name);
+            }}
             className={clsx(
               "px-4 py-2 rounded-lg font-semibold whitespace-nowrap",
               activeCategory === cat.name

@@ -13,6 +13,10 @@ export const blogService = {
   getAllBlogs: async (category = "all", page = 1, limit = 9): Promise<BlogListResponse> => {
     const apiPublic = await getApiPublic();
 
+    console.log("BlogService.getAllBlogs - Category parameter:", category);
+    console.log("BlogService.getAllBlogs - Category type:", typeof category);
+    console.log("BlogService.getAllBlogs - Category length:", category.length);
+
     const { data } = await apiPublic.get("/blogs", {
       params: { category, page, limit },
     });

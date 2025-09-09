@@ -30,3 +30,6 @@ export function handleAvatarError(event: React.SyntheticEvent<HTMLImageElement, 
 export function isValidAvatarUrl(avatarUrl?: string | null): boolean {
   return Boolean(avatarUrl && avatarUrl.trim() !== "");
 }
+
+
+

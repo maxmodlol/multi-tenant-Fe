@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAdSettings } from "@/src/hooks/dashboard/useAdSetting";
 import { Placement } from "@/src/types/ads";
 import { Blog } from "@explore/types/blogs";
@@ -22,10 +23,19 @@ function AdSlot({ snippet }: { snippet: string }) {
   );
 }
 
-export default function BlogDetailClient({ blog }: { blog: Blog }) {
-  const [page, setPage] = useState(1);
+export default function BlogDetailClient({
+  blog,
+  initialPage = 1,
+}: {
+  blog: Blog;
+  initialPage?: number;
+}) {
+  const searchParams = useSearchParams();
+  const urlPage = parseInt(searchParams.get("page") || "1", 10);
+  const [page, setPage] = useState(urlPage || initialPage);
   const total = blog.pages.length;
   const qc = useQueryClient();
+  const router = useRouter();
 
   // Fetch ads for this blogId:
   const {
@@ -34,6 +44,11 @@ export default function BlogDetailClient({ blog }: { blog: Blog }) {
     error: adsError,
     refetch,
   } = useAdSettings(blog.id);
+
+  // Sync page state with URL parameters
+  useEffect(() => {
+    setPage(urlPage || 1);
+  }, [urlPage]);
 
   // Re-fetch ads whenever `page` changes:
   useEffect(() => {
@@ -100,7 +115,9 @@ export default function BlogDetailClient({ blog }: { blog: Blog }) {
           <PaginationBar
             currentPage={page}
             totalPages={total}
-            onPageChange={(newPage) => setPage(newPage)}
+            onPageChange={(newPage) => {
+              router.push(`/blogs/${blog.id}?page=${newPage}`);
+            }}
           />
         )}
 
@@ -133,7 +150,9 @@ export default function BlogDetailClient({ blog }: { blog: Blog }) {
           <PaginationBar
             currentPage={page}
             totalPages={total}
-            onPageChange={(newPage) => setPage(newPage)}
+            onPageChange={(newPage) => {
+              router.push(`/blogs/${blog.id}?page=${newPage}`);
+            }}
           />
         )}
 
