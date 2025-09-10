@@ -66,40 +66,44 @@ export default function BlogFooterMeta({
 
   return (
     <div
-      className="border-t border-gray-200 dark:border-gray-700 py-6 lg:bg-gradient-to-br lg:from-gray-50 lg:to-gray-100 dark:lg:from-gray-800 lg:to-gray-900 lg:rounded-2xl lg:p-4 md:lg:p-6 lg:border lg:border-gray-200 dark:lg:border-gray-700 lg:border-r-0 lg:shadow-sm lg:border-t-0 lg:py-0 relative lg:pr-0"
+      className="border-t border-gray-200 dark:border-gray-700 py-8 px-4 md:px-6 lg:px-8 bg-white dark:bg-gray-900"
       aria-label="معلومات عن المؤلف ومشاركة المقال"
     >
-      {/* Main Content - Horizontal Layout */}
-      <div className="flex flex-col lg:flex-row items-center lg:items-center justify-between gap-6 lg:gap-6">
-        {/* Author Section - Centered on Mobile, Right on Desktop */}
-        <div className="flex flex-col lg:flex-row items-center lg:items-center gap-4 lg:gap-3 order-1 lg:order-1 w-full lg:w-auto">
-          {/* Avatar */}
-          <div className="w-16 h-16 lg:w-16 lg:h-16 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0 shadow-sm lg:absolute lg:-right-2 lg:top-1/2 lg:-translate-y-1/2">
-            <Image
-              src={getAvatarUrl(author?.avatarUrl)}
-              alt={author?.name ? `صورة ${author.name}` : "مؤلف مجهول"}
-              width={64}
-              height={64}
-              className="object-cover w-full h-full"
-              onError={handleAvatarError}
-            />
+      {/* Main Content - Clean Horizontal Layout */}
+      <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-8">
+        {/* Author Section - Vertical on mobile, Horizontal on desktop */}
+        <div className="flex flex-col lg:flex-row items-center gap-4 order-1 lg:order-1">
+          {/* Avatar - Clean circular design */}
+          <div className="relative">
+            <div className="w-20 h-20 rounded-full overflow-hidden bg-gray-100 dark:bg-gray-800 flex-shrink-0 shadow-lg ring-2 ring-gray-200 dark:ring-gray-700">
+              <Image
+                src={getAvatarUrl(author?.avatarUrl)}
+                alt={author?.name ? `صورة ${author.name}` : "مؤلف مجهول"}
+                width={80}
+                height={80}
+                className="object-cover w-full h-full"
+                onError={handleAvatarError}
+              />
+            </div>
           </div>
-          <div className="text-center lg:text-right flex-1 min-w-0 lg:pr-20">
-            <h3 className="text-lg lg:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1 line-clamp-1">
+
+          {/* Author Info - Centered on mobile, Right-aligned on desktop */}
+          <div className="text-center lg:text-right">
+            <h3 className="text-xl lg:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">
               {author?.name || "مؤلف مجهول"}
             </h3>
             {author?.bio && (
-              <p className="text-sm lg:text-sm text-gray-600 dark:text-gray-300 leading-relaxed line-clamp-2">
+              <p className="text-sm lg:text-base text-gray-600 dark:text-gray-400 leading-relaxed max-w-md">
                 {author.bio}
               </p>
             )}
           </div>
         </div>
 
-        {/* Share Section - Below Author on Mobile, Left on Desktop */}
-        <div className="flex flex-col gap-2 lg:gap-3 order-2 lg:order-2 w-full lg:w-auto">
-          <div className="flex items-center gap-3 lg:gap-2 justify-center lg:justify-start">
-            {/* Social Media Icons */}
+        {/* Share Section - Below on mobile, Left side on desktop */}
+        <div className="flex items-center gap-3 order-2 lg:order-2">
+          {/* Social Media Icons */}
+          <div className="flex items-center gap-2">
             {mounted &&
               platforms.map((p) => (
                 <a
@@ -108,37 +112,37 @@ export default function BlogFooterMeta({
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`مشاركة عبر ${p.name}`}
-                  className={`group relative bg-white dark:bg-gray-800 ${p.color} p-2 rounded-lg transition-all duration-200 hover:scale-105 hover:shadow-md border border-gray-200 dark:border-gray-700 w-9 h-9 lg:w-10 lg:h-10 flex items-center justify-center flex-shrink-0`}
+                  className={`group relative bg-gray-50 dark:bg-gray-800 ${p.color} p-3 rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg border border-gray-200 dark:border-gray-700 w-12 h-12 flex items-center justify-center flex-shrink-0`}
                 >
                   <Image
                     src={p.icon}
                     alt={p.name}
-                    width={18}
-                    height={18}
+                    width={20}
+                    height={20}
                     className="object-contain text-gray-600 dark:text-gray-300 transition-transform duration-200"
                   />
                 </a>
               ))}
-
-            {/* Copy Link Button */}
-            <button
-              onClick={copyLink}
-              aria-label="نسخ رابط المقال"
-              className={`group flex items-center gap-1.5 lg:gap-2 bg-white dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-900/20 px-2.5 lg:px-3 py-1.5 lg:py-2 rounded-lg text-xs lg:text-sm font-medium text-gray-700 dark:text-gray-300 hover:scale-105 transition-all duration-200 hover:shadow-md border border-gray-200 dark:border-gray-700 flex-shrink-0 ${copied ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" : ""}`}
-            >
-              <Image
-                src="/icons/copy.svg"
-                alt=""
-                width={16}
-                height={16}
-                aria-hidden="true"
-                className="object-contain text-gray-600 dark:text-gray-300 transition-transform duration-200"
-              />
-              <span className="transition-transform duration-200">
-                {copied ? "تم النسخ!" : "نسخ الرابط"}
-              </span>
-            </button>
           </div>
+
+          {/* Copy Link Button */}
+          <button
+            onClick={copyLink}
+            aria-label="نسخ رابط المقال"
+            className={`group flex items-center gap-2 bg-gray-50 dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-900/20 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:scale-105 transition-all duration-200 hover:shadow-lg border border-gray-200 dark:border-gray-700 flex-shrink-0 ${copied ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" : ""}`}
+          >
+            <Image
+              src="/icons/copy.svg"
+              alt=""
+              width={18}
+              height={18}
+              aria-hidden="true"
+              className="object-contain text-gray-600 dark:text-gray-300 transition-transform duration-200"
+            />
+            <span className="transition-transform duration-200">
+              {copied ? "تم النسخ!" : "نسخ الرابط"}
+            </span>
+          </button>
         </div>
       </div>
     </div>
