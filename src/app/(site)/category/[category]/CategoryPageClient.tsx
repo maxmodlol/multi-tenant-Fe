@@ -5,7 +5,8 @@ import { blogService } from "@explore/services/blogService";
 import { fetchCategories } from "@explore/services/categoryService";
 import BlogsList from "@explore/components/BlogList";
 import { CategoryTopAd, CategoryBottomAd } from "@/src/components/TenantAdInjector";
-import { Blog, Category } from "@explore/types";
+import { Blog } from "@explore/types/blogs";
+import { Category } from "@explore/types/category";
 
 interface CategoryPageClientProps {
   categoryName: string;
