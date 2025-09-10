@@ -109,21 +109,23 @@ export default function BlogDetailClient({
       {/* ─── Hero including ABOVE_TAGS & UNDER_DATE ─── */}
       <BlogHero blog={blog} aboveTagsAds={aboveTagsAds} underDateAds={underDateAds} />
 
-      <div className="max-w-3xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-4 md:px-6 -mt-2 md:mt-0">
         {/* ─── Pagination (Top) ─── */}
         {!isSingle && (
-          <PaginationBar
-            currentPage={page}
-            totalPages={total}
-            onPageChange={(newPage) => {
-              router.push(`/blogs/${blog.id}?page=${newPage}`);
-            }}
-          />
+          <div className="mb-4">
+            <PaginationBar
+              currentPage={page}
+              totalPages={total}
+              onPageChange={(newPage) => {
+                router.push(`/blogs/${blog.id}?page=${newPage}`);
+              }}
+            />
+          </div>
         )}
 
         {/* ─── Page Content with INLINE ─── */}
-        <div className="space-y-8 py-6">
-          <article className="prose dark:prose-invert max-w-none">
+        <div className="space-y-6 py-4">
+          <article className="prose dark:prose-invert max-w-none prose-lg leading-relaxed">
             <div
               dangerouslySetInnerHTML={{
                 __html:
@@ -147,21 +149,25 @@ export default function BlogDetailClient({
 
         {/* ─── Pagination (Bottom) ─── */}
         {!isSingle && (
-          <PaginationBar
-            currentPage={page}
-            totalPages={total}
-            onPageChange={(newPage) => {
-              router.push(`/blogs/${blog.id}?page=${newPage}`);
-            }}
-          />
+          <div className="mt-6">
+            <PaginationBar
+              currentPage={page}
+              totalPages={total}
+              onPageChange={(newPage) => {
+                router.push(`/blogs/${blog.id}?page=${newPage}`);
+              }}
+            />
+          </div>
         )}
 
         {/* ─── Footer Meta ─── */}
-        <BlogFooterMeta
-          url={typeof window !== "undefined" ? window.location.href : ""}
-          author={blog.author}
-          createdAt={blog.createdAt}
-        />
+        <div className="mt-6">
+          <BlogFooterMeta
+            url={typeof window !== "undefined" ? window.location.href : ""}
+            author={blog.author}
+            createdAt={blog.createdAt}
+          />
+        </div>
 
         {/* ─── Optional Bottom UNDER_DATE Ad ─── */}
         {adSettings
@@ -170,7 +176,9 @@ export default function BlogDetailClient({
       </div>
 
       {/* ─── Related Blogs ─── */}
-      <RelatedBlogs currentBlog={blog} />
+      <div className="mt-8">
+        <RelatedBlogs currentBlog={blog} />
+      </div>
     </div>
   );
 }

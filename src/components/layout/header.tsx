@@ -106,15 +106,15 @@ export default function Header({
   return (
     <div className="fixed inset-x-0 top-0 z-50">
       {/* Gradient backdrop with brand colors */}
-      {gradientOn && !isMobile && (
+      {gradientOn && (
         <div
           aria-hidden
-          className="
-            absolute inset-0
-            bg-gradient-to-r from-indigo-200 via-brand-300 to-blue-400
-            bg-[length:300%_300%] animate-gradient-x
-            opacity-60 blur-2xl pointer-events-none
-          "
+          className={clsx(
+            "absolute inset-0 bg-gradient-to-r from-indigo-200 via-brand-300 to-blue-400 pointer-events-none",
+            isMobile
+              ? "opacity-50 blur-2xl" // Less color, no animation on mobile
+              : "bg-[length:300%_300%] animate-gradient-x opacity-85 blur-xl", // Full effect on desktop
+          )}
         />
       )}
 
@@ -122,13 +122,16 @@ export default function Header({
       {gradientOn && brandHsl && (
         <div
           aria-hidden
-          className="
-            absolute inset-0
-            bg-[length:300%_300%] animate-gradient-x
-            opacity-70 blur-2xl pointer-events-none
-          "
+          className={clsx(
+            "absolute inset-0 pointer-events-none",
+            isMobile
+              ? "opacity-60 blur-2xl" // Less color, no animation on mobile
+              : "bg-[length:300%_300%] animate-gradient-x opacity-90 blur-lg", // Full effect on desktop
+          )}
           style={{
-            background: `linear-gradient(90deg, hsla(${brandHsl} / 0.8), hsla(${brandHsl} / 0.6), hsla(${brandHsl} / 0.8))`,
+            background: isMobile
+              ? `linear-gradient(90deg, hsla(${brandHsl} / 0.6), hsla(${brandHsl} / 0.4), hsla(${brandHsl} / 0.6))` // Reduced color intensity on mobile
+              : `linear-gradient(90deg, hsla(${brandHsl} / 0.9), hsla(${brandHsl} / 0.8), hsla(${brandHsl} / 0.9))`, // Full color on desktop
           }}
         />
       )}
@@ -146,39 +149,39 @@ export default function Header({
             !isColoredLightDark &&
             !gradientOn &&
             !isSolidHeader &&
-            "bg-white/95 dark:bg-gray-900/95",
+            "bg-white/98 dark:bg-gray-900/98",
         )}
         style={
           isColoredHeader
             ? {
                 // Light mode solid header with brand color
-                backgroundColor: `hsla(${headerColor} / 0.95)`,
+                backgroundColor: `hsla(${headerColor} / 0.98)`,
               }
             : isColoredHeaderDark
               ? {
                   // Dark mode solid header with brand color - dark with subtle brand effect
-                  background: `radial-gradient(1200px 300px at 50% -5%, hsla(${headerColor} / 0.15), transparent 50%), linear-gradient(180deg, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.98))`,
+                  background: `radial-gradient(1200px 300px at 50% -5%, hsla(${headerColor} / 0.2), transparent 50%), linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(17, 24, 39, 0.99))`,
                 }
               : isSolidHeader && !headerColor
                 ? {
                     // Solid header without brand color - use dark background for white icons
-                    backgroundColor: `${isDark ? "rgba(17, 24, 39, 0.95)" : "rgba(0, 0, 0, 0.95)"} !important`,
+                    backgroundColor: `${isDark ? "rgba(17, 24, 39, 0.98)" : "rgba(0, 0, 0, 0.98)"} !important`,
                   }
                 : gradientOn && brandHsl
                   ? {
                       // Gradient header with strong brand colors
-                      background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.4), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.9), hsla(${brandHsl} / 0.95))`,
-                      boxShadow: `0 4px 6px -1px hsla(${brandHsl} / 0.4), 0 2px 4px -1px hsla(${brandHsl} / 0.3)`,
+                      background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.5), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.95), hsla(${brandHsl} / 0.98))`,
+                      boxShadow: `0 4px 6px -1px hsla(${brandHsl} / 0.5), 0 2px 4px -1px hsla(${brandHsl} / 0.4)`,
                     }
                   : !gradientOn && isColoredLight
                     ? {
                         // Light mode non-gradient header with brand colors
-                        background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.25), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.95), hsla(${brandHsl} / 0.97))`,
+                        background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.3), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.97), hsla(${brandHsl} / 0.98))`,
                       }
                     : !gradientOn && isColoredLightDark
                       ? {
                           // Dark mode non-gradient header with brand colors
-                          background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.25), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.95), hsla(${brandHsl} / 0.97))`,
+                          background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.3), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.97), hsla(${brandHsl} / 0.98))`,
                         }
                       : undefined
         }
@@ -260,7 +263,7 @@ export default function Header({
 
       {/* MOBILE MENU */}
       {menuOpen && isMobile && (
-        <nav className="fixed inset-0 top-[64px] bg-gray-50 dark:bg-gray-900 z-40 p-6">
+        <nav className="fixed inset-0 top-[64px] bg-white/98 dark:bg-gray-900/98 backdrop-blur-md z-40 p-6">
           <ResponsiveMenu
             isDark={isDark}
             toggleDarkMode={toggleDark}
@@ -272,7 +275,7 @@ export default function Header({
 
       {/* DESKTOP DROPDOWN */}
       {menuOpen && !isMobile && (
-        <nav className="absolute top-[64px] left-6 bg-black/40 dark:bg-white/20 backdrop-blur-lg rounded-lg p-4 shadow-lg z-40">
+        <nav className="absolute top-[64px] left-6 bg-black/60 dark:bg-white/30 backdrop-blur-md rounded-lg p-4 shadow-lg z-40">
           <ResponsiveMenu
             isDark={isDark}
             toggleDarkMode={toggleDark}

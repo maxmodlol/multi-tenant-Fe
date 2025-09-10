@@ -24,7 +24,7 @@ export function parseTenant(hostname: string | undefined): Tenant {
   }
 
   // Reserved names or no real sub-domain (only 1-2 parts)
-  if (RESERVED.includes(parts[0] as (typeof RESERVED)[number]) || parts.length < 3) {
+  if (RESERVED.includes(parts[0] as (typeof RESERVED)[number]) || parts.length < 2) {
     return "main";
   }
 

@@ -54,7 +54,7 @@ export default function FeaturedSlider({
   if (!blogs.length) return null;
 
   return (
-    <section className="relative w-full max-w-screen-xl mx-auto h-[400px] md:h-[600px] rounded-2xl overflow-hidden px-4 md:px-14">
+    <div className="relative w-full max-w-screen-xl mx-auto px-4 md:px-14">
       <Swiper
         dir="rtl"
         modules={[Navigation, Autoplay, EffectCreative]}
@@ -80,7 +80,11 @@ export default function FeaturedSlider({
           setIsBeginning(s.isBeginning);
           setIsEnd(s.isEnd);
         }}
-        className="w-full h-full"
+        className="w-full h-[400px] md:h-[600px] rounded-2xl overflow-hidden border border-brand-200/40 shadow-2xl"
+        style={{
+          boxShadow:
+            "0 20px 40px -12px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+        }}
       >
         {blogs.map((blog) => (
           <SwiperSlide key={blog.id} className="h-full select-none">
@@ -89,7 +93,7 @@ export default function FeaturedSlider({
             <BlogCard blog={blog} type="slider" />
           </SwiperSlide>
         ))}
-        <div className="absolute bottom-12 left-6 z-10 hidden md:flex items-center ">
+        <div className="absolute bottom-12 left-6 z-10 hidden md:flex items-center">
           <Button
             ref={nextRef}
             variant="ghost"
@@ -122,8 +126,6 @@ export default function FeaturedSlider({
           </Button>
         </div>
       </Swiper>
-
-      {/* Navigation Buttons */}
-    </section>
+    </div>
   );
 }
