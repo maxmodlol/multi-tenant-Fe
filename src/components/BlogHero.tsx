@@ -21,9 +21,9 @@ export default function BlogHero({
   underDateAds?: string[];
 }) {
   return (
-    <div className="bg-white dark:bg-black text-center pt-10 pb-2 md:pb-16 px-4 md:px-8">
+    <div className="bg-white dark:bg-black text-center pt-4 pb-4 md:pb-8 px-4 md:px-8">
       {/* Tags */}
-      <div className="flex flex-wrap justify-center gap-2 mb-4">
+      <div className="flex flex-wrap justify-center gap-2 mb-3">
         {(blog.tags ?? []).map((tag, idx) => (
           <span
             key={idx}
@@ -38,40 +38,25 @@ export default function BlogHero({
       {aboveTagsAds.map((snippet, i) => (
         <div
           key={`above-${i}`}
-          className="my-4 w-full flex justify-center"
+          className="my-3 w-full flex justify-center"
           dangerouslySetInnerHTML={{ __html: snippet }}
         />
       ))}
 
       {/* Title */}
-      <h1 className="text-6xl md:text-7xl font-extrabold mb-3 line-clamp-3">{blog.title}</h1>
+      <h1 className="text-[1.6rem] md:text-[3rem] font-extrabold  mb-6 line-clamp-3 leading-tight">
+        {blog.title}
+      </h1>
 
       {/* Description */}
       {blog.description && (
-        <p className="text-gray-500 dark:text-gray-400 text-lg mb-2 line-clamp-3 max-w-4xl mx-auto px-4">
+        <p className="text-gray-500 dark:text-gray-400 text-sm md:text-lg mb-4 line-clamp-4 md:line-clamp-3 max-w-xs sm:max-w-sm md:max-w-3xl mx-auto px-2 sm:px-4 leading-relaxed break-words">
           {blog.description}
         </p>
       )}
 
-      {/* Author - Desktop: Avatar and name */}
-      <div className="hidden md:flex items-center justify-center gap-3 mb-2">
-        <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
-          <Image
-            src={getAvatarUrl(blog.author?.avatarUrl)}
-            alt={blog.author?.name ? `صورة ${blog.author.name}` : "كاتب"}
-            width={40}
-            height={40}
-            className="object-cover w-full h-full"
-            onError={handleAvatarError}
-          />
-        </div>
-        <div className="text-base font-semibold text-gray-700 dark:text-gray-300">
-          {blog.author?.name ?? "كاتب"}
-        </div>
-      </div>
-
       {/* Date in grey */}
-      <p className="text-xs text-gray-400">
+      <p className="text-sm text-gray-400 mb-2">
         <time dateTime={new Date(blog.createdAt).toISOString()}>{formatDate(blog.createdAt)}</time>
       </p>
 
@@ -79,21 +64,21 @@ export default function BlogHero({
       {underDateAds.map((snippet, i) => (
         <div
           key={`under-${i}`}
-          className="my-4 w-full flex justify-center"
+          className="my-3 w-full flex justify-center"
           dangerouslySetInnerHTML={{ __html: snippet }}
         />
       ))}
 
       {/* Cover Image */}
       {blog.coverPhoto && (
-        <div className="mt-4 md:mt-6 max-w-6xl mx-auto rounded-xl overflow-hidden">
+        <div className="mt-2 md:mt-4 max-w-6xl mx-auto rounded-2xl overflow-hidden shadow-2xl border border-gray-200/50 dark:border-gray-700/50">
           <div className="relative aspect-[3/2] w-full">
             <Image
               src={blog.coverPhoto}
               alt={`غلاف: ${blog.title}`}
               width={1200}
               height={600}
-              className="object-cover"
+              className="object-cover w-full h-full"
               priority
             />
           </div>

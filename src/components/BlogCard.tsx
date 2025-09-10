@@ -43,7 +43,7 @@ export default function BlogCard({ blog, type }: BlogCardProps) {
   // ─── Slider variant ───────────────────────────────────────────────────────
   if (type === "slider") {
     return (
-      <div className="relative w-full h-full rounded-3xl overflow-hidden">
+      <div className="relative w-full h-full rounded-2xl overflow-hidden">
         <Link href={resolveHref()}>
           <Image
             src={blog.coverPhoto ?? "/placeholder-image.jpg"}
@@ -53,16 +53,25 @@ export default function BlogCard({ blog, type }: BlogCardProps) {
             priority
             className="object-cover object-center w-full h-full"
           />
-          {/* Solid black/gray background behind text (no blur, no gradient) */}
+          {/* Gradient overlay background behind text */}
           <div className="absolute inset-x-0 bottom-0 z-20">
             <div
-              className="w-full rounded-b-2xl px-4 sm:px-6 md:px-10 py-4 sm:py-6 md:py-10 min-h-[150px] sm:min-h-[180px] md:min-h-[160px] dark:!bg-gray-900/95"
-              style={{ backgroundColor: "rgba(0, 0, 0, 0.95)" }}
+              className="w-full rounded-b-2xl px-4 sm:px-6 md:px-10 py-4 sm:py-6 md:py-10 min-h-[150px] sm:min-h-[180px] md:min-h-[160px]"
+              style={{
+                background:
+                  "linear-gradient(to top, rgba(0, 0, 0, 0.98) 0%, rgba(0, 0, 0, 0.9) 30%, rgba(0, 0, 0, 0.7) 60%, rgba(0, 0, 0, 0.4) 100%)",
+              }}
             >
-              <h2 className="text-right text-2xl sm:text-3xl md:text-5xl font-extrabold leading-tight md:leading-[1.15] line-clamp-1 md:line-clamp-2 break-words text-text-white">
+              <h2
+                className="text-right text-2xl sm:text-3xl md:text-5xl font-extrabold leading-tight md:leading-[1.15] line-clamp-1 md:line-clamp-2 break-words drop-shadow-lg"
+                style={{ color: "white" }}
+              >
                 {blog.title}
               </h2>
-              <p className="mt-2 sm:mt-3 text-right text-xs sm:text-sm md:text-base leading-6 md:leading-7 text-text-white line-clamp-1 md:line-clamp-2 break-words">
+              <p
+                className="mt-2 sm:mt-3 text-right text-xs sm:text-sm md:text-base leading-6 md:leading-7 line-clamp-1 md:line-clamp-2 break-words drop-shadow-md"
+                style={{ color: "white" }}
+              >
                 {blog.description || ""}
               </p>
               <div className="mt-2 sm:mt-3 w-full flex flex-wrap gap-1 sm:gap-2 justify-end rtl:justify-start">

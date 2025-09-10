@@ -201,6 +201,16 @@ export default function Footer({
         </div>
       )}
 
+      {/* Mobile separator line - always visible with brand color animation */}
+      <div className="absolute inset-x-0 top-0 h-[2px] md:hidden">
+        <div
+          className="h-full w-full animate-gradient-x"
+          style={{
+            backgroundImage: `linear-gradient(90deg, hsla(${brandHsl} / 0), hsla(${brandHsl} / 0.9), hsla(${brandHsl} / 0))`,
+          }}
+        />
+      </div>
+
       {/* subtle authentic brand blobs */}
       {!gradientOn && isColoredLight && (
         <>
