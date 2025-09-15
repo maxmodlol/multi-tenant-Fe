@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import { format } from "date-fns";
 import Image from "next/image";
 import { getAvatarUrl, handleAvatarError } from "@/src/utils/avatarUtils";
+import IconWithFallback from "./IconWithFallback";
 
 const platforms = [
   {
@@ -114,12 +115,13 @@ export default function BlogFooterMeta({
                   aria-label={`مشاركة عبر ${p.name}`}
                   className={`group relative bg-gray-50 dark:bg-gray-800 ${p.color} p-3 rounded-xl transition-all duration-200 hover:scale-105 hover:shadow-lg border border-gray-200 dark:border-gray-700 w-12 h-12 flex items-center justify-center flex-shrink-0`}
                 >
-                  <Image
+                  <IconWithFallback
                     src={p.icon}
                     alt={p.name}
                     width={20}
                     height={20}
-                    className="object-contain text-gray-600 dark:text-gray-300 transition-transform duration-200"
+                    className="text-gray-600 dark:text-gray-300 transition-transform duration-200"
+                    fallbackText={p.name.charAt(0)}
                   />
                 </a>
               ))}
