@@ -7,6 +7,7 @@ import Script from "next/script";
 import { detectTenantServerOnly } from "../lib/tenantFromServer";
 import type { Metadata } from "next";
 import TenantStyleInjector from "@/src/components/TenantStyleInjector";
+import { validateFaviconUrl } from "../lib/utils";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -24,7 +25,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     const tenant = await detectTenantServerOnly();
     tenantId = tenant || "default";
     const s = await fetchSiteSetting(tenant);
-    siteIconUrl = s.siteIconUrl || "";
+
+    // Validate favicon URL before using it
+    siteIconUrl = (await validateFaviconUrl(s.siteIconUrl)) || "";
 
     // Ensure consistent ordering of brand scale variables
     if (s.brandScale && typeof s.brandScale === "object") {
@@ -76,25 +79,26 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
             <meta httpEquiv="Pragma" content="no-cache" />
             <meta httpEquiv="Expires" content="0" />
-            <link rel="icon" href={siteIconUrl} />
-            <link rel="shortcut icon" href={siteIconUrl} />
+            <link rel="icon" href={siteIconUrl} type="image/x-icon" />
+            <link rel="shortcut icon" href={siteIconUrl} type="image/x-icon" />
             <link rel="apple-touch-icon" sizes="180x180" href={siteIconUrl} />
             <link rel="icon" type="image/png" sizes="32x32" href={siteIconUrl} />
             <link rel="icon" type="image/png" sizes="16x16" href={siteIconUrl} />
             <link rel="manifest" href="/manifest.json" />
             <meta name="msapplication-TileImage" content={siteIconUrl} />
             <meta name="msapplication-TileColor" content="#000000" />
-            {/* Additional favicon formats for better browser support */}
-            <link rel="icon" type="image/x-icon" href={siteIconUrl} />
-            <link rel="icon" type="image/jpeg" href={siteIconUrl} />
-            {/* Handle JPEG images specifically */}
-            {siteIconUrl.endsWith(".jpg") || siteIconUrl.endsWith(".jpeg") ? (
-              <link rel="icon" type="image/jpeg" href={siteIconUrl} />
-            ) : null}
-            {/* Handle ICO images specifically */}
+            {/* Handle different image formats with proper MIME types */}
             {siteIconUrl.endsWith(".ico") ? (
               <link rel="icon" type="image/x-icon" href={siteIconUrl} />
-            ) : null}
+            ) : siteIconUrl.endsWith(".png") ? (
+              <link rel="icon" type="image/png" href={siteIconUrl} />
+            ) : siteIconUrl.endsWith(".jpg") || siteIconUrl.endsWith(".jpeg") ? (
+              <link rel="icon" type="image/jpeg" href={siteIconUrl} />
+            ) : siteIconUrl.endsWith(".svg") ? (
+              <link rel="icon" type="image/svg+xml" href={siteIconUrl} />
+            ) : (
+              <link rel="icon" href={siteIconUrl} />
+            )}
           </>
         )}
 
@@ -120,49 +124,78 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {siteIconUrl && (
           <Script id="favicon-refresh" strategy="afterInteractive">
             {`
-              try {
-                console.log('Favicon refresh script running, URL: ${siteIconUrl}');
-                console.log('Current favicon links:', document.querySelectorAll('link[rel*="icon"]').length);
-                
-                // Test if the image can be loaded
-                const testImg = new Image();
-                testImg.onload = function() {
-                  console.log('Favicon image loaded successfully:', this.width, 'x', this.height);
-                  console.log('Favicon URL:', this.src);
-                };
-                testImg.onerror = function() {
-                  console.error('Failed to load favicon image from:', this.src);
-                };
-                testImg.src = '${siteIconUrl}';
-                
-                // Force refresh favicon by changing the href
-                const favicon = document.querySelector('link[rel="icon"]');
-                if (favicon) {
-                  const timestamp = Date.now();
-                  favicon.href = '${siteIconUrl}?v=' + timestamp;
-                  console.log('Favicon updated to:', favicon.href);
-                } else {
-                  console.log('No favicon link found');
-                }
-                
-                // Also update all icon links
-                document.querySelectorAll('link[rel*="icon"]').forEach((link, index) => {
-                  console.log('Icon link', index, ':', link.rel, link.href);
-                });
-                
-                // Force browser to reload favicon
-                setTimeout(() => {
-                  const links = document.querySelectorAll('link[rel*="icon"]');
-                  links.forEach(link => {
-                    if (link.href.includes('${siteIconUrl}')) {
-                      link.href = link.href + '?reload=' + Date.now();
-                      console.log('Forced favicon reload:', link.href);
+              (function() {
+                try {
+                  // Favicon refresh script running
+                  
+                  // Test if the image can be loaded with proper error handling
+                  const testImg = new Image();
+                  // Remove crossOrigin to avoid CORS issues with S3
+                  
+                  testImg.onload = function() {
+                    // Favicon image loaded successfully
+                  };
+                  
+                  testImg.onerror = function() {
+                    console.warn('Failed to load favicon image from:', this.src);
+                    console.warn('This might be due to CORS, file permissions, or missing file');
+                    
+                    // Apply fallback to all favicon links
+                    try {
+                      const faviconLinks = document.querySelectorAll('link[rel*="icon"]');
+                      faviconLinks.forEach(link => {
+                        if (link.href && link.href.includes('${siteIconUrl}')) {
+                          link.href = '/logo.svg';
+                        }
+                      });
+                      
+                      // Also update apple-touch-icon and other icon types
+                      const appleTouchIcon = document.querySelector('link[rel="apple-touch-icon"]');
+                      if (appleTouchIcon) {
+                        appleTouchIcon.href = '/logo.svg';
+                      }
+                      
+                      const msTileImage = document.querySelector('meta[name="msapplication-TileImage"]');
+                      if (msTileImage) {
+                        msTileImage.content = '/logo.svg';
+                      }
+                      
+                      // Favicon fallback applied
+                    } catch (fallbackError) {
+                      console.warn('Error applying favicon fallback:', fallbackError);
                     }
-                  });
-                }, 1000);
-              } catch (error) {
-                console.error('Error updating favicon:', error);
-              }
+                  };
+                  
+                  // Set a timeout for the image test to avoid hanging
+                  const timeoutId = setTimeout(() => {
+                    console.warn('Favicon test timed out, applying fallback');
+                    testImg.onerror();
+                  }, 5000);
+                  
+                  testImg.onload = function() {
+                    clearTimeout(timeoutId);
+                    // Favicon image loaded successfully
+                  };
+                  
+                  testImg.src = '${siteIconUrl}';
+                  
+                  // Force refresh favicon by changing the href
+                  try {
+                    const favicon = document.querySelector('link[rel="icon"]');
+                    if (favicon) {
+                      const timestamp = Date.now();
+                      favicon.href = '${siteIconUrl}?v=' + timestamp;
+                      // Favicon updated
+                    }
+                  } catch (refreshError) {
+                    console.warn('Error refreshing favicon:', refreshError);
+                  }
+                  
+                } catch (error) {
+                  console.warn('Error in favicon refresh script:', error);
+                  // Don't throw the error to prevent breaking the page
+                }
+              })();
             `}
           </Script>
         )}
@@ -201,16 +234,20 @@ export async function generateMetadata(): Promise<Metadata> {
   try {
     const tenant = await detectTenantServerOnly();
     const s = await fetchSiteSetting(tenant);
+
+    // Validate favicon URL before using it in metadata
+    const validatedFaviconUrl = await validateFaviconUrl(s.siteIconUrl);
+
     return {
       title: s.siteTitle || "مدونة الموقع",
       description: s.siteDescription || undefined,
-      icons: s.siteIconUrl
+      icons: validatedFaviconUrl
         ? {
             icon: [
-              { url: s.siteIconUrl, rel: "icon" },
-              { url: s.siteIconUrl, rel: "shortcut icon" },
+              { url: validatedFaviconUrl, rel: "icon" },
+              { url: validatedFaviconUrl, rel: "shortcut icon" },
             ],
-            apple: [{ url: s.siteIconUrl, sizes: "180x180" }],
+            apple: [{ url: validatedFaviconUrl, sizes: "180x180" }],
           }
         : undefined,
     };

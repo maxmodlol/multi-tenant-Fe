@@ -25,10 +25,10 @@ export default async function SettingsPage() {
   const initialTab = url.searchParams.get("tab") || undefined;
 
   return (
-    <section className="max-w-5xl space-y-8">
-      <header>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-sm text-muted-foreground">Change how your dashboard looks and feels.</p>
+    <section className="max-w-7xl space-y-6 sm:space-y-8">
+      <header className="space-y-2">
+        <h1 className="text-xl sm:text-2xl font-bold text-text-primary">Settings</h1>
+        <p className="text-sm text-text-tertiary">Change how your dashboard looks and feels.</p>
       </header>
 
       <SettingsTabs tabs={allowedTabs} />

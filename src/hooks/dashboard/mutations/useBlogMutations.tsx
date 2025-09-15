@@ -4,16 +4,16 @@ import { Blog, BlogStatus, CreateBlogInput } from "@explore/types/blogs";
 import toast from "react-hot-toast";
 export function useApproveBlog() {
   const qc = useQueryClient();
-  return useMutation<Blog, Error, string>({
-    mutationFn: (id) => blogService.updateBlogStatus(id, BlogStatus.ACCEPTED),
+  return useMutation<Blog, Error, { id: string; tenant?: string }>({
+    mutationFn: ({ id, tenant }) => blogService.updateBlogStatus(id, BlogStatus.ACCEPTED, tenant),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["dashboardBlogs"] }),
   });
 }
 
 export function useDeclineBlog() {
   const qc = useQueryClient();
-  return useMutation<Blog, Error, string>({
-    mutationFn: (id) => blogService.updateBlogStatus(id, BlogStatus.DECLINED),
+  return useMutation<Blog, Error, { id: string; tenant?: string }>({
+    mutationFn: ({ id, tenant }) => blogService.updateBlogStatus(id, BlogStatus.DECLINED, tenant),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["dashboardBlogs"] }),
   });
 }

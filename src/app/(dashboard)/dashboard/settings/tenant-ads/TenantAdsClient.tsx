@@ -15,8 +15,6 @@ import { useTenantAdMutations } from "@/src/hooks/dashboard/mutations/useTenantA
 import { TenantAdPlacement, TenantAdAppearance } from "@/src/types/tenantAds";
 
 export default function TenantAdsClient() {
-  console.log("🚀 TenantAdsClient: Component mounted!");
-
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingAd, setDeletingAd] = useState<any>(null);
@@ -34,19 +32,12 @@ export default function TenantAdsClient() {
 
   // Fetch all approved blogs (global index) - reusing existing pattern
   const { data: globalBlogs, isLoading: loadingGlobal, error: errorGlobal } = useGlobalBlogs();
-  console.log("🔍 TenantAdsClient: useGlobalBlogs result:", {
-    globalBlogs,
-    loadingGlobal,
-    errorGlobal,
-  });
 
   // Fetch all tenants directly
   const { data: tenants, isLoading: loadingTenants, error: errorTenants } = useTenants();
-  console.log("🔍 TenantAdsClient: useTenants result:", { tenants, loadingTenants, errorTenants });
 
   // Fetch tenant ads using the proper hook
   const { data: tenantAds, isLoading: loadingAds, error: errorAds } = useTenantAds();
-  console.log("🔍 TenantAdsClient: useTenantAds result:", { tenantAds, loadingAds, errorAds });
 
   // Get mutation hooks
   const { createMutation, updateMutation, deleteMutation } = useTenantAdMutations();

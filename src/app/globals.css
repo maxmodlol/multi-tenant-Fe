@@ -930,6 +930,99 @@
       white-space: normal !important;
       word-break: break-word;
     }
+
+    /* Responsive utilities */
+    .container-responsive {
+      @apply w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+    }
+
+    .text-responsive {
+      @apply text-sm sm:text-base;
+    }
+
+    .heading-responsive {
+      @apply text-lg sm:text-xl lg:text-2xl;
+    }
+
+    .grid-responsive {
+      @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+    }
+
+    .flex-responsive {
+      @apply flex flex-col sm:flex-row gap-4;
+    }
+
+    .card-responsive {
+      @apply rounded-lg border border-border-secondary bg-background-secondary p-4 sm:p-6;
+    }
+
+    .button-responsive {
+      @apply px-3 py-2 text-sm sm:px-4 sm:py-2;
+    }
+
+    /* Mobile-first responsive text */
+    .text-mobile-sm {
+      @apply text-xs sm:text-sm;
+    }
+
+    .text-mobile-base {
+      @apply text-sm sm:text-base;
+    }
+
+    .text-mobile-lg {
+      @apply text-base sm:text-lg;
+    }
+
+    .text-mobile-xl {
+      @apply text-lg sm:text-xl;
+    }
+
+    /* Responsive spacing */
+    .space-responsive {
+      @apply space-y-4 sm:space-y-6 lg:space-y-8;
+    }
+
+    .gap-responsive {
+      @apply gap-2 sm:gap-4 lg:gap-6;
+    }
+
+    /* Mobile table utilities */
+    .table-mobile {
+      @apply block lg:table;
+    }
+
+    .table-mobile-header {
+      @apply hidden lg:table-header-group;
+    }
+
+    .table-mobile-body {
+      @apply block lg:table-row-group;
+    }
+
+    .table-mobile-row {
+      @apply block lg:table-row border-b border-border-secondary p-4 lg:p-0;
+    }
+
+    .table-mobile-cell {
+      @apply block lg:table-cell p-2 lg:p-4;
+    }
+
+    /* Dark mode improvements */
+    .dark .shadow-custom {
+      box-shadow:
+        0 4px 6px -1px rgba(0, 0, 0, 0.3),
+        0 2px 4px -1px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Focus states for better accessibility */
+    .focus-visible-ring {
+      @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2;
+    }
+
+    /* Smooth transitions */
+    .transition-smooth {
+      @apply transition-all duration-200 ease-in-out;
+    }
   }
   /* Editor frame ---------------------------------------------------- */
 

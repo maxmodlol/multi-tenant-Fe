@@ -96,11 +96,11 @@ export default function Header({
 
   // (C) Determine header visual mode and logo
   const isColoredHeader = !isDark && headerStyle === "solid" && Boolean(headerColor);
-  const isColoredHeaderDark = isDark && headerStyle === "solid" && Boolean(headerColor);
+  const isColoredHeaderDark = false; // Disabled: dark mode should use normal grey background
   const isSolidHeader = headerStyle === "solid";
   const brandHsl = headerColor ?? undefined;
   const isColoredLight = !isDark && Boolean(brandHsl);
-  const isColoredLightDark = isDark && Boolean(brandHsl);
+  const isColoredLightDark = false; // Disabled: dark mode should use normal grey background
   let logoUrl = isDark && logoDarkUrl ? logoDarkUrl : logoLightUrl;
 
   return (
@@ -111,9 +111,7 @@ export default function Header({
           aria-hidden
           className={clsx(
             "absolute inset-0 bg-gradient-to-r from-indigo-200 via-brand-300 to-blue-400 pointer-events-none",
-            isMobile
-              ? "opacity-50 blur-2xl" // Less color, no animation on mobile
-              : "bg-[length:300%_300%] animate-gradient-x opacity-85 blur-xl", // Full effect on desktop
+            "bg-[length:300%_300%] animate-gradient-x opacity-85 blur-md", // Full effect on desktop
           )}
         />
       )}
@@ -125,8 +123,8 @@ export default function Header({
           className={clsx(
             "absolute inset-0 pointer-events-none",
             isMobile
-              ? "opacity-60 blur-2xl" // Less color, no animation on mobile
-              : "bg-[length:300%_300%] animate-gradient-x opacity-90 blur-lg", // Full effect on desktop
+              ? "opacity-60 blur-md" // Less color, no animation on mobile
+              : "bg-[length:100%_100%] animate-gradient-x opacity-90 blur-md", // Full effect on desktop
           )}
           style={{
             background: isMobile
@@ -141,49 +139,43 @@ export default function Header({
         className={clsx(
           "relative flex flex-row items-center justify-between px-4 py-3 md:px-8 md:py-4 transition-colors",
           // Shadow styling based on header type
-          isColoredHeaderDark ? "shadow-md" : gradientOn && brandHsl ? "shadow-lg" : "shadow-md",
-          // Default background for non-colored headers
-          !isColoredHeader &&
+          "shadow-md",
+          // Default background for non-colored headers and dark mode solid headers
+          (!isColoredHeader &&
             !isColoredLight &&
             !isColoredHeaderDark &&
             !isColoredLightDark &&
             !gradientOn &&
-            !isSolidHeader &&
-            "bg-white/98 dark:bg-gray-900/98",
+            !isSolidHeader) ||
+            (isDark && isSolidHeader)
+            ? isMobile
+              ? "bg-white/90 dark:bg-gray-900/90"
+              : "bg-white dark:bg-gray-900"
+            : "",
         )}
         style={
           isColoredHeader
             ? {
                 // Light mode solid header with brand color
-                backgroundColor: `hsla(${headerColor} / 0.98)`,
+                backgroundColor: `hsla(${headerColor} / 1)`,
               }
-            : isColoredHeaderDark
+            : isSolidHeader && !headerColor
               ? {
-                  // Dark mode solid header with brand color - dark with subtle brand effect
-                  background: `radial-gradient(1200px 300px at 50% -5%, hsla(${headerColor} / 0.2), transparent 50%), linear-gradient(180deg, rgba(17, 24, 39, 0.98), rgba(17, 24, 39, 0.99))`,
+                  // Solid header without brand color - use normal grey background in dark mode
+                  backgroundColor: `${isDark ? "rgba(17, 24, 39, 1)" : "rgba(0, 0, 0, 1)"} !important`,
                 }
-              : isSolidHeader && !headerColor
+              : gradientOn && brandHsl
                 ? {
-                    // Solid header without brand color - use dark background for white icons
-                    backgroundColor: `${isDark ? "rgba(17, 24, 39, 0.98)" : "rgba(0, 0, 0, 0.98)"} !important`,
+                    // Gradient header with strong brand colors
+                    background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.8), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 1), hsla(${brandHsl} / 1))`,
+                    boxShadow: `0 4px 6px -1px hsla(${brandHsl} / 0.1), 0 2px 4px -1px hsla(${brandHsl} / 0.1)`,
                   }
-                : gradientOn && brandHsl
+                : !gradientOn && isColoredLight
                   ? {
-                      // Gradient header with strong brand colors
-                      background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.5), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.95), hsla(${brandHsl} / 0.98))`,
-                      boxShadow: `0 4px 6px -1px hsla(${brandHsl} / 0.5), 0 2px 4px -1px hsla(${brandHsl} / 0.4)`,
+                      // Light mode non-gradient header with brand colors
+                      background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.5), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 1), hsla(${brandHsl} / 1))`,
                     }
-                  : !gradientOn && isColoredLight
-                    ? {
-                        // Light mode non-gradient header with brand colors
-                        background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.3), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.97), hsla(${brandHsl} / 0.98))`,
-                      }
-                    : !gradientOn && isColoredLightDark
-                      ? {
-                          // Dark mode non-gradient header with brand colors
-                          background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.3), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.97), hsla(${brandHsl} / 0.98))`,
-                        }
-                      : undefined
+                  : undefined
         }
       >
         {/* DESKTOP ACTIONS - LEFT SIDE (only on desktop) */}
@@ -263,26 +255,48 @@ export default function Header({
 
       {/* MOBILE MENU */}
       {menuOpen && isMobile && (
-        <nav className="fixed inset-0 top-[64px] bg-white/98 dark:bg-gray-900/98 backdrop-blur-md z-40 p-6">
-          <ResponsiveMenu
-            isDark={isDark}
-            toggleDarkMode={toggleDark}
-            closeMenu={() => setMenuOpen(false)}
-            isMobile
-          />
-        </nav>
+        <>
+          {/* Backdrop overlay */}
+          <div className="fixed inset-0 bg-black/10 z-30" onClick={() => setMenuOpen(false)} />
+          <nav className="fixed inset-0 top-[64px] z-40 p-6 animate-in slide-in-from-top-2 duration-300">
+            {/* Solid opaque background - no transparency */}
+            <div
+              className={`absolute inset-0 pointer-events-none ${
+                isDark ? "bg-gray-900" : "bg-gray-100"
+              }`}
+              style={{ opacity: 1 }}
+            />
+            <ResponsiveMenu
+              isDark={isDark}
+              toggleDarkMode={toggleDark}
+              closeMenu={() => setMenuOpen(false)}
+              isMobile
+            />
+          </nav>
+        </>
       )}
 
       {/* DESKTOP DROPDOWN */}
       {menuOpen && !isMobile && (
-        <nav className="absolute top-[64px] left-6 bg-black/60 dark:bg-white/30 backdrop-blur-md rounded-lg p-4 shadow-lg z-40">
-          <ResponsiveMenu
-            isDark={isDark}
-            toggleDarkMode={toggleDark}
-            closeMenu={() => setMenuOpen(false)}
-            isMobile={false}
-          />
-        </nav>
+        <>
+          {/* Backdrop overlay */}
+          <div className="fixed inset-0 bg-black/5 z-30" onClick={() => setMenuOpen(false)} />
+          <nav className="absolute top-[72px] left-6 rounded-2xl p-6 shadow-2xl z-40 min-w-[320px] border border-gray-200 dark:border-gray-700 animate-in slide-in-from-top-2 duration-300">
+            {/* Solid opaque background - no transparency */}
+            <div
+              className={`absolute inset-0 pointer-events-none rounded-2xl ${
+                isDark ? "bg-gray-900" : "bg-gray-100"
+              }`}
+              style={{ opacity: 1 }}
+            />
+            <ResponsiveMenu
+              isDark={isDark}
+              toggleDarkMode={toggleDark}
+              closeMenu={() => setMenuOpen(false)}
+              isMobile={false}
+            />
+          </nav>
+        </>
       )}
 
       {/* Header Ad - Below the main header */}

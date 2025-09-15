@@ -51,15 +51,12 @@ export default function BlogsList({
   const totalPages = blogsResponse?.totalPages || initialTotalPages;
 
   const handleCategoryChange = (category: string) => {
-    console.log("BlogList - handleCategoryChange called with:", category);
     if (category === "all") {
       // For "all", just filter locally
-      console.log("BlogList - Filtering locally for 'all'");
       setActiveCategory(category);
       setCurrentPage(1);
     } else {
       // For specific categories, navigate to the category page
-      console.log("BlogList - Navigating to category page:", category);
       router.push(`/category/${encodeURIComponent(category)}`);
     }
   };
@@ -108,7 +105,6 @@ export default function BlogsList({
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log("BlogList - 'All' button clicked");
             handleCategoryChange("all");
           }}
           className={clsx(
@@ -124,7 +120,6 @@ export default function BlogsList({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log("BlogList - Category button clicked:", cat.name);
               handleCategoryChange(cat.name);
             }}
             className={clsx(

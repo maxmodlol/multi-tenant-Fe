@@ -44,13 +44,13 @@ export default function BlogHero({
       ))}
 
       {/* Title */}
-      <h1 className="text-[1.6rem] md:text-[3rem] font-extrabold  mb-6 line-clamp-3 leading-tight">
+      <h1 className="text-[2rem] md:text-[3.5rem] font-extrabold mb-8 line-clamp-3 leading-tight">
         {blog.title}
       </h1>
 
       {/* Description */}
       {blog.description && (
-        <p className="text-gray-500 dark:text-gray-400 text-sm md:text-lg mb-4 line-clamp-4 md:line-clamp-3 max-w-xs sm:max-w-sm md:max-w-3xl mx-auto px-2 sm:px-4 leading-relaxed break-words">
+        <p className="text-gray-500 dark:text-gray-400 text-base text-[1.2rem] md:text-[1.4rem] mb-6 line-clamp-4 md:line-clamp-3 max-w-sm sm:max-w-md md:max-w-4xl mx-auto px-2 sm:px-4 leading-relaxed break-words">
           {blog.description}
         </p>
       )}

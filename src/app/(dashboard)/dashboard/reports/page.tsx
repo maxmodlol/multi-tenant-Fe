@@ -46,7 +46,8 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
         <Stat title="إجمالي" value={counts.total ?? "—"} />
         <Stat title="منشورة" value={counts.accepted ?? "—"} />
         <Stat title="جاهزة للنشر" value={counts.ready ?? "—"} />
@@ -84,9 +85,9 @@ export default function ReportsPage() {
 
 function Stat({ title, value }: { title: string; value: number | string }) {
   return (
-    <div className="rounded-lg border border-border-secondary bg-background-secondary p-4">
-      <div className="text-xs text-text-tertiary">{title}</div>
-      <div className="text-2xl font-semibold text-text-primary">{value}</div>
+    <div className="rounded-lg border border-border-secondary bg-background-secondary p-3 sm:p-4 hover:bg-background-secondary/80 transition-colors">
+      <div className="text-xs text-text-tertiary mb-1">{title}</div>
+      <div className="text-xl sm:text-2xl font-bold text-text-primary">{value}</div>
     </div>
   );
 }
@@ -111,20 +112,24 @@ function Donut({
     { label: "مرفوضة", value: counts.declined || 0, color: "hsl(var(--error-500))" },
   ];
   return (
-    <div className="rounded-lg border border-border-secondary bg-background-secondary p-4 flex items-center gap-6">
-      <PieChart data={data} />
-      <div className="grid grid-cols-2 gap-2 text-xs text-text-tertiary">
-        {data.map((d) => (
-          <div key={d.label} className="flex items-center gap-2">
-            <span
-              className="inline-block h-2 w-3 rounded-sm"
-              style={{ backgroundColor: d.color }}
-            />
-            <span>
-              {d.label}: <span className="text-text-primary">{d.value}</span>
-            </span>
-          </div>
-        ))}
+    <div className="rounded-lg border border-border-secondary bg-background-secondary p-4">
+      <div className="flex flex-col lg:flex-row items-center gap-6">
+        <div className="flex-shrink-0">
+          <PieChart data={data} />
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-2 text-xs text-text-tertiary flex-1">
+          {data.map((d) => (
+            <div key={d.label} className="flex items-center gap-2">
+              <span
+                className="inline-block h-2 w-3 rounded-sm flex-shrink-0"
+                style={{ backgroundColor: d.color }}
+              />
+              <span className="truncate">
+                {d.label}: <span className="text-text-primary font-medium">{d.value}</span>
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -159,30 +164,36 @@ function ControlsAndCharts({ tenant, controls }: { tenant?: string; controls?: R
   // chart.js variant no longer needs manual path calculations
 
   return (
-    <div className="rounded-lg border border-border-secondary bg-background-secondary p-4 overflow-auto space-y-3">
-      <div className="flex items-center justify-between">
-        <div className="text-text-tertiary text-sm">تطور الحالات</div>
-        <div className="flex items-center gap-3 text-xs">
+    <div className="rounded-lg border border-border-secondary bg-background-secondary p-4 overflow-auto space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="text-text-primary font-medium text-sm">تطور الحالات</div>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full sm:w-auto">
           <select
             value={range}
             onChange={(e) => setRange(e.target.value)}
-            className="rounded-md border border-border-secondary bg-background-primary px-2 py-1"
+            className="rounded-md border border-border-secondary bg-background-primary px-3 py-2 text-sm focus:border-brand-500 transition-colors w-full sm:w-auto"
           >
             <option value="7">آخر 7 أيام</option>
             <option value="30">آخر 30 يوم</option>
             <option value="90">آخر 90 يوم</option>
             <option value="all">كل الأيام</option>
           </select>
-          {(["accepted", "ready", "pending", "drafted", "declined"] as const).map((k) => (
-            <label key={k} className="inline-flex items-center gap-1">
-              <input
-                type="checkbox"
-                checked={show[k]}
-                onChange={(e) => setShow((s) => ({ ...s, [k]: e.target.checked }))}
-              />
-              <span className="capitalize">{k}</span>
-            </label>
-          ))}
+          <div className="flex flex-wrap gap-2 text-xs">
+            {(["accepted", "ready", "pending", "drafted", "declined"] as const).map((k) => (
+              <label
+                key={k}
+                className="inline-flex items-center gap-2 px-2 py-1 rounded border border-border-secondary hover:bg-background-secondary/50 transition-colors cursor-pointer"
+              >
+                <input
+                  type="checkbox"
+                  checked={show[k]}
+                  onChange={(e) => setShow((s) => ({ ...s, [k]: e.target.checked }))}
+                  className="rounded"
+                />
+                <span className="capitalize text-text-secondary">{k}</span>
+              </label>
+            ))}
+          </div>
         </div>
       </div>
       <div className="bg-background-primary rounded-md p-3">
@@ -194,7 +205,7 @@ function ControlsAndCharts({ tenant, controls }: { tenant?: string; controls?: R
           stacked
         />
       </div>
-      <div className="mt-2 flex gap-4 text-xs text-text-tertiary">
+      <div className="mt-2 flex flex-wrap gap-4 text-xs text-text-tertiary">
         {show.accepted && <Legend color={series.accepted} label="منشورة" />}
         {show.ready && <Legend color={series.ready} label="جاهزة" />}
         {show.pending && <Legend color={series.pending} label="بانتظار" />}

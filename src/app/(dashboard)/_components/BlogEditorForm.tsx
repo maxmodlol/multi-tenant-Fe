@@ -276,10 +276,12 @@ export function BlogEditorForm({
     };
 
     if (isEdit) {
-      updateBlog({ id: initialData!.id, dto: input }, { onSuccess: () => console.log("Updated!") });
+      updateBlog({ id: initialData!.id, dto: input });
     } else {
       createBlog(input, {
-        onSuccess: (newBlog) => console.log("Created!", newBlog.id),
+        onSuccess: (newBlog) => {
+          /* Blog created successfully */
+        },
       });
     }
   };

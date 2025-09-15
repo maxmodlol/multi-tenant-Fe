@@ -28,15 +28,10 @@ export default function CategoryPageClient({ categoryName }: CategoryPageClientP
         setLoading(true);
         setError(null);
 
-        console.log("CategoryPageClient - Fetching data for category:", categoryName);
-
         const [blogsResponse, categoriesResponse] = await Promise.all([
           blogService.getAllBlogs(categoryName, 1, 11),
           fetchCategories(),
         ]);
-
-        console.log("CategoryPageClient - Blogs response:", blogsResponse);
-        console.log("CategoryPageClient - Categories response:", categoriesResponse);
 
         setBlogsData(blogsResponse);
         setCategories(categoriesResponse);

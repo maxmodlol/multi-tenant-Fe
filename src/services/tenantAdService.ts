@@ -26,18 +26,11 @@ export const tenantAdService = {
    * Get all tenant ads for the current tenant
    */
   async getTenantAds(): Promise<TenantAdSetting[]> {
-    console.log("🔍 tenantAdService.getTenantAds: Starting...");
     try {
       const apiPrivate = await getApiPrivate();
-      console.log(
-        "🔍 tenantAdService.getTenantAds: Got API instance, making request to:",
-        `${API_BASE}`,
-      );
       const response = await apiPrivate.get(API_BASE);
-      console.log("✅ tenantAdService.getTenantAds: Response received:", response);
       return response.data;
     } catch (error) {
-      console.error("❌ tenantAdService.getTenantAds: Error:", error);
       throw error;
     }
   },

@@ -13,6 +13,8 @@ const nextConfig = {
   images: {
     domains: ["aktshf.s3.il-central-1.amazonaws.com"],
     formats: ["image/avif", "image/webp"],
+    dangerouslyAllowSVG: true,
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
   },
 
   // expose any non‐NEXT_PUBLIC_ vars if you need them in server code
