@@ -8,6 +8,7 @@ import { Input } from "@explore/components/ui/input";
 import { ResponsiveMenuProps } from "./types";
 import { Spinner } from "../ui/spinner";
 import { useRouter } from "next/navigation";
+import IconWithFallback from "../IconWithFallback";
 
 const ResponsiveMenu: React.FC<ResponsiveMenuProps> = ({
   isDark,
@@ -56,7 +57,9 @@ const ResponsiveMenu: React.FC<ResponsiveMenuProps> = ({
       )}
 
       {/* Navigation links */}
-      <nav className={`flex flex-col ${isMobile ? "gap-3" : "gap-2"} ${!isMobile ? "max-h-[40vh] overflow-y-auto pr-2" : ""}`}>
+      <nav
+        className={`flex flex-col ${isMobile ? "gap-3" : "gap-2"} ${!isMobile ? "max-h-[40vh] overflow-y-auto pr-2" : ""}`}
+      >
         <a
           href="/"
           onClick={closeMenu}
@@ -181,12 +184,13 @@ const ResponsiveMenu: React.FC<ResponsiveMenuProps> = ({
                 isMobile ? "w-12 h-12" : "w-10 h-10"
               } flex items-center justify-center flex-shrink-0`}
             >
-              <Image
+              <IconWithFallback
                 src={p.icon}
                 alt={p.name}
                 width={20}
                 height={20}
-                className="object-contain text-gray-600 dark:text-gray-300 transition-transform duration-200"
+                className="text-gray-600 dark:text-gray-300 transition-transform duration-200"
+                fallbackText={p.name.charAt(0)}
               />
             </a>
           ))}

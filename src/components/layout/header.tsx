@@ -9,7 +9,6 @@ import { usePathname } from "next/navigation";
 import { Button } from "@explore/components/ui/button";
 import ResponsiveMenu from "./ResponsiveMenu";
 import SearchOverlay from "@explore/components/SearchOverlay";
-import { HeaderAd } from "@/src/components/TenantAdInjector";
 import type { PageType } from "@/src/types/tenantAds";
 
 // Dynamically import Lucide icons so they don’t bloat the initial JS bundle:
@@ -111,7 +110,9 @@ export default function Header({
           aria-hidden
           className={clsx(
             "absolute inset-0 bg-gradient-to-r from-indigo-200 via-brand-300 to-blue-400 pointer-events-none",
-            "bg-[length:300%_300%] animate-gradient-x opacity-85 blur-md", // Full effect on desktop
+            isMobile
+              ? "opacity-50" // Much less color, no animation on mobile
+              : "bg-[length:300%_300%] animate-gradient-x opacity-85 blur-md", // Full effect on desktop
           )}
         />
       )}
@@ -123,12 +124,12 @@ export default function Header({
           className={clsx(
             "absolute inset-0 pointer-events-none",
             isMobile
-              ? "opacity-60 blur-md" // Less color, no animation on mobile
+              ? "opacity-30" // Much less color, no animation on mobile
               : "bg-[length:100%_100%] animate-gradient-x opacity-90 blur-md", // Full effect on desktop
           )}
           style={{
             background: isMobile
-              ? `linear-gradient(90deg, hsla(${brandHsl} / 0.6), hsla(${brandHsl} / 0.4), hsla(${brandHsl} / 0.6))` // Reduced color intensity on mobile
+              ? `linear-gradient(90deg, hsla(${brandHsl} / 0.3), hsla(${brandHsl} / 0.2), hsla(${brandHsl} / 0.3))` // Much reduced color intensity on mobile
               : `linear-gradient(90deg, hsla(${brandHsl} / 0.9), hsla(${brandHsl} / 0.8), hsla(${brandHsl} / 0.9))`, // Full color on desktop
           }}
         />
@@ -298,9 +299,6 @@ export default function Header({
           </nav>
         </>
       )}
-
-      {/* Header Ad - Below the main header */}
-      <HeaderAd pageType={pageType} />
 
       {/* SEARCH OVERLAY */}
       {searchOpen && <SearchOverlay onClose={() => setSearchOpen(false)} />}
