@@ -125,41 +125,29 @@ export default function Footer({
   const gradientOn = headerStyle === "gradient";
   const brandHsl = baseColor ?? headerColor ?? undefined;
   const isColoredFooter = !isDark && headerStyle === "solid" && Boolean(headerColor);
-  const isColoredFooterDark = isDark && headerStyle === "solid" && Boolean(headerColor);
+  const isColoredFooterDark = false; // Disabled: dark mode should use normal grey background
   const isColoredLight = !isDark && Boolean(brandHsl);
-
-  // Debug logging
-  console.log("Footer Debug:", {
-    isDark,
-    headerStyle,
-    headerColor,
-    isColoredFooter,
-    isColoredFooterDark,
-    shouldBeWhite: isColoredFooter || isColoredFooterDark,
-  });
 
   return (
     <footer
       role="contentinfo"
-      className={`relative overflow-hidden pt-20 pb-10 dark:bg-white/5 ${
-        isColoredFooter || isColoredFooterDark
-          ? "text-white [&_*]:!text-white"
-          : "text-white dark:text-black"
+      className={`relative overflow-hidden pt-20 pb-10 ${
+        isColoredFooter ? "text-white [&_*]:!text-white" : "text-white dark:text-black"
+      } ${
+        (!isColoredFooter && !isColoredFooterDark && !gradientOn && !isColoredLight) ||
+        (isDark && headerStyle === "solid")
+          ? "bg-white/90 dark:bg-gray-900/90"
+          : ""
       }`}
       style={{
         ...(isColoredFooter
           ? { backgroundColor: `hsla(${headerColor} / 0.95)`, color: "white" }
-          : isColoredFooterDark
+          : !gradientOn && isColoredLight
             ? {
-                background: `radial-gradient(1200px 300px at 50% -5%, hsla(${headerColor} / 0.15), transparent 50%), linear-gradient(180deg, rgba(17, 24, 39, 0.95), rgba(17, 24, 39, 0.98))`,
-                color: "white",
+                background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.18), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.92), hsla(${brandHsl} / 0.94))`,
               }
-            : !gradientOn && isColoredLight
-              ? {
-                  background: `radial-gradient(1600px 500px at 50% -10%, hsla(${brandHsl} / 0.18), transparent 60%), linear-gradient(180deg, hsla(${brandHsl} / 0.92), hsla(${brandHsl} / 0.94))`,
-                }
-              : {}),
-        ...(isColoredFooter || isColoredFooterDark ? { color: "white" } : {}),
+            : {}),
+        ...(isColoredFooter ? { color: "white" } : {}),
       }}
     >
       {/* Subtle gradient backdrop */}
@@ -176,7 +164,7 @@ export default function Footer({
       )}
 
       {/* Brand gradient backdrop for solid headers */}
-      {(isColoredFooter || isColoredFooterDark) && brandHsl && (
+      {isColoredFooter && brandHsl && (
         <div
           aria-hidden
           className="

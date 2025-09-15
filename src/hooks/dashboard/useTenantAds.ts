@@ -9,16 +9,11 @@ import { TenantAdPlacement, TenantAdAppearance } from "@/src/types/tenantAds";
  * Fetches all tenant ads for the current tenant context
  */
 export function useTenantAds() {
-  console.log("🔍 useTenantAds: Hook called!");
-
   return useQuery<TenantAdSetting[], Error>({
     queryKey: ["tenantAds"],
     queryFn: async () => {
-      console.log("🔍 useTenantAds: Starting API call...");
-
       try {
         const result = await tenantAdService.getTenantAds();
-        console.log("✅ useTenantAds: API call successful:", result);
         return result;
       } catch (error) {
         console.error("❌ useTenantAds: API call failed:", error);
@@ -36,10 +31,8 @@ export function useTenantAdById(id: string) {
   return useQuery<TenantAdSetting, Error>({
     queryKey: ["tenantAds", id],
     queryFn: async () => {
-      console.log("🔍 useTenantAdById: Starting API call for ID:", id);
       try {
         const result = await tenantAdService.getTenantAdById(id);
-        console.log("✅ useTenantAdById: API call successful:", result);
         return result;
       } catch (error) {
         console.error("❌ useTenantAdById: API call failed:", error);

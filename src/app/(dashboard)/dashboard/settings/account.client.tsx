@@ -37,8 +37,6 @@ export default function AccountSettingsForm() {
         const api = await getApiPrivate();
         const { data } = await api.get<UserProfile>("/auth/me/profile");
 
-        console.log("Loaded user profile:", data);
-
         // Initialize form with existing user data
         setName(data.name || "");
         setBio(data.bio || "");

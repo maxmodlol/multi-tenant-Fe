@@ -112,7 +112,7 @@ export default function BlogDetailClient({
       <div className="max-w-4xl mx-auto px-4 md:px-6 -mt-2 md:mt-0">
         {/* ─── Pagination (Top) ─── */}
         {!isSingle && (
-          <div className="mb-4">
+          <div className="mb-2">
             <PaginationBar
               currentPage={page}
               totalPages={total}
@@ -124,7 +124,7 @@ export default function BlogDetailClient({
         )}
 
         {/* ─── Page Content with INLINE ─── */}
-        <div className="space-y-6 py-4">
+        <div className="space-y-3 py-1">
           <article className="prose dark:prose-invert max-w-none prose-lg leading-relaxed">
             <div
               dangerouslySetInnerHTML={{
@@ -149,7 +149,7 @@ export default function BlogDetailClient({
 
         {/* ─── Pagination (Bottom) ─── */}
         {!isSingle && (
-          <div className="mt-6">
+          <div className="mt-2">
             <PaginationBar
               currentPage={page}
               totalPages={total}

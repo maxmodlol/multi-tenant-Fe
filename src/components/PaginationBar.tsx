@@ -11,7 +11,7 @@ type Props = {
 export default function PaginationBar({ currentPage, totalPages, onPageChange }: Props) {
   return (
     <nav
-      className="flex items-center justify-between gap-4 p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 mt-6"
+      className="flex items-center justify-between gap-4 p-2 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 mt-2"
       aria-label="تنقل بين صفحات المقال"
     >
       {/* Prev / Next */}

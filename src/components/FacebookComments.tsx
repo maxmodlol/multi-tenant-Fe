@@ -154,7 +154,7 @@ export default function FacebookComments({
             getUserInfo();
             setShowPreviewMode(false); // Switch to real comments after login
           } else {
-            console.log("User cancelled login or did not fully authorize.");
+            // User cancelled login or did not fully authorize
           }
         },
         { scope: "public_profile,email" },

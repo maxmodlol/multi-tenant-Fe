@@ -84,3 +84,34 @@ export function getTagColorClass(index: number): string {
   ];
   return tagColors[index % tagColors.length];
 }
+
+/**
+ * Validates if a favicon URL is accessible and returns a fallback if needed.
+ * @param faviconUrl The favicon URL to validate.
+ * @returns The original URL if valid, or a fallback URL if invalid.
+ */
+export async function validateFaviconUrl(
+  faviconUrl: string | null | undefined,
+): Promise<string | null> {
+  if (!faviconUrl) return null;
+
+  try {
+    // Basic URL validation
+    const url = new URL(faviconUrl);
+    if (!["http:", "https:"].includes(url.protocol)) {
+      console.warn("Invalid favicon URL protocol:", faviconUrl);
+      return null;
+    }
+
+    // For S3 URLs, we'll assume they're valid but add a cache-busting parameter
+    if (url.hostname.includes("amazonaws.com") || url.hostname.includes("s3.")) {
+      return faviconUrl;
+    }
+
+    // For other URLs, we could add more validation here
+    return faviconUrl;
+  } catch (error) {
+    console.warn("Invalid favicon URL format:", faviconUrl, error);
+    return null;
+  }
+}

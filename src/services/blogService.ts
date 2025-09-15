@@ -13,10 +13,6 @@ export const blogService = {
   getAllBlogs: async (category = "all", page = 1, limit = 9): Promise<BlogListResponse> => {
     const apiPublic = await getApiPublic();
 
-    console.log("BlogService.getAllBlogs - Category parameter:", category);
-    console.log("BlogService.getAllBlogs - Category type:", typeof category);
-    console.log("BlogService.getAllBlogs - Category length:", category.length);
-
     const { data } = await apiPublic.get("/blogs", {
       params: { category, page, limit },
     });
@@ -80,10 +76,13 @@ export const blogService = {
     return data;
   },
 
-  updateBlogStatus: async (id: string, status: BlogStatus): Promise<Blog> => {
+  updateBlogStatus: async (id: string, status: BlogStatus, tenant?: string): Promise<Blog> => {
     const apiPrivate = await getApiPrivate(); // ✅
 
-    const { data } = await apiPrivate.patch(`/dashboard/blogs/${id}/status`, { status });
+    const { data } = await apiPrivate.patch(`/dashboard/blogs/${id}/status`, {
+      status,
+      ...(tenant && { tenant }),
+    });
     return data;
   },
 
