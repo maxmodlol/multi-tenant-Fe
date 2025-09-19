@@ -26,8 +26,16 @@ export default function AdHeaderInjector() {
       nodesRef.current = [];
     }
 
-    // Avoid injecting on search page to prevent third-party scripts from hijacking navigation
-    if (pathname?.startsWith("/search")) return;
+    // Don't inject ads on dashboard, auth, or admin pages
+    if (
+      pathname?.startsWith("/dashboard") ||
+      pathname?.startsWith("/login") ||
+      pathname?.startsWith("/forgot-password") ||
+      pathname?.startsWith("/reset-password") ||
+      pathname?.startsWith("/search")
+    ) {
+      return;
+    }
 
     if (isLoading || error || !headerData) return;
 
