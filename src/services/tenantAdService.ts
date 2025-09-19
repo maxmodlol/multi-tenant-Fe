@@ -87,6 +87,7 @@ export const tenantAdService = {
     pageType: PageType,
     placements?: string[],
     tenantId?: string,
+    blogId?: string,
   ): Promise<TenantAdsByPlacement> {
     const apiPublic = await getApiPublic();
     const params = new URLSearchParams();
@@ -100,9 +101,13 @@ export const tenantAdService = {
       params.append("tenantId", tenantId);
     }
 
+    if (blogId) {
+      params.append("blogId", blogId);
+    }
+
     // Use the new public endpoint
     const response = await apiPublic.get(
-      `${API_BASE}/public/page/${pageType}?${params.toString()}`,
+      `/public/tenant-ads/page/${pageType}?${params.toString()}`,
     );
     return response.data;
   },

@@ -9,9 +9,8 @@ import { ToggleGroup, ToggleGroupItem } from "@explore/components/ui/toggle-grou
 import AppearanceForm from "./appearance.client";
 import UsersAndTeamsForm from "./users.client";
 import AccountSettingsForm from "./account.client";
-import AdsSettingsForm from "./ads.client";
+import UnifiedAdsClient from "./ads/UnifiedAdsClient";
 import HeaderSettingsForm from "./header.client";
-import TenantAdsClient from "./tenant-ads/TenantAdsClient";
 
 interface SettingsTabsProps {
   tabs: TabConfig[];
@@ -60,9 +59,8 @@ export default function SettingsTabs({ tabs }: SettingsTabsProps) {
         {activeTab.key === "appearance" && <AppearanceForm />}
         {activeTab.key === "users" && <UsersAndTeamsForm />}
         {activeTab.key === "account" && <AccountSettingsForm />}
-        {activeTab.key === "ads" && <AdsSettingsForm />}
+        {activeTab.key === "ads" && <UnifiedAdsClient />}
         {activeTab.key === "header" && <HeaderSettingsForm />}
-        {activeTab.key === "tenant-ads" && <TenantAdsClient />}
       </div>
     </div>
   );

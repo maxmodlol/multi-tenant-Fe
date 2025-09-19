@@ -22,9 +22,7 @@ export const SETTINGS_TABS: TabConfig[] = [
     label: "Account settings",
     allowedRoles: ["ADMIN", "PUBLISHER", "EDITOR", "ADMIN_HELPER"],
   },
-  // ADS and Header remain Admin only
-  { key: "ads", label: "ADS settings", allowedRoles: ["ADMIN"] },
-  { key: "header", label: "Header Ad", allowedRoles: ["ADMIN"] },
-  // Tenant Ads - Admin only
-  { key: "tenant-ads", label: "Tenant Ads", allowedRoles: ["ADMIN"] },
+  // Unified Ads Management - Admin only
+  { key: "ads", label: "Ads Management", allowedRoles: ["ADMIN"] },
+  { key: "header", label: "Header Ads", allowedRoles: ["ADMIN"] },
 ];

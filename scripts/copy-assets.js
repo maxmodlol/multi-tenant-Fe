@@ -33,15 +33,40 @@ function copyDirectory(src, dest) {
   }
 }
 
-// Only run if we're in production and standalone build exists
-if (
-  process.env.NODE_ENV === "production" &&
-  fs.existsSync(path.join(__dirname, "..", ".next", "standalone"))
-) {
-  console.log("Copying static assets to standalone build...");
-  copyDirectory(sourceDir, targetDir);
-  console.log("Static assets copied successfully!");
-} else {
-  console.log("Skipping asset copy - not in production or standalone build not found");
+// Always run the copy operation during build process
+console.log("Starting asset copy process...");
+console.log("Source directory:", sourceDir);
+console.log("Target directory:", targetDir);
+
+// Check if source directory exists
+if (!fs.existsSync(sourceDir)) {
+  console.error("Source directory does not exist:", sourceDir);
+  process.exit(1);
 }
 
+// Check if .next directory exists (build must have completed)
+const nextDir = path.join(__dirname, "..", ".next");
+if (!fs.existsSync(nextDir)) {
+  console.error("Build directory does not exist. Make sure 'next build' completed successfully.");
+  process.exit(1);
+}
+
+// Create standalone directory if it doesn't exist
+const standaloneDir = path.join(__dirname, "..", ".next", "standalone");
+if (!fs.existsSync(standaloneDir)) {
+  console.log("Creating standalone directory...");
+  fs.mkdirSync(standaloneDir, { recursive: true });
+}
+
+console.log("Copying static assets to standalone build...");
+copyDirectory(sourceDir, targetDir);
+console.log("Static assets copied successfully!");
+
+// Also copy to static directory for additional safety
+const staticTargetDir = path.join(__dirname, "..", ".next", "static", "public");
+if (!fs.existsSync(staticTargetDir)) {
+  fs.mkdirSync(staticTargetDir, { recursive: true });
+}
+console.log("Copying assets to static directory as well...");
+copyDirectory(sourceDir, staticTargetDir);
+console.log("All asset copying completed successfully!");

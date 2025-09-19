@@ -133,13 +133,13 @@ export default function BlogFooterMeta({
             aria-label="نسخ رابط المقال"
             className={`group flex items-center gap-2 bg-gray-50 dark:bg-gray-800 hover:bg-green-50 dark:hover:bg-green-900/20 px-4 py-3 rounded-xl text-sm font-medium text-gray-700 dark:text-gray-300 hover:scale-105 transition-all duration-200 hover:shadow-lg border border-gray-200 dark:border-gray-700 flex-shrink-0 ${copied ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300" : ""}`}
           >
-            <Image
+            <IconWithFallback
               src="/icons/copy.svg"
               alt=""
               width={18}
               height={18}
-              aria-hidden="true"
               className="object-contain text-gray-600 dark:text-gray-300 transition-transform duration-200"
+              fallbackText="📋"
             />
             <span className="transition-transform duration-200">
               {copied ? "تم النسخ!" : "نسخ الرابط"}

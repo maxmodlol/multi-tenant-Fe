@@ -10,13 +10,13 @@ import "swiper/css/effect-creative";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Autoplay, EffectCreative } from "swiper/modules";
 import { useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import clsx from "clsx";
 
 import { useBlogs } from "@/src/hooks/public/useBlogs";
 import BlogCard from "./BlogCard";
 import { Blog } from "@explore/types/blogs";
 import { Button } from "./ui/button";
+import IconWithFallback from "./IconWithFallback";
 
 interface FeaturedSliderProps {
   initialBlogs: Blog[];
@@ -107,7 +107,13 @@ export default function FeaturedSlider({
               isEnd && "opacity-50 cursor-not-allowed",
             )}
           >
-            <Image src="/icons/arrow-right.svg" alt="next" width={44} height={44} />
+            <IconWithFallback
+              src="/icons/arrow-right.svg"
+              alt="next"
+              width={44}
+              height={44}
+              fallbackText="→"
+            />
           </Button>
           <Button
             ref={prevRef}
@@ -122,7 +128,13 @@ export default function FeaturedSlider({
               isBeginning && "opacity-50 cursor-not-allowed",
             )}
           >
-            <Image src="/icons/arrow-left.svg" alt="prev" width={44} height={44} />
+            <IconWithFallback
+              src="/icons/arrow-left.svg"
+              alt="prev"
+              width={44}
+              height={44}
+              fallbackText="←"
+            />
           </Button>
         </div>
       </Swiper>

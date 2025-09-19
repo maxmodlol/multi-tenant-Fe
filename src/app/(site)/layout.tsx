@@ -6,7 +6,6 @@ import Footer from "@explore/components/layout/footer";
 import AdHeaderInjector from "@explore/components/AdHeaderInjector";
 import { fetchSiteSetting } from "@explore/services/settingService";
 import type { Metadata } from "next";
-import { FooterAd } from "@/src/components/TenantAdInjector";
 
 /* Dynamic tenant metadata */
 export async function generateMetadata(): Promise<Metadata> {
@@ -89,11 +88,6 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
       />
 
       <main className="mt-20">{children}</main>
-
-      {/* Footer Ad - Above the footer */}
-      <div className="w-full">
-        <FooterAd pageType="home" />
-      </div>
 
       <Footer
         logoLightUrl={logoLight}

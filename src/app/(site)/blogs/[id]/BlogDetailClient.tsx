@@ -1,27 +1,33 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+
+// Declare adsbygoogle for TypeScript
+declare global {
+  interface Window {
+    adsbygoogle: any[];
+  }
+}
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useAdSettings } from "@/src/hooks/dashboard/useAdSetting";
-import { Placement } from "@/src/types/ads";
+import {
+  UnderDateAd,
+  UnderHeroAd,
+  UnderHeroImageAd,
+  AboveShareableAd,
+  UnderShareableAd,
+} from "@/src/components/TenantAdInjector";
+import { useInlineAds, injectInlineAdsIntoContent } from "@/src/utils/inlineAdInjector";
+import { useTenantAds } from "@/src/hooks/public/useTenantAds";
+import { useCurrentTenant } from "@/src/hooks/public/useCurrentTenant";
+import { TenantAdPlacement } from "@/src/types/tenantAds";
 import { Blog } from "@explore/types/blogs";
 import BlogHero from "@explore/components/BlogHero";
 import BlogFooterMeta from "@explore/components/BlogFooterMeta";
 import PaginationBar from "@explore/components/PaginationBar";
 import RelatedBlogs from "@explore/components/RelatedBlogs";
 
-/**
- * Renders one ad snippet as raw HTML.
- */
-function AdSlot({ snippet }: { snippet: string }) {
-  return (
-    <div
-      className="my-6 w-full flex justify-center"
-      dangerouslySetInnerHTML={{ __html: snippet }}
-    />
-  );
-}
+// AdSlot component removed - now using unified TenantAdInjector system
 
 export default function BlogDetailClient({
   blog,
@@ -37,77 +43,119 @@ export default function BlogDetailClient({
   const qc = useQueryClient();
   const router = useRouter();
 
-  // Fetch ads for this blogId:
-  const {
-    data: adSettings,
-    isLoading: adsLoading,
-    error: adsError,
-    refetch,
-  } = useAdSettings(blog.id);
+  // Get current tenant
+  const currentTenant = useCurrentTenant();
+
+  // Get inline ads for this blog
+  const inlineAds = useInlineAds(blog.id);
+
+  // Get all blog ads for this blog
+  const { data: blogAdsData } = useTenantAds(
+    "blog",
+    [
+      "ABOVE_TAGS",
+      "UNDER_DATE",
+      "UNDER_HERO",
+      "UNDER_HERO_IMAGE",
+      "ABOVE_SHAREABLE",
+      "UNDER_SHAREABLE",
+    ],
+    currentTenant,
+    blog.id,
+  );
+
+  const aboveTagsAds = blogAdsData?.["ABOVE_TAGS"] || [];
+  const underDateAds = blogAdsData?.["UNDER_DATE"] || [];
+
+  // Debug logging
+  console.log("BlogDetailClient Debug:", {
+    currentTenant,
+    blogAdsData,
+    aboveTagsAds,
+    underDateAds,
+    blogId: blog.id,
+  });
 
   // Sync page state with URL parameters
   useEffect(() => {
     setPage(urlPage || 1);
   }, [urlPage]);
 
-  // Re-fetch ads whenever `page` changes:
+  // Inject inline ads into content
+  const contentWithInlineAds = blog.pages.map((pageContent) =>
+    injectInlineAdsIntoContent(pageContent.content, inlineAds),
+  );
+
+  // Execute AdSense push for inline ads after content is rendered
   useEffect(() => {
-    refetch();
-  }, [page, refetch]);
+    if (inlineAds.length > 0) {
+      const executeInlineAds = () => {
+        if (window.adsbygoogle) {
+          // Find all inline ad containers and execute push for them
+          const inlineAdContainers = document.querySelectorAll(".inline-ad-container");
+          console.log(`Found ${inlineAdContainers.length} inline ad containers`);
 
-  // Prepare ABOVE_TAGS and UNDER_DATE for BlogHero:
-  const aboveTagsAds = adSettings
-    ? adSettings
-        .filter((ad) => ad.isEnabled && ad.placement === Placement.ABOVE_TAGS)
-        .map((ad) => ad.codeSnippet)
-    : [];
+          inlineAdContainers.forEach((container, index) => {
+            try {
+              // Check if this container has AdSense ads
+              const insElements = container.querySelectorAll("ins.adsbygoogle");
+              if (insElements.length > 0) {
+                // Check if any ins elements don't have ads yet
+                let needsPush = false;
+                insElements.forEach((ins: any) => {
+                  if (!ins.dataset.adsbygoogleStatus) {
+                    needsPush = true;
+                  }
+                });
 
-  const underDateAds = adSettings
-    ? adSettings
-        .filter((ad) => ad.isEnabled && ad.placement === Placement.UNDER_DATE)
-        .map((ad) => ad.codeSnippet)
-    : [];
+                if (needsPush) {
+                  (window.adsbygoogle = window.adsbygoogle || []).push({});
+                  console.log(`Inline AdSense ad ${index + 1} pushed successfully`);
+                } else {
+                  console.log(`Inline AdSense ad ${index + 1} already has ads, skipping push`);
+                }
+              }
+            } catch (error) {
+              console.error(`Error pushing inline AdSense ad ${index + 1}:`, error);
+            }
+          });
+        } else {
+          // Retry after a short delay, but limit retries
+          setTimeout(executeInlineAds, 100);
+        }
+      };
 
-  // INLINE ad injection into page content:
-  const [contentWithInlineAds, setContentWithInlineAds] = useState<string[]>([]);
+      // Execute after a short delay to ensure DOM is updated
+      const timeoutId = setTimeout(executeInlineAds, 200);
 
-  useEffect(() => {
-    if (!adSettings || adsLoading) {
-      // If still loading or no ads, use original content
-      setContentWithInlineAds(blog.pages.map((p) => p.content));
-      return;
+      // Add a timeout to prevent infinite retries
+      const maxTimeoutId = setTimeout(() => {
+        console.warn("Inline AdSense ads not executed after 10 seconds");
+      }, 10000);
+
+      return () => {
+        clearTimeout(timeoutId);
+        clearTimeout(maxTimeoutId);
+      };
     }
+  }, [inlineAds, page]);
 
-    const inlineAds = adSettings.filter((ad) => ad.isEnabled && ad.placement === Placement.INLINE);
-    if (inlineAds.length === 0) {
-      setContentWithInlineAds(blog.pages.map((p) => p.content));
-      return;
-    }
-
-    // Only handle the first INLINE ad for simplicity:
-    const firstInline = inlineAds[0];
-    const offset = firstInline.positionOffset || 0;
-
-    // Split first page content into words:
-    const firstWords = blog.pages[0].content.split(" ");
-    if (offset >= firstWords.length) {
-      firstWords.push(firstInline.codeSnippet);
-    } else {
-      firstWords.splice(offset, 0, firstInline.codeSnippet);
-    }
-
-    const newPages = [firstWords.join(" "), ...blog.pages.slice(1).map((p) => p.content)];
-    setContentWithInlineAds(newPages);
-  }, [adSettings, adsLoading, blog.pages]);
-
-  if (adsError) {
-    console.error("Error loading ad settings:", adsError);
-  }
+  // Old ad error handling removed - now using unified system
   const isSingle = total === 1;
   return (
     <div className="bg-white dark:bg-black text-gray-900 dark:text-gray-100">
       {/* ─── Hero including ABOVE_TAGS & UNDER_DATE ─── */}
-      <BlogHero blog={blog} aboveTagsAds={aboveTagsAds} underDateAds={underDateAds} />
+      <BlogHero
+        blog={blog}
+        aboveTagsAds={aboveTagsAds.map((ad) => ad.codeSnippet).filter(Boolean)}
+        underDateAds={underDateAds.map((ad) => ad.codeSnippet).filter(Boolean)}
+      />
+
+      {/* ─── UNDER_HERO Ad ─── */}
+      <UnderHeroAd blogId={blog.id} />
+
+      {/* ─── UNDER_HERO_IMAGE Ad ─── */}
+      <UnderHeroImageAd blogId={blog.id} />
 
       <div className="max-w-4xl mx-auto px-4 md:px-6 -mt-2 md:mt-0">
         {/* ─── Pagination (Top) ─── */}
@@ -135,16 +183,6 @@ export default function BlogDetailClient({
               }}
             />
           </article>
-
-          {/* ─── UNDER_SHARE_1 Ad ─── */}
-          {adSettings
-            ?.filter((ad) => ad.isEnabled && ad.placement === Placement.UNDER_SHARE_1)
-            .map((ad) => <AdSlot key={ad.id} snippet={ad.codeSnippet} />)}
-
-          {/* ─── UNDER_SHARE_2 Ad ─── */}
-          {adSettings
-            ?.filter((ad) => ad.isEnabled && ad.placement === Placement.UNDER_SHARE_2)
-            .map((ad) => <AdSlot key={ad.id} snippet={ad.codeSnippet} />)}
         </div>
 
         {/* ─── Pagination (Bottom) ─── */}
@@ -160,7 +198,10 @@ export default function BlogDetailClient({
           </div>
         )}
 
-        {/* ─── Footer Meta ─── */}
+        {/* ─── ABOVE_SHAREABLE Ad ─── */}
+        <AboveShareableAd blogId={blog.id} />
+
+        {/* ─── Footer Meta (Shareable Links) ─── */}
         <div className="mt-6">
           <BlogFooterMeta
             url={typeof window !== "undefined" ? window.location.href : ""}
@@ -169,10 +210,8 @@ export default function BlogDetailClient({
           />
         </div>
 
-        {/* ─── Optional Bottom UNDER_DATE Ad ─── */}
-        {adSettings
-          ?.filter((ad) => ad.isEnabled && ad.placement === Placement.UNDER_DATE)
-          .map((ad) => <AdSlot key={`${ad.id}-bottom`} snippet={ad.codeSnippet} />)}
+        {/* ─── UNDER_SHAREABLE Ad ─── */}
+        <UnderShareableAd blogId={blog.id} />
       </div>
 
       {/* ─── Related Blogs ─── */}

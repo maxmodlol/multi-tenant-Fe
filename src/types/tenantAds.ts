@@ -1,6 +1,7 @@
 // types/tenantAds.ts
 
 export enum TenantAdPlacement {
+  // Site-wide placements (home, category, search pages)
   HEADER = "HEADER",
   FOOTER = "FOOTER",
   SIDEBAR = "SIDEBAR",
@@ -12,6 +13,15 @@ export enum TenantAdPlacement {
   SEARCH_BOTTOM = "SEARCH_BOTTOM",
   BLOG_LIST_TOP = "BLOG_LIST_TOP",
   BLOG_LIST_BOTTOM = "BLOG_LIST_BOTTOM",
+
+  // Blog-specific placements (individual blog posts)
+  ABOVE_TAGS = "ABOVE_TAGS",
+  UNDER_DATE = "UNDER_DATE",
+  UNDER_HERO = "UNDER_HERO",
+  UNDER_HERO_IMAGE = "UNDER_HERO_IMAGE",
+  ABOVE_SHAREABLE = "ABOVE_SHAREABLE",
+  UNDER_SHAREABLE = "UNDER_SHAREABLE",
+  INLINE = "INLINE",
 }
 
 export enum TenantAdAppearance {
@@ -33,6 +43,9 @@ export interface TenantAdSetting {
   priority: number;
   title?: string;
   description?: string;
+  scope: string; // "main" = main domain only, "all" = all domains, or specific tenant ID
+  blogId?: string; // Only used for blog-specific placements
+  positionOffset?: number; // For INLINE placement: how many words before injecting
   targetingRules?: {
     pageTypes?: string[];
     excludePageTypes?: string[];
@@ -52,6 +65,9 @@ export interface CreateTenantAdInput {
   priority?: number;
   title?: string;
   description?: string;
+  scope: string; // "main" = main domain only, "all" = all domains, or specific tenant ID
+  blogId?: string; // Only used for blog-specific placements
+  positionOffset?: number; // For INLINE placement: how many words before injecting
   targetingRules?: {
     pageTypes?: string[];
     excludePageTypes?: string[];
@@ -70,6 +86,9 @@ export interface UpdateTenantAdInput {
   priority?: number;
   title?: string;
   description?: string;
+  scope?: string; // "main" = main domain only, "all" = all domains, or specific tenant ID
+  blogId?: string; // Only used for blog-specific placements
+  positionOffset?: number; // For INLINE placement: how many words before injecting
   targetingRules?: {
     pageTypes?: string[];
     excludePageTypes?: string[];
@@ -83,3 +102,13 @@ export type TenantAdsByPlacement = Record<string, TenantAdSetting[]>;
 
 // Page types for targeting
 export type PageType = "home" | "category" | "search" | "blog" | "blog-list" | "about" | "contact";
+
+// Scope options for ads
+export enum AdScope {
+  MAIN = "main", // Main domain only
+  ALL = "all", // All domains (main + subdomains)
+  // Specific tenant IDs are passed as strings
+}
+
+// Helper type for scope selection
+export type AdScopeOption = AdScope.MAIN | AdScope.ALL | string; // string for specific tenant IDs
