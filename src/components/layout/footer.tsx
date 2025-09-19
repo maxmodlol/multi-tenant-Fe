@@ -224,7 +224,8 @@ export default function Footer({
         {!pathname?.startsWith("/dashboard") &&
           !pathname?.startsWith("/login") &&
           !pathname?.startsWith("/forgot-password") &&
-          !pathname?.startsWith("/reset-password") && <FooterAd pageType={pageType} />}
+          !pathname?.startsWith("/reset-password") &&
+          !pathname?.startsWith("/auth") && <FooterAd pageType={pageType} />}
 
         {/* الشعار + الاشتراك */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">

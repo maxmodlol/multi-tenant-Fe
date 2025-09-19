@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 import Header from "@explore/components/layout/header";
 import Footer from "@explore/components/layout/footer";
 import AdHeaderInjector from "@explore/components/AdHeaderInjector";
+import ConditionalAdWrapper from "@/src/components/ConditionalAdWrapper";
 import { fetchSiteSetting } from "@explore/services/settingService";
 import type { Metadata } from "next";
 
@@ -78,7 +79,9 @@ export default async function SiteLayout({ children }: { children: ReactNode }) 
 
   return (
     <>
-      <AdHeaderInjector />
+      <ConditionalAdWrapper>
+        <AdHeaderInjector />
+      </ConditionalAdWrapper>
 
       <Header
         logoLightUrl={logoLight}
