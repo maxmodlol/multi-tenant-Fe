@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useCallback } from "react";
+import { usePathname } from "next/navigation";
 import { useTenantAds } from "@/src/hooks/public/useTenantAds";
 import { useCurrentTenant } from "@/src/hooks/public/useCurrentTenant";
 import { TenantAdPlacement } from "@/src/types/tenantAds";
@@ -28,9 +29,23 @@ function TenantAdInjector({
   tenantId,
   blogId,
 }: TenantAdInjectorProps) {
+  const pathname = usePathname();
   const containerRef = useRef<HTMLDivElement>(null);
   const currentTenant = useCurrentTenant();
   const effectiveTenantId = tenantId || currentTenant;
+
+  // Don't render ads on admin pages
+  const isAdminPage =
+    pathname?.startsWith("/dashboard") ||
+    pathname?.startsWith("/login") ||
+    pathname?.startsWith("/forgot-password") ||
+    pathname?.startsWith("/reset-password") ||
+    pathname?.startsWith("/auth");
+
+  if (isAdminPage) {
+    console.log("🚫 TenantAdInjector: Skipping ad injection for admin page:", pathname);
+    return null;
+  }
 
   const {
     data: adsByPlacement,

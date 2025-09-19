@@ -32,8 +32,10 @@ export default function AdHeaderInjector() {
       pathname?.startsWith("/login") ||
       pathname?.startsWith("/forgot-password") ||
       pathname?.startsWith("/reset-password") ||
+      pathname?.startsWith("/auth") ||
       pathname?.startsWith("/search")
     ) {
+      console.log("🚫 AdHeaderInjector: Skipping ad injection for admin page:", pathname);
       return;
     }
 
