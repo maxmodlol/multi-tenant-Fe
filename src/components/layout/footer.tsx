@@ -220,8 +220,11 @@ export default function Footer({
       )}
 
       <div className="relative z-10 mx-auto max-w-screen-xl px-6">
-        {/* Footer Ad - Above the footer content */}
-        <FooterAd pageType={pageType} />
+        {/* Footer Ad - Above the footer content (only on public site pages) */}
+        {!pathname?.startsWith("/dashboard") &&
+          !pathname?.startsWith("/login") &&
+          !pathname?.startsWith("/forgot-password") &&
+          !pathname?.startsWith("/reset-password") && <FooterAd pageType={pageType} />}
 
         {/* الشعار + الاشتراك */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
