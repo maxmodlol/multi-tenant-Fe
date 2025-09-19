@@ -43,7 +43,6 @@ const ResponsiveMenu: React.FC<ResponsiveMenuProps> = ({
               placeholder="ابحث هنا..."
               icon="search"
               value={query}
-              autoFocus
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && onSearch()}
               className={`w-full rounded-xl px-4 py-3 text-base font-semibold ${
@@ -115,7 +114,7 @@ const ResponsiveMenu: React.FC<ResponsiveMenuProps> = ({
       </nav>
 
       {/* Dark mode toggle and Social Media Icons */}
-      <div className={`${isMobile ? "mt-auto" : "mt-6"}`}>
+      <div className={`${isMobile ? "mt-3" : "mt-6"}`}>
         {/* Dark mode toggle (Mobile only) */}
         {isMobile && (
           <button
@@ -131,7 +130,7 @@ const ResponsiveMenu: React.FC<ResponsiveMenuProps> = ({
               stroke="currentColor"
               className="!size-5 relative z-10"
             />
-            <span className="text-base font-bold relative z-10">الوضع الليلي</span>
+            <span className="text-base font-bold  relative z-10">الوضع الليلي</span>
             <div
               className={`absolute inset-0 rounded-xl opacity-0 group-hover:opacity-10 transition-opacity duration-300 ${
                 isDark ? "bg-white" : "bg-gray-900"

@@ -1054,10 +1054,7 @@
 
 .tenant-ad {
   margin: 0.5rem 0;
-  padding: 0.5rem;
-  border-radius: 0.5rem;
-  background-color: hsl(var(--bg-secondary));
-  border: 1px solid hsl(var(--border));
+  /* Remove padding, border, and background to avoid styling conflicts with ads */
 }
 
 .tenant-ad-loading {
@@ -1177,4 +1174,18 @@
     width: 90%;
     max-width: 400px;
   }
+}
+
+/* AdSense inline ad styling */
+.inline-ad-container {
+  margin: 1.5rem 0;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.inline-ad-container ins {
+  display: block !important;
+  margin: 0 auto;
 }

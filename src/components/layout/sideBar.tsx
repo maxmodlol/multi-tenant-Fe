@@ -18,6 +18,7 @@ import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import ThemeToggle from "@/src/app/(dashboard)/_components/ThemeToggle";
 import { getAvatarUrl, handleAvatarError } from "@/src/utils/avatarUtils";
+import LogoImage from "@/src/components/LogoImage";
 
 export default function Sidebar({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
@@ -76,12 +77,11 @@ export default function Sidebar({ onClose }: { onClose?: () => void }) {
     <aside className="flex h-full w-full shrink-0 flex-col border-r border-border-secondary bg-background-secondary px-4 sm:px-6 py-6 sm:py-8 shadow-lg dark:shadow-black/30 transition-colors duration-200">
       {/* Logo links to dashboard home */}
       <Link href="/dashboard" className="-mx-2 mb-8 sm:mb-12 flex items-center gap-2">
-        <Image
+        <LogoImage
           src="/logo.svg"
           alt="Logo"
           width={120}
           height={28}
-          priority
           className="h-6 sm:h-8 w-auto"
         />
       </Link>

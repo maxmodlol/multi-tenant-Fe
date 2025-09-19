@@ -200,6 +200,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </Script>
         )}
 
+        {/* Google AdSense Script - Load globally */}
+        <Script
+          id="google-adsense"
+          src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5603341970726415"
+          strategy="afterInteractive"
+          crossOrigin="anonymous"
+        />
+
         {/* Facebook SDK for Comments - Only load on HTTPS or localhost */}
         <Script
           id="facebook-sdk"

@@ -5,8 +5,11 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "next build && node scripts/copy-assets.js",
-    "build:standalone": "next build && node scripts/copy-assets.js",
+    "build:production": "NODE_ENV=production next build && node scripts/copy-assets.js",
+    "build:standalone": "NODE_ENV=production next build && node scripts/copy-assets.js",
     "start": "next start",
+    "start:production": "NODE_ENV=production next start",
+    "verify-assets": "node scripts/verify-assets.js",
     "lint": "next lint",
     "format": "prettier --write ."
   },

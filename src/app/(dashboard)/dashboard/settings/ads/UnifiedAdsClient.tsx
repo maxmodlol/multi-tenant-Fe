@@ -7,8 +7,8 @@ import { useTenants } from "@/src/hooks/dashboard/useTenants";
 import { TenantAdPlacement, TenantAdAppearance, AdScope } from "@/src/types/tenantAds";
 import type { TenantAdSetting, CreateTenantAdInput } from "@/src/types/tenantAds";
 
-export default function HeaderSettingsForm() {
-  console.log("🚀 HeaderSettingsForm: Component mounted!");
+export default function UnifiedAdsClient() {
+  console.log("🚀 UnifiedAdsClient: Component mounted!");
 
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -28,8 +28,12 @@ export default function HeaderSettingsForm() {
     positionOffset: undefined,
   });
 
+  // Add page type selection
+  const [selectedPageType, setSelectedPageType] = useState<"home" | "blog">("home");
+
   // Add filtering state
   const [statusFilter, setStatusFilter] = useState<"all" | "enabled" | "disabled">("all");
+  const [placementFilter, setPlacementFilter] = useState<string>("all");
 
   // Fetch data
   const { data: tenantAds, isLoading: loadingAds, error: errorAds } = useTenantAds();
@@ -37,12 +41,6 @@ export default function HeaderSettingsForm() {
 
   // Get mutation hooks
   const { createMutation, updateMutation, deleteMutation } = useTenantAdMutations();
-
-  // Filter only header ads
-  const headerAds = useMemo(() => {
-    if (!tenantAds) return [];
-    return tenantAds.filter((ad) => ad.placement === TenantAdPlacement.HEADER);
-  }, [tenantAds]);
 
   // Create tenant options for scope selection
   const tenantOptions = useMemo(() => {
@@ -64,11 +62,11 @@ export default function HeaderSettingsForm() {
     return options;
   }, [tenants]);
 
-  // Group header ads by scope
-  const headerAdsByScope = useMemo(() => {
-    if (!headerAds) return {};
+  // Group ads by scope for better organization
+  const adsByScope = useMemo(() => {
+    if (!tenantAds) return {};
 
-    return headerAds.reduce(
+    return tenantAds.reduce(
       (acc, ad) => {
         const scopeKey = ad.scope || "main";
         if (!acc[scopeKey]) {
@@ -79,11 +77,13 @@ export default function HeaderSettingsForm() {
       },
       {} as Record<string, TenantAdSetting[]>,
     );
-  }, [headerAds]);
+  }, [tenantAds]);
 
-  // Filter header ads based on current filters
-  const filteredHeaderAds = useMemo(() => {
-    return headerAds.filter((ad) => {
+  // Filter ads based on current filters
+  const filteredAds = useMemo(() => {
+    if (!tenantAds) return [];
+
+    return tenantAds.filter((ad) => {
       // Status filter
       if (statusFilter !== "all") {
         const isEnabled = ad.isEnabled;
@@ -91,9 +91,34 @@ export default function HeaderSettingsForm() {
         if (statusFilter === "disabled" && isEnabled) return false;
       }
 
+      // Placement filter
+      if (placementFilter !== "all") {
+        if (ad.placement !== placementFilter) return false;
+      }
+
       return true;
     });
-  }, [headerAds, statusFilter]);
+  }, [tenantAds, statusFilter, placementFilter]);
+
+  // Define placements based on page type
+  const homePlacements = [
+    TenantAdPlacement.HEADER,
+    TenantAdPlacement.FOOTER,
+    TenantAdPlacement.HOME_HERO,
+    TenantAdPlacement.HOME_BELOW_HERO,
+  ];
+
+  const blogPlacements = [
+    TenantAdPlacement.ABOVE_TAGS,
+    TenantAdPlacement.UNDER_DATE,
+    TenantAdPlacement.UNDER_HERO,
+    TenantAdPlacement.UNDER_HERO_IMAGE,
+    TenantAdPlacement.ABOVE_SHAREABLE,
+    TenantAdPlacement.UNDER_SHAREABLE,
+    TenantAdPlacement.INLINE,
+  ];
+
+  const currentPlacements = selectedPageType === "home" ? homePlacements : blogPlacements;
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -125,7 +150,7 @@ export default function HeaderSettingsForm() {
         positionOffset: undefined,
       });
     } catch (error) {
-      console.error("Error saving header ad:", error);
+      console.error("Error saving ad:", error);
     }
   };
 
@@ -157,7 +182,7 @@ export default function HeaderSettingsForm() {
       setIsDeleteModalOpen(false);
       setDeletingAd(null);
     } catch (error) {
-      console.error("Error deleting header ad:", error);
+      console.error("Error deleting ad:", error);
     }
   };
 
@@ -166,7 +191,7 @@ export default function HeaderSettingsForm() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-text-secondary">Loading header ads configuration...</p>
+          <p className="text-text-secondary">Loading ads configuration...</p>
         </div>
       </div>
     );
@@ -178,9 +203,7 @@ export default function HeaderSettingsForm() {
         <div className="text-center">
           <div className="text-red-500 text-6xl mb-4">⚠️</div>
           <h3 className="text-lg font-semibold text-text-primary mb-2">Error Loading Data</h3>
-          <p className="text-text-secondary">
-            Failed to load header ads configuration. Please try again.
-          </p>
+          <p className="text-text-secondary">Failed to load ads configuration. Please try again.</p>
         </div>
       </div>
     );
@@ -190,13 +213,40 @@ export default function HeaderSettingsForm() {
     <div className="space-y-8">
       {/* Header */}
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-text-primary mb-2 flex items-center justify-center gap-3">
-          <span className="text-primary">🔝</span>
-          Header Ads Management
-        </h1>
+        <h1 className="text-3xl font-bold text-text-primary mb-2">Ads Management</h1>
         <p className="text-text-secondary">
-          Manage header ads that appear at the top of your pages across different scopes
+          Manage ads across your entire platform with unified controls
         </p>
+      </div>
+
+      {/* Page Type Selection */}
+      <div className="bg-background-secondary rounded-2xl p-6 border border-border-secondary shadow-lg">
+        <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
+          <span className="text-primary">📄</span>
+          Page Type
+        </h3>
+        <div className="flex gap-4">
+          <button
+            onClick={() => setSelectedPageType("home")}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
+              selectedPageType === "home"
+                ? "bg-primary text-white shadow-lg"
+                : "bg-background-primary text-text-secondary hover:bg-background-tertiary border border-border-secondary"
+            }`}
+          >
+            🏠 Home Page
+          </button>
+          <button
+            onClick={() => setSelectedPageType("blog")}
+            className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 ${
+              selectedPageType === "blog"
+                ? "bg-primary text-white shadow-lg"
+                : "bg-background-primary text-text-secondary hover:bg-background-tertiary border border-border-secondary"
+            }`}
+          >
+            📝 Blog Pages
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -205,7 +255,7 @@ export default function HeaderSettingsForm() {
           <span className="text-primary">🔍</span>
           Filters
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Status Filter */}
           <div>
             <label className="block text-sm font-medium text-text-primary mb-2">Status</label>
@@ -219,6 +269,23 @@ export default function HeaderSettingsForm() {
               <option value="disabled">Disabled Only</option>
             </select>
           </div>
+
+          {/* Placement Filter */}
+          <div>
+            <label className="block text-sm font-medium text-text-primary mb-2">Placement</label>
+            <select
+              value={placementFilter}
+              onChange={(e) => setPlacementFilter(e.target.value)}
+              className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+            >
+              <option value="all">All Placements</option>
+              {currentPlacements.map((placement) => (
+                <option key={placement} value={placement}>
+                  {placement.replace(/_/g, " ")}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
@@ -226,24 +293,24 @@ export default function HeaderSettingsForm() {
       <div className="bg-background-secondary rounded-2xl p-6 border border-border-secondary shadow-lg">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <div className="text-center">
-            <div className="text-3xl font-bold text-primary mb-1">{filteredHeaderAds.length}</div>
-            <div className="text-sm text-text-secondary">Total Header Ads</div>
+            <div className="text-3xl font-bold text-primary mb-1">{filteredAds.length}</div>
+            <div className="text-sm text-text-secondary">Total Ads</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-green-500 mb-1">
-              {filteredHeaderAds.filter((ad) => ad.isEnabled).length}
+              {filteredAds.filter((ad) => ad.isEnabled).length}
             </div>
             <div className="text-sm text-text-secondary">Enabled</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-red-500 mb-1">
-              {filteredHeaderAds.filter((ad) => !ad.isEnabled).length}
+              {filteredAds.filter((ad) => !ad.isEnabled).length}
             </div>
             <div className="text-sm text-text-secondary">Disabled</div>
           </div>
           <div className="text-center">
             <div className="text-3xl font-bold text-blue-500 mb-1">
-              {Object.keys(headerAdsByScope).length}
+              {Object.keys(adsByScope).length}
             </div>
             <div className="text-sm text-text-secondary">Scopes</div>
           </div>
@@ -254,10 +321,10 @@ export default function HeaderSettingsForm() {
       <div className="bg-background-secondary rounded-2xl p-6 lg:p-8 border border-border-secondary shadow-lg">
         <h3 className="text-lg font-semibold text-text-primary mb-4 flex items-center gap-2">
           <span className="text-primary">🎯</span>
-          Header Ad Scopes
+          Ad Scopes
         </h3>
         <div className="flex flex-wrap gap-3">
-          {Object.entries(headerAdsByScope).map(([scope, ads]) => (
+          {Object.entries(adsByScope).map(([scope, ads]) => (
             <button
               key={scope}
               className="group flex items-center px-4 py-3 rounded-lg border-2 transition-all duration-200 font-medium text-sm min-w-0 flex-shrink-0"
@@ -286,14 +353,14 @@ export default function HeaderSettingsForm() {
         </div>
       </div>
 
-      {/* Create Header Ad Button */}
+      {/* Create Ad Button */}
       <div className="flex justify-center">
         <button
           onClick={() => {
             setEditingAd(null);
             setFormData({
               tenantId: "main",
-              placement: TenantAdPlacement.HEADER,
+              placement: currentPlacements[0],
               appearance: TenantAdAppearance.FULL_WIDTH,
               codeSnippet: "",
               isEnabled: true,
@@ -309,23 +376,39 @@ export default function HeaderSettingsForm() {
           className="px-8 py-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center gap-2"
         >
           <span className="text-xl">➕</span>
-          Create New Header Ad
+          Create New Ad
         </button>
       </div>
 
-      {/* Header Ads Grid */}
+      {/* Ads Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {filteredHeaderAds.map((ad) => (
+        {filteredAds.map((ad) => (
           <div
             key={ad.id}
             className="bg-background-secondary rounded-2xl p-6 border border-border-secondary shadow-lg hover:shadow-xl transition-all duration-200"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
-                <span className="text-2xl">🔝</span>
+                <span className="text-2xl">
+                  {ad.placement.includes("HEADER")
+                    ? "🔝"
+                    : ad.placement.includes("FOOTER")
+                      ? "🔽"
+                      : ad.placement.includes("HERO")
+                        ? "🎯"
+                        : ad.placement.includes("TAGS")
+                          ? "🏷️"
+                          : ad.placement.includes("DATE")
+                            ? "📅"
+                            : ad.placement.includes("SHARE")
+                              ? "🔗"
+                              : ad.placement.includes("INLINE")
+                                ? "📝"
+                                : "📄"}
+                </span>
                 <div>
                   <h3 className="text-lg font-semibold text-text-primary">
-                    {ad.title || "Header Ad"}
+                    {ad.title || `${ad.placement.replace(/_/g, " ")} Ad`}
                   </h3>
                   <p className="text-sm text-text-secondary">
                     {ad.scope === "all"
@@ -379,21 +462,21 @@ export default function HeaderSettingsForm() {
       </div>
 
       {/* Empty State */}
-      {filteredHeaderAds.length === 0 && (
+      {filteredAds.length === 0 && (
         <div className="text-center py-12">
-          <div className="text-6xl mb-4">🔝</div>
-          <h3 className="text-xl font-semibold text-text-primary mb-2">No Header Ads Found</h3>
+          <div className="text-6xl mb-4">📭</div>
+          <h3 className="text-xl font-semibold text-text-primary mb-2">No Ads Found</h3>
           <p className="text-text-secondary mb-6">
-            {statusFilter !== "all"
-              ? "No header ads match your current filter. Try adjusting your filter settings."
-              : "Get started by creating your first header ad."}
+            {statusFilter !== "all" || placementFilter !== "all"
+              ? "No ads match your current filters. Try adjusting your filter settings."
+              : "Get started by creating your first ad."}
           </p>
           <button
             onClick={() => {
               setEditingAd(null);
               setFormData({
                 tenantId: "main",
-                placement: TenantAdPlacement.HEADER,
+                placement: currentPlacements[0],
                 appearance: TenantAdAppearance.FULL_WIDTH,
                 codeSnippet: "",
                 isEnabled: true,
@@ -408,7 +491,7 @@ export default function HeaderSettingsForm() {
             }}
             className="px-6 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            Create Your First Header Ad
+            Create Your First Ad
           </button>
         </div>
       )}
@@ -419,7 +502,7 @@ export default function HeaderSettingsForm() {
           <div className="bg-background-secondary rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto border border-border-secondary shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-text-primary">
-                {editingAd ? "Edit Header Ad" : "Create New Header Ad"}
+                {editingAd ? "Edit Ad" : "Create New Ad"}
               </h2>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
@@ -439,7 +522,7 @@ export default function HeaderSettingsForm() {
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                     className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Header ad title (optional)"
+                    placeholder="Ad title (optional)"
                   />
                 </div>
 
@@ -469,7 +552,7 @@ export default function HeaderSettingsForm() {
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
                   rows={3}
-                  placeholder="Header ad description (optional)"
+                  placeholder="Ad description (optional)"
                 />
               </div>
 
@@ -484,6 +567,26 @@ export default function HeaderSettingsForm() {
                   {tenantOptions.map((option) => (
                     <option key={option.id} value={option.id}>
                       {option.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Placement */}
+              <div>
+                <label className="block text-sm font-medium text-text-primary mb-2">
+                  Placement
+                </label>
+                <select
+                  value={formData.placement}
+                  onChange={(e) =>
+                    setFormData({ ...formData, placement: e.target.value as TenantAdPlacement })
+                  }
+                  className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                >
+                  {currentPlacements.map((placement) => (
+                    <option key={placement} value={placement}>
+                      {placement.replace(/_/g, " ")}
                     </option>
                   ))}
                 </select>
@@ -504,6 +607,7 @@ export default function HeaderSettingsForm() {
                   <option value={TenantAdAppearance.FULL_WIDTH}>Full Width</option>
                   <option value={TenantAdAppearance.LEFT_ALIGNED}>Left Aligned</option>
                   <option value={TenantAdAppearance.CENTERED}>Centered</option>
+                  <option value={TenantAdAppearance.POPUP}>Popup</option>
                   <option value={TenantAdAppearance.STICKY}>Sticky</option>
                 </select>
               </div>
@@ -511,14 +615,14 @@ export default function HeaderSettingsForm() {
               {/* Code Snippet */}
               <div>
                 <label className="block text-sm font-medium text-text-primary mb-2">
-                  Header Ad Code Snippet
+                  Ad Code Snippet
                 </label>
                 <textarea
                   value={formData.codeSnippet}
                   onChange={(e) => setFormData({ ...formData, codeSnippet: e.target.value })}
                   className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent font-mono text-sm"
                   rows={8}
-                  placeholder="Paste your header ad code here (HTML, JavaScript, AdSense, etc.)"
+                  placeholder="Paste your ad code here (HTML, JavaScript, AdSense, etc.)"
                   required
                 />
               </div>
@@ -533,7 +637,7 @@ export default function HeaderSettingsForm() {
                   className="w-4 h-4 text-primary bg-background-primary border-border-secondary rounded focus:ring-primary"
                 />
                 <label htmlFor="isEnabled" className="text-sm font-medium text-text-primary">
-                  Enable this header ad
+                  Enable this ad
                 </label>
               </div>
 
@@ -557,9 +661,9 @@ export default function HeaderSettingsForm() {
                       {editingAd ? "Updating..." : "Creating..."}
                     </span>
                   ) : editingAd ? (
-                    "Update Header Ad"
+                    "Update Ad"
                   ) : (
-                    "Create Header Ad"
+                    "Create Ad"
                   )}
                 </button>
               </div>
@@ -574,9 +678,10 @@ export default function HeaderSettingsForm() {
           <div className="bg-background-secondary rounded-2xl p-6 w-full max-w-md border border-border-secondary shadow-2xl">
             <div className="text-center">
               <div className="text-red-500 text-6xl mb-4">⚠️</div>
-              <h3 className="text-xl font-bold text-text-primary mb-2">Delete Header Ad</h3>
+              <h3 className="text-xl font-bold text-text-primary mb-2">Delete Ad</h3>
               <p className="text-text-secondary mb-6">
-                Are you sure you want to delete "{deletingAd.title || "Header Ad"}"? This action
+                Are you sure you want to delete "
+                {deletingAd.title || `${deletingAd.placement.replace(/_/g, " ")} Ad`}"? This action
                 cannot be undone.
               </p>
               <div className="flex justify-center gap-4">

@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { Button } from "@explore/components/ui/button";
 import ResponsiveMenu from "./ResponsiveMenu";
 import SearchOverlay from "@explore/components/SearchOverlay";
+import { handleIconError } from "@/src/utils/avatarUtils";
 import type { PageType } from "@/src/types/tenantAds";
 
 // Dynamically import Lucide icons so they don’t bloat the initial JS bundle:
@@ -111,7 +112,7 @@ export default function Header({
           className={clsx(
             "absolute inset-0 bg-gradient-to-r from-indigo-200 via-brand-300 to-blue-400 pointer-events-none",
             isMobile
-              ? "opacity-50" // Much less color, no animation on mobile
+              ? "opacity-30" // Much less color, no animation on mobile
               : "bg-[length:300%_300%] animate-gradient-x opacity-85 blur-md", // Full effect on desktop
           )}
         />
@@ -230,6 +231,7 @@ export default function Header({
             height={40}
             priority
             className="object-contain h-[40px] w-[80px]"
+            onError={(e) => handleIconError(e)}
           />
         </Link>
 
@@ -239,7 +241,14 @@ export default function Header({
           variant="ghost"
           size="icon"
           className={clsx(
-            isSolidHeader ? "hover:opacity-80" : "text-black hover:opacity-70 dark:text-white",
+            isSolidHeader
+              ? "hover:opacity-80"
+              : clsx(
+                  "text-black dark:text-white transition-colors",
+                  isColoredLight && !isSolidHeader
+                    ? `hover:text-[hsl(${brandHsl})]`
+                    : "hover:opacity-70",
+                ),
             "transition",
           )}
           style={isSolidHeader ? { color: "white !important" } : undefined}
@@ -247,9 +256,27 @@ export default function Header({
           onClick={() => setMenuOpen((o) => !o)}
         >
           {menuOpen ? (
-            <XIcon className="w-6 h-6" style={isSolidHeader ? { color: "white" } : undefined} />
+            <XIcon
+              className="w-6 h-6"
+              style={
+                isSolidHeader
+                  ? { color: "white" }
+                  : isColoredLight && !isSolidHeader
+                    ? { color: `hsl(${brandHsl})` }
+                    : undefined
+              }
+            />
           ) : (
-            <MenuIcon className="w-6 h-6" style={isSolidHeader ? { color: "white" } : undefined} />
+            <MenuIcon
+              className="w-6 h-6"
+              style={
+                isSolidHeader
+                  ? { color: "white" }
+                  : isColoredLight && !isSolidHeader
+                    ? { color: `hsl(${brandHsl})` }
+                    : undefined
+              }
+            />
           )}
         </Button>
       </header>

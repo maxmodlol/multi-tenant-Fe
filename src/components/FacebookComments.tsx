@@ -256,7 +256,7 @@ export default function FacebookComments({
               setIsLoggedIn(true);
               setUserInfo({
                 name: "مستخدم تجريبي",
-                picture: { data: { url: "/icons/author-avatar.svg" } },
+                picture: { data: { url: "/icons/author-avatar.png" } },
               });
               setShowPreviewMode(false);
             }}
@@ -427,7 +427,7 @@ export default function FacebookComments({
                       setIsLoggedIn(true);
                       setUserInfo({
                         name: "مستخدم تجريبي",
-                        picture: { data: { url: "/icons/author-avatar.svg" } },
+                        picture: { data: { url: "/icons/author-avatar.png" } },
                       });
                       setShowPreviewMode(false);
                     }}
@@ -517,7 +517,7 @@ export default function FacebookComments({
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <img
-                    src={userInfo.picture?.data?.url || "/icons/author-avatar.svg"}
+                    src={userInfo.picture?.data?.url || "/icons/author-avatar.png"}
                     alt={userInfo.name}
                     className="w-10 h-10 rounded-full object-cover"
                   />
@@ -544,7 +544,7 @@ export default function FacebookComments({
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <img
-                    src={userInfo?.picture?.data?.url || "/icons/author-avatar.svg"}
+                    src={userInfo?.picture?.data?.url || "/icons/author-avatar.png"}
                     alt={userInfo?.name || "User"}
                     className="w-8 h-8 rounded-full object-cover"
                   />

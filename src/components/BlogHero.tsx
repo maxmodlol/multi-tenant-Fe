@@ -1,6 +1,13 @@
 "use client";
 
 import { Blog } from "@explore/types/blogs";
+
+// Declare adsbygoogle for TypeScript
+declare global {
+  interface Window {
+    adsbygoogle: any[];
+  }
+}
 import Image from "next/image";
 import clsx from "clsx";
 import { formatDate, getTagColorClass } from "@explore/lib/utils";
@@ -8,7 +15,7 @@ import { getAvatarUrl, handleAvatarError } from "@/src/utils/avatarUtils";
 
 /**
  * Renders the hero section of a blog, plus optional ads:
- * - ABOVE_TAGS ads (just below tags and before title)
+ * - ABOVE_TAGS ads (above the tags)
  * - UNDER_DATE ads (right under the date line)
  */
 export default function BlogHero({
@@ -20,8 +27,25 @@ export default function BlogHero({
   aboveTagsAds?: string[];
   underDateAds?: string[];
 }) {
+  // Debug logging
+  console.log("BlogHero Debug:", {
+    aboveTagsAds,
+    underDateAds,
+    aboveTagsAdsLength: aboveTagsAds.length,
+    underDateAdsLength: underDateAds.length,
+  });
   return (
     <div className="bg-white dark:bg-black text-center pt-4 pb-4 md:pb-8 px-4 md:px-8">
+      {/* ─── ABOVE_TAGS ADS ─── */}
+      {aboveTagsAds.map((snippet, i) => (
+        <div
+          key={`above-${i}`}
+          className="my-3 w-full flex justify-center"
+          style={{ minWidth: "300px", minHeight: "100px" }}
+          dangerouslySetInnerHTML={{ __html: snippet }}
+        />
+      ))}
+
       {/* Tags */}
       <div className="flex flex-wrap justify-center gap-2 mb-3">
         {(blog.tags ?? []).map((tag, idx) => (
@@ -33,15 +57,6 @@ export default function BlogHero({
           </span>
         ))}
       </div>
-
-      {/* ─── ABOVE_TAGS ADS ─── */}
-      {aboveTagsAds.map((snippet, i) => (
-        <div
-          key={`above-${i}`}
-          className="my-3 w-full flex justify-center"
-          dangerouslySetInnerHTML={{ __html: snippet }}
-        />
-      ))}
 
       {/* Title */}
       <h1 className="text-[2rem] md:text-[3.5rem] font-extrabold mb-8 line-clamp-3 leading-tight">
@@ -65,6 +80,7 @@ export default function BlogHero({
         <div
           key={`under-${i}`}
           className="my-3 w-full flex justify-center"
+          style={{ minWidth: "300px", minHeight: "100px" }}
           dangerouslySetInnerHTML={{ __html: snippet }}
         />
       ))}
