@@ -13,7 +13,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import {
   UnderDateAd,
   UnderHeroAd,
-  UnderHeroImageAd,
   AboveShareableAd,
   UnderShareableAd,
 } from "@/src/components/TenantAdInjector";
@@ -153,9 +152,6 @@ export default function BlogDetailClient({
 
       {/* ─── UNDER_HERO Ad ─── */}
       <UnderHeroAd blogId={blog.id} />
-
-      {/* ─── UNDER_HERO_IMAGE Ad ─── */}
-      <UnderHeroImageAd blogId={blog.id} />
 
       <div className="max-w-4xl mx-auto px-4 md:px-6 -mt-2 md:mt-0">
         {/* ─── Pagination (Top) ─── */}

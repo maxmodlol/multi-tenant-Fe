@@ -33,6 +33,12 @@ export enum TenantAdAppearance {
   STICKY = "STICKY",
 }
 
+export enum AdScope {
+  ALL = "all",
+  GLOBAL = "global",
+  MAIN = "main",
+}
+
 export interface TenantAdSetting {
   id: string;
   tenantId: string;
@@ -43,7 +49,7 @@ export interface TenantAdSetting {
   priority: number;
   title?: string;
   description?: string;
-  scope: string; // "main" = main domain only, "all" = all domains, or specific tenant ID
+  scope?: string; // "main" = main domain only, "all" = all domains, or specific tenant ID
   blogId?: string; // Only used for blog-specific placements
   positionOffset?: number; // For INLINE placement: how many words before injecting
   targetingRules?: {
@@ -65,7 +71,7 @@ export interface CreateTenantAdInput {
   priority?: number;
   title?: string;
   description?: string;
-  scope: string; // "main" = main domain only, "all" = all domains, or specific tenant ID
+  scope?: string; // "main" = main domain only, "all" = all domains, or specific tenant ID
   blogId?: string; // Only used for blog-specific placements
   positionOffset?: number; // For INLINE placement: how many words before injecting
   targetingRules?: {
@@ -102,13 +108,3 @@ export type TenantAdsByPlacement = Record<string, TenantAdSetting[]>;
 
 // Page types for targeting
 export type PageType = "home" | "category" | "search" | "blog" | "blog-list" | "about" | "contact";
-
-// Scope options for ads
-export enum AdScope {
-  MAIN = "main", // Main domain only
-  ALL = "all", // All domains (main + subdomains)
-  // Specific tenant IDs are passed as strings
-}
-
-// Helper type for scope selection
-export type AdScopeOption = AdScope.MAIN | AdScope.ALL | string; // string for specific tenant IDs
