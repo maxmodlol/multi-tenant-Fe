@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useTenantAds } from "@/src/hooks/dashboard/useTenantAds";
 import { useTenantAdMutations } from "@/src/hooks/dashboard/mutations/useTenantAdMutations";
 import { useTenants } from "@/src/hooks/dashboard/useTenants";
@@ -172,6 +173,22 @@ export default function UnifiedAdsClient() {
 
   // Get form placements (for form only)
   const formPlacements = formPageType === "home" ? homePlacements : blogPlacements;
+
+  // Modal management - prevent body scroll but don't auto-scroll
+  useEffect(() => {
+    if (isCreateModalOpen) {
+      // Prevent body scroll but don't change scroll position
+      document.body.style.overflow = "hidden";
+    } else {
+      // Restore body scroll
+      document.body.style.overflow = "unset";
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isCreateModalOpen]);
 
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
@@ -797,286 +814,333 @@ export default function UnifiedAdsClient() {
         </div>
       )}
 
-      {/* Create/Edit Modal - Responsive */}
-      {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
-          <div className="bg-background-secondary rounded-2xl p-4 sm:p-6 w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-y-auto border border-border-secondary shadow-2xl">
-            <div className="flex items-center justify-between mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl lg:text-2xl font-bold text-text-primary">
-                {editingAd ? "Edit Ad" : "Create New Ad"}
-              </h2>
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="text-text-secondary hover:text-text-primary text-xl sm:text-2xl p-1"
-              >
-                ×
-              </button>
+      {/* Create/Edit Modal - Portal Rendering */}
+      {isCreateModalOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: "100vh",
+              width: "100vw",
+              margin: 0,
+              padding: "1rem",
+              zIndex: 9999,
+            }}
+          >
+            <div className="bg-background-secondary rounded-2xl w-full max-w-2xl max-h-[70vh] overflow-y-auto border border-border-secondary shadow-2xl">
+              {/* Modal Header */}
+              <div className="sticky top-0 bg-background-secondary border-b border-border-secondary px-6 py-4 rounded-t-2xl">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-bold text-text-primary">
+                    {editingAd ? "Edit Ad" : "Create New Ad"}
+                  </h2>
+                  <button
+                    onClick={() => setIsCreateModalOpen(false)}
+                    className="text-text-secondary hover:text-text-primary text-2xl p-2 hover:bg-background-primary rounded-full transition-colors"
+                    aria-label="Close modal"
+                  >
+                    ×
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Content */}
+              <div className="p-6 flex flex-col h-full">
+                <form onSubmit={handleSubmit} className="flex flex-col h-full">
+                  {/* Scrollable Content Area */}
+                  <div className="flex-1 overflow-y-auto space-y-6 pr-2">
+                    {/* Page Type Selection */}
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-3">
+                        Page Type
+                      </label>
+                      <div className="flex gap-6">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="pageType"
+                            value="home"
+                            checked={formPageType === "home"}
+                            onChange={(e) => {
+                              setFormPageType("home");
+                              setFormData({ ...formData, placement: homePlacements[0] });
+                            }}
+                            className="w-4 h-4 text-primary bg-background-primary border-border-secondary focus:ring-primary focus:ring-2"
+                          />
+                          <span className="ml-2 text-sm font-medium text-text-primary">
+                            🏠 Home Page
+                          </span>
+                        </label>
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="radio"
+                            name="pageType"
+                            value="blog"
+                            checked={formPageType === "blog"}
+                            onChange={(e) => {
+                              setFormPageType("blog");
+                              setFormData({ ...formData, placement: blogPlacements[0] });
+                            }}
+                            className="w-4 h-4 text-primary bg-background-primary border-border-secondary focus:ring-primary focus:ring-2"
+                          />
+                          <span className="ml-2 text-sm font-medium text-text-primary">
+                            📝 Blog Page
+                          </span>
+                        </label>
+                      </div>
+                      <p className="text-xs text-text-secondary mt-2">
+                        Choose whether this ad will appear on home page or blog pages
+                      </p>
+                    </div>
+
+                    {/* Basic Info */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-2">
+                          Title
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.title}
+                          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                          className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Ad title (optional)"
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-2">
+                          Priority
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.priority}
+                          onChange={(e) =>
+                            setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })
+                          }
+                          className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="0"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Description */}
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Description
+                      </label>
+                      <textarea
+                        value={formData.description}
+                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                        rows={3}
+                        placeholder="Ad description (optional)"
+                      />
+                    </div>
+
+                    {/* Scope */}
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Scope
+                      </label>
+                      <select
+                        value={formData.scope}
+                        onChange={(e) =>
+                          setFormData({ ...formData, scope: e.target.value as AdScope })
+                        }
+                        className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                      >
+                        {tenantOptions.map((option) => (
+                          <option key={option.id} value={option.id}>
+                            {option.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Placement */}
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Placement
+                      </label>
+                      <select
+                        value={formData.placement}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            placement: e.target.value as TenantAdPlacement,
+                          })
+                        }
+                        className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                      >
+                        {formPlacements.map((placement) => (
+                          <option key={placement} value={placement}>
+                            {placement.replace(/_/g, " ")}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {/* Appearance */}
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Appearance
+                      </label>
+                      <select
+                        value={formData.appearance}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            appearance: e.target.value as TenantAdAppearance,
+                          })
+                        }
+                        className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                      >
+                        <option value={TenantAdAppearance.FULL_WIDTH}>Full Width</option>
+                        <option value={TenantAdAppearance.LEFT_ALIGNED}>Left Aligned</option>
+                        <option value={TenantAdAppearance.CENTERED}>Centered</option>
+                        <option value={TenantAdAppearance.POPUP}>Popup</option>
+                        <option value={TenantAdAppearance.STICKY}>Sticky</option>
+                      </select>
+                    </div>
+
+                    {/* Position Offset - Only show for INLINE placement */}
+                    {formData.placement === TenantAdPlacement.INLINE && (
+                      <div>
+                        <label className="block text-sm font-medium text-text-primary mb-2">
+                          Word Position Offset
+                        </label>
+                        <input
+                          type="number"
+                          value={formData.positionOffset || ""}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              positionOffset: e.target.value ? parseInt(e.target.value) : undefined,
+                            })
+                          }
+                          className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
+                          placeholder="Number of words before injecting ad (e.g., 150)"
+                          min="1"
+                        />
+                        <p className="text-sm text-text-secondary mt-2">
+                          The ad will be injected after this many words in the blog content. Leave
+                          empty for default positioning.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Code Snippet */}
+                    <div>
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Ad Code Snippet
+                      </label>
+                      <textarea
+                        value={formData.codeSnippet}
+                        onChange={(e) => setFormData({ ...formData, codeSnippet: e.target.value })}
+                        className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent font-mono text-sm"
+                        rows={8}
+                        placeholder="Paste your ad code here (HTML, JavaScript, AdSense, etc.)"
+                        required
+                      />
+                    </div>
+
+                    {/* Status */}
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        id="isEnabled"
+                        checked={formData.isEnabled}
+                        onChange={(e) => setFormData({ ...formData, isEnabled: e.target.checked })}
+                        className="w-4 h-4 text-primary bg-background-primary border-border-secondary rounded focus:ring-primary"
+                      />
+                      <label htmlFor="isEnabled" className="text-sm font-medium text-text-primary">
+                        Enable this ad
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* Submit Buttons - Always Visible */}
+                  <div className="flex-shrink-0 pt-4 border-t border-border-secondary mt-4">
+                    <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setIsCreateModalOpen(false)}
+                        className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-background-primary text-text-secondary hover:bg-background-tertiary border border-border-secondary rounded-lg font-medium transition-colors"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={createMutation.isPending || updateMutation.isPending}
+                        className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {createMutation.isPending || updateMutation.isPending ? (
+                          <span className="flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                            {editingAd ? "Updating..." : "Creating..."}
+                          </span>
+                        ) : editingAd ? (
+                          "Update Ad"
+                        ) : (
+                          "Create Ad"
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
-              {/* Page Type Selection */}
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-3">
-                  Page Type
-                </label>
-                <div className="flex gap-6">
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      type="radio"
-                      name="pageType"
-                      value="home"
-                      checked={formPageType === "home"}
-                      onChange={(e) => {
-                        setFormPageType("home");
-                        setFormData({ ...formData, placement: homePlacements[0] });
-                      }}
-                      className="w-4 h-4 text-primary bg-background-primary border-border-secondary focus:ring-primary focus:ring-2"
-                    />
-                    <span className="ml-2 text-sm font-medium text-text-primary">🏠 Home Page</span>
-                  </label>
-                  <label className="flex items-center cursor-pointer">
-                    <input
-                      type="radio"
-                      name="pageType"
-                      value="blog"
-                      checked={formPageType === "blog"}
-                      onChange={(e) => {
-                        setFormPageType("blog");
-                        setFormData({ ...formData, placement: blogPlacements[0] });
-                      }}
-                      className="w-4 h-4 text-primary bg-background-primary border-border-secondary focus:ring-primary focus:ring-2"
-                    />
-                    <span className="ml-2 text-sm font-medium text-text-primary">📝 Blog Page</span>
-                  </label>
-                </div>
-                <p className="text-xs text-text-secondary mt-2">
-                  Choose whether this ad will appear on home page or blog pages
-                </p>
-              </div>
-
-              {/* Basic Info */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-2">Title</label>
-                  <input
-                    type="text"
-                    value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Ad title (optional)"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-2">
-                    Priority
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.priority}
-                    onChange={(e) =>
-                      setFormData({ ...formData, priority: parseInt(e.target.value) || 0 })
-                    }
-                    className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
-                  Description
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
-                  rows={3}
-                  placeholder="Ad description (optional)"
-                />
-              </div>
-
-              {/* Scope */}
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">Scope</label>
-                <select
-                  value={formData.scope}
-                  onChange={(e) => setFormData({ ...formData, scope: e.target.value as AdScope })}
-                  className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
-                >
-                  {tenantOptions.map((option) => (
-                    <option key={option.id} value={option.id}>
-                      {option.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Placement */}
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
-                  Placement
-                </label>
-                <select
-                  value={formData.placement}
-                  onChange={(e) =>
-                    setFormData({ ...formData, placement: e.target.value as TenantAdPlacement })
-                  }
-                  className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
-                >
-                  {formPlacements.map((placement) => (
-                    <option key={placement} value={placement}>
-                      {placement.replace(/_/g, " ")}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Appearance */}
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
-                  Appearance
-                </label>
-                <select
-                  value={formData.appearance}
-                  onChange={(e) =>
-                    setFormData({ ...formData, appearance: e.target.value as TenantAdAppearance })
-                  }
-                  className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
-                >
-                  <option value={TenantAdAppearance.FULL_WIDTH}>Full Width</option>
-                  <option value={TenantAdAppearance.LEFT_ALIGNED}>Left Aligned</option>
-                  <option value={TenantAdAppearance.CENTERED}>Centered</option>
-                  <option value={TenantAdAppearance.POPUP}>Popup</option>
-                  <option value={TenantAdAppearance.STICKY}>Sticky</option>
-                </select>
-              </div>
-
-              {/* Position Offset - Only show for INLINE placement */}
-              {formData.placement === TenantAdPlacement.INLINE && (
-                <div>
-                  <label className="block text-sm font-medium text-text-primary mb-2">
-                    Word Position Offset
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.positionOffset || ""}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        positionOffset: e.target.value ? parseInt(e.target.value) : undefined,
-                      })
-                    }
-                    className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Number of words before injecting ad (e.g., 150)"
-                    min="1"
-                  />
-                  <p className="text-sm text-text-secondary mt-2">
-                    The ad will be injected after this many words in the blog content. Leave empty
-                    for default positioning.
-                  </p>
-                </div>
-              )}
-
-              {/* Code Snippet */}
-              <div>
-                <label className="block text-sm font-medium text-text-primary mb-2">
-                  Ad Code Snippet
-                </label>
-                <textarea
-                  value={formData.codeSnippet}
-                  onChange={(e) => setFormData({ ...formData, codeSnippet: e.target.value })}
-                  className="w-full p-3 bg-background-primary border border-border-secondary rounded-lg text-text-primary focus:ring-2 focus:ring-primary focus:border-transparent font-mono text-sm"
-                  rows={8}
-                  placeholder="Paste your ad code here (HTML, JavaScript, AdSense, etc.)"
-                  required
-                />
-              </div>
-
-              {/* Status */}
-              <div className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  id="isEnabled"
-                  checked={formData.isEnabled}
-                  onChange={(e) => setFormData({ ...formData, isEnabled: e.target.checked })}
-                  className="w-4 h-4 text-primary bg-background-primary border-border-secondary rounded focus:ring-primary"
-                />
-                <label htmlFor="isEnabled" className="text-sm font-medium text-text-primary">
-                  Enable this ad
-                </label>
-              </div>
-
-              {/* Submit Buttons - Responsive */}
-              <div className="flex flex-col sm:flex-row justify-end gap-3 sm:gap-4 pt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-background-primary text-text-secondary hover:bg-background-tertiary border border-border-secondary rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={createMutation.isPending || updateMutation.isPending}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-3 bg-primary hover:bg-primary/90 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {createMutation.isPending || updateMutation.isPending ? (
-                    <span className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      {editingAd ? "Updating..." : "Creating..."}
-                    </span>
-                  ) : editingAd ? (
-                    "Update Ad"
-                  ) : (
-                    "Create Ad"
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
 
       {/* Delete Confirmation Modal */}
-      {isDeleteModalOpen && deletingAd && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-background-secondary rounded-2xl p-6 w-full max-w-md border border-border-secondary shadow-2xl">
-            <div className="text-center">
-              <div className="text-red-500 text-6xl mb-4">⚠️</div>
-              <h3 className="text-xl font-bold text-text-primary mb-2">Delete Ad</h3>
-              <p className="text-text-secondary mb-6">
-                Are you sure you want to delete "
-                {deletingAd?.title || `${deletingAd?.placement.replace(/_/g, " ")} Ad`}"? This
-                action cannot be undone.
-              </p>
-              <div className="flex justify-center gap-4">
-                <button
-                  onClick={() => setIsDeleteModalOpen(false)}
-                  className="px-6 py-3 bg-background-primary text-text-secondary hover:bg-background-tertiary border border-border-secondary rounded-lg font-medium transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  disabled={deleteMutation.isPending}
-                  className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {deleteMutation.isPending ? (
-                    <span className="flex items-center gap-2">
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Deleting...
-                    </span>
-                  ) : (
-                    "Delete"
-                  )}
-                </button>
+      {isDeleteModalOpen &&
+        deletingAd &&
+        createPortal(
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4">
+            <div className="bg-background-secondary rounded-2xl p-6 w-full max-w-md border border-border-secondary shadow-2xl">
+              <div className="text-center">
+                <div className="text-red-500 text-6xl mb-4">⚠️</div>
+                <h3 className="text-xl font-bold text-text-primary mb-2">Delete Ad</h3>
+                <p className="text-text-secondary mb-6">
+                  Are you sure you want to delete "
+                  {deletingAd?.title || `${deletingAd?.placement.replace(/_/g, " ")} Ad`}"? This
+                  action cannot be undone.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={() => setIsDeleteModalOpen(false)}
+                    className="px-6 py-3 bg-background-primary text-text-secondary hover:bg-background-tertiary border border-border-secondary rounded-lg font-medium transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    disabled={deleteMutation.isPending}
+                    className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {deleteMutation.isPending ? (
+                      <span className="flex items-center gap-2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                        Deleting...
+                      </span>
+                    ) : (
+                      "Delete"
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </div>
   );
 }
