@@ -7,3 +7,9 @@ export function useUploadBlogImage() {
     mutationFn: (file) => blogService.uploadBlogImage(file),
   });
 }
+
+export function useUploadBlogVideo() {
+  return useMutation<string, Error, File>({
+    mutationFn: (file) => blogService.uploadBlogVideo(file),
+  });
+}
