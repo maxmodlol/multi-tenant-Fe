@@ -35,7 +35,7 @@ export default function BlogHero({
     underDateAdsLength: underDateAds.length,
   });
   return (
-    <div className="bg-white dark:bg-black text-center pt-4 pb-4 md:pb-8 px-4 md:px-8">
+    <div className="bg-white dark:bg-black text-center pt-8 pb-4 md:pb-8 px-4 md:px-8">
       {/* ─── ABOVE_TAGS ADS ─── */}
       {aboveTagsAds.map((snippet, i) => (
         <div
@@ -59,13 +59,13 @@ export default function BlogHero({
       </div>
 
       {/* Title */}
-      <h1 className="text-[2rem] md:text-[3.5rem] font-extrabold mb-8 line-clamp-3 leading-tight">
+      <h1 className="text-[2rem] md:text-[3.5rem] font-extrabold mt-1 mb-8 leading-tight break-words">
         {blog.title}
       </h1>
 
       {/* Description */}
       {blog.description && (
-        <p className="text-gray-500 dark:text-gray-400 text-base text-[1.2rem] md:text-[1.4rem] mb-6 line-clamp-4 md:line-clamp-3 max-w-sm sm:max-w-md md:max-w-4xl mx-auto px-2 sm:px-4 leading-relaxed break-words">
+        <p className="text-gray-500 dark:text-gray-400 text-base text-[1.2rem] md:text-[1.4rem] mt-1 mb-6 line-clamp-4 md:line-clamp-3 max-w-sm sm:max-w-md md:max-w-4xl mx-auto px-2 sm:px-4 leading-relaxed break-words">
           {blog.description}
         </p>
       )}

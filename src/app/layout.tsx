@@ -232,6 +232,25 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <TenantStyleInjector cssVars={cssVars} tenantId={tenantId} />
         <div id="modal-root"></div>
         <Providers>{children}</Providers>
+        {/* Ad Debugger for development */}
+        {process.env.NODE_ENV === "development" && (
+          <>
+            <script
+              dangerouslySetInnerHTML={{
+                __html: `
+                // Add GPT library for testing
+                if (typeof googletag === 'undefined') {
+                  window.googletag = window.googletag || {cmd: []};
+                  const gptScript = document.createElement('script');
+                  gptScript.async = true;
+                  gptScript.src = 'https://securepubads.g.doubleclick.net/tag/js/gpt.js';
+                  document.head.appendChild(gptScript);
+                }
+              `,
+              }}
+            />
+          </>
+        )}
       </body>
     </html>
   );

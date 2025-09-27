@@ -43,7 +43,7 @@ export default async function Page(props: {
   const blog = await blogService.getBlogById(params.id);
   if (!blog) return <div>Not Found</div>;
 
-  // sanitize-html options that allow Tiptap’s output:
+  // sanitize-html options that allow Tiptap's output:
   const cleanOptions: sanitizeHtml.IOptions = {
     allowedTags: sanitizeHtml.defaults.allowedTags.concat([
       "img",
@@ -55,6 +55,8 @@ export default async function Page(props: {
       "u",
       "figure",
       "figcaption",
+      "video",
+      "iframe",
     ]),
     allowedAttributes: {
       ...sanitizeHtml.defaults.allowedAttributes,
@@ -64,11 +66,27 @@ export default async function Page(props: {
       span: ["style"],
       figure: ["class", "style"],
       figcaption: ["class", "style"],
+      // video elements
+      video: ["src", "title", "width", "height", "controls", "style"],
+      iframe: [
+        "src",
+        "title",
+        "width",
+        "height",
+        "frameborder",
+        "allow",
+        "allowfullscreen",
+        "style",
+      ],
       // if you ever use data- attributes:
-      "*": ["data-align", "class"],
+      "*": ["data-align", "class", "data-video"],
+      // Allow video attributes on div elements with data-video
+      div: ["data-video", "src", "title", "width", "height", "style", "class"],
     },
     allowedSchemesByTag: {
       img: ["http", "https", "data"],
+      video: ["http", "https", "data"],
+      iframe: ["http", "https"],
     },
   };
 

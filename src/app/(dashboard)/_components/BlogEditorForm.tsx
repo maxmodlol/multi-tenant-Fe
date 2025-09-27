@@ -11,6 +11,9 @@ import TextStyle from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import HorizontalRule from "@tiptap/extension-horizontal-rule";
 import LinkExtension from "@tiptap/extension-link";
+import { Video } from "@/src/components/editor/VideoExtension";
+import { VideoUrlDialog } from "@/src/components/editor/VideoUrlDialog";
+import { VideoUploadDialog } from "@/src/components/editor/VideoUploadDialog";
 
 import { Button } from "@explore/components/ui/button";
 import { Input } from "@explore/components/ui/input";
@@ -36,12 +39,17 @@ import {
   AlignCenter,
   AlignJustify,
   AlignRight,
+  Video as VideoIcon,
+  Upload,
 } from "lucide-react";
 import { Quote } from "lucide-react";
 import Heading from "@tiptap/extension-heading";
 import ImageResize from "tiptap-extension-resize-image"; // ← our new extension
 
-import { useUploadBlogImage } from "@/src/hooks/dashboard/mutations/useUploadMutations";
+import {
+  useUploadBlogImage,
+  useUploadBlogVideo,
+} from "@/src/hooks/dashboard/mutations/useUploadMutations";
 import {
   useCreateBlog,
   useUpdateBlog,
@@ -133,6 +141,7 @@ export function BlogEditorForm({
           style: "max-width: 100%; height: auto;", // ensure responsiveness
         },
       }),
+      Video,
       Placeholder.configure({ placeholder: "Start writing…" }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Heading.configure({ levels: [1, 2, 3, 4, 5] }),
@@ -179,6 +188,11 @@ export function BlogEditorForm({
   }, [editor, saveCurrentPage]);
 
   const uploadImageMutation = useUploadBlogImage();
+  const uploadVideoMutation = useUploadBlogVideo(); // Use proper video upload hook
+
+  // Video dialog states
+  const [isVideoUrlDialogOpen, setIsVideoUrlDialogOpen] = useState(false);
+  const [isVideoUploadDialogOpen, setIsVideoUploadDialogOpen] = useState(false);
 
   // Handlers
   const applyTag = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -254,6 +268,55 @@ export function BlogEditorForm({
       });
     };
     inp.click();
+  };
+
+  const addVideo = () => {
+    const inp = document.createElement("input");
+    inp.type = "file";
+    inp.accept = "video/*";
+    inp.onchange = () => {
+      const file = inp.files?.[0];
+      if (!file || !editor) return;
+
+      uploadVideoMutation.mutate(file, {
+        onSuccess(url) {
+          editor.chain().focus().setVideo({ src: url }).run();
+        },
+        onError(err) {
+          console.error("Video upload failed:", err);
+        },
+      });
+    };
+    inp.click();
+  };
+
+  const handleVideoUrlConfirm = (data: {
+    src: string;
+    title: string;
+    width: string;
+    height: string;
+  }) => {
+    if (!editor) return;
+    editor.chain().focus().setVideo(data).run();
+  };
+
+  const handleVideoUpload = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      uploadVideoMutation.mutate(file, {
+        onSuccess: (url) => resolve(url),
+        onError: (error) => reject(error),
+      });
+    });
+  };
+
+  const handleVideoUploadConfirm = (data: {
+    src: string;
+    title: string;
+    width: string;
+    height: string;
+  }) => {
+    if (!editor) return;
+    editor.chain().focus().setVideo(data).run();
   };
 
   // After your useEditor() call:
@@ -647,6 +710,26 @@ export function BlogEditorForm({
             <ImageIcon className="w-4 h-4" />
           </Button>
         )}
+
+        {/* Video Upload */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsVideoUploadDialogOpen(true)}
+          title="Upload video"
+        >
+          <Upload className="w-4 h-4" />
+        </Button>
+
+        {/* Video Embed */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsVideoUrlDialogOpen(true)}
+          title="Embed video (YouTube, Vimeo, etc.)"
+        >
+          <VideoIcon className="w-4 h-4" />
+        </Button>
       </div>
 
       {/* Editor */}
@@ -656,6 +739,21 @@ export function BlogEditorForm({
           className=" [&_ul]:list-disc [&_ol]:list-decimal p-lg text-text-primary"
         />
       </div>
+
+      {/* Video Dialogs */}
+      <VideoUrlDialog
+        isOpen={isVideoUrlDialogOpen}
+        onClose={() => setIsVideoUrlDialogOpen(false)}
+        onConfirm={handleVideoUrlConfirm}
+      />
+
+      <VideoUploadDialog
+        isOpen={isVideoUploadDialogOpen}
+        onClose={() => setIsVideoUploadDialogOpen(false)}
+        onConfirm={handleVideoUploadConfirm}
+        onUpload={handleVideoUpload}
+        isUploading={uploadVideoMutation.isPending}
+      />
     </div>
   );
 }

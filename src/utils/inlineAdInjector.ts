@@ -21,78 +21,91 @@ export function injectInlineAdsIntoContent(
     return content;
   }
 
-  // Sort ads by positionOffset to inject them in the correct order
+  // Sort by requested offsets
   const sortedAds = inlineAds
     .filter((ad) => ad.positionOffset > 0)
     .sort((a, b) => a.positionOffset - b.positionOffset);
 
+  // Measure content length in words (approximate)
+  const baseTokens = content.split(/(\s+)/);
+  const totalWordCount = baseTokens.reduce((acc, t) => (t.trim() ? acc + 1 : acc), 0);
+
+  // Smart detection: prevent ads from clustering together
+  const MIN_GAP_WORDS = Math.max(80, Math.floor(totalWordCount * 0.15)); // 15% of content or 80 words minimum
+  const maxAdsAllowed = Math.max(1, Math.floor(totalWordCount / (MIN_GAP_WORDS + 40)));
+
+  const adsToPlace = sortedAds.slice(0, maxAdsAllowed);
+
+  // Dynamic gap calculation based on content length and number of ads
+  const idealGap =
+    adsToPlace.length > 1
+      ? Math.floor(totalWordCount / (adsToPlace.length + 1))
+      : Math.floor(totalWordCount * 0.3); // Single ad goes at 30% of content
+
   let modifiedContent = content;
-  let offsetAdjustment = 0; // Track how much the content has grown due to previous injections
 
-  sortedAds.forEach((ad, index) => {
-    // Calculate word position, accounting for previous ad injections
-    const targetPosition = ad.positionOffset + offsetAdjustment;
+  adsToPlace.forEach((ad, index) => {
+    // Smart distribution: prevent clustering by ensuring minimum spacing
+    let distributedTarget;
 
-    // Split content into words
+    if (adsToPlace.length === 1) {
+      // Single ad: place at 30% of content
+      distributedTarget = Math.floor(totalWordCount * 0.3);
+    } else {
+      // Multiple ads: distribute evenly with smart spacing
+      const basePosition = (index + 1) * idealGap;
+      const requestedPosition = ad.positionOffset;
+
+      // Use the requested position if it's reasonable, otherwise use distributed position
+      const isRequestedPositionValid =
+        requestedPosition >= index * MIN_GAP_WORDS &&
+        requestedPosition <= totalWordCount - (adsToPlace.length - index - 1) * MIN_GAP_WORDS;
+
+      distributedTarget = isRequestedPositionValid ? requestedPosition : basePosition;
+    }
+
     const words = modifiedContent.split(/(\s+)/);
     let currentWordCount = 0;
-    let insertionIndex = 0;
-
-    // Find the insertion point - look for sentence boundaries to avoid cutting words
     let bestInsertionIndex = 0;
-    let foundGoodPosition = false;
 
     for (let i = 0; i < words.length; i++) {
-      if (words[i].trim()) {
-        currentWordCount++;
-      }
-      if (currentWordCount >= targetPosition) {
-        // Look for a good insertion point (after sentence endings)
-        for (let j = i; j < Math.min(i + 10, words.length); j++) {
+      if (words[i].trim()) currentWordCount++;
+      if (currentWordCount >= distributedTarget) {
+        // Snap to nearby boundary so we don't split HTML
+        let found = false;
+        for (let j = i; j < Math.min(i + 12, words.length); j++) {
+          const token = words[j];
           if (
-            words[j].includes(".") ||
-            words[j].includes("!") ||
-            words[j].includes("?") ||
-            words[j].includes("</p>") ||
-            words[j].includes("</div>") ||
-            words[j].includes("<br")
+            token.includes(".") ||
+            token.includes("!") ||
+            token.includes("?") ||
+            token.includes("</p>") ||
+            token.includes("</div>") ||
+            token.includes("<br")
           ) {
             bestInsertionIndex = j + 1;
-            foundGoodPosition = true;
+            found = true;
             break;
           }
         }
-
-        // If no good position found, use the target position
-        if (!foundGoodPosition) {
-          bestInsertionIndex = i + 1;
-        }
+        if (!found) bestInsertionIndex = i + 1;
         break;
       }
     }
 
-    // If we haven't found any position, append at the end
     if (bestInsertionIndex === 0) {
-      bestInsertionIndex = words.length;
+      // Middle fallback if the content is very short
+      bestInsertionIndex = Math.floor(words.length / 2);
     }
 
-    insertionIndex = bestInsertionIndex;
-
-    // Create the ad HTML with proper styling
     const adHtml = `
       <div class="inline-ad-container" data-ad-id="${ad.id}" data-ad-placement="INLINE" data-ad-index="${index}" style="margin: 20px 0; text-align: center;">
         ${ad.codeSnippet}
       </div>
     `;
 
-    // Insert the ad
-    words.splice(insertionIndex, 0, adHtml);
-
-    // Update the content
+    words.splice(bestInsertionIndex, 0, adHtml);
     modifiedContent = words.join("");
-
-    // Adjust offset for next ad (approximate word count of injected ad)
-    offsetAdjustment += Math.max(5, Math.floor(ad.codeSnippet.split(" ").length / 2));
   });
 
   return modifiedContent;
