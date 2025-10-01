@@ -67,7 +67,48 @@ export default function AdHeaderInjector() {
 
           // If there's inline code (innerHTML), copy it as textContent
           if (oldScript.textContent) {
-            newScript.textContent = oldScript.textContent;
+            // Check if this is a Google Analytics script
+            const isGoogleAnalytics =
+              oldScript.textContent.includes("gtag") && oldScript.textContent.includes("dataLayer");
+
+            // Check if this is an AdSense script
+            const isAdSense =
+              oldScript.textContent.includes("adsbygoogle") &&
+              oldScript.textContent.includes("push");
+
+            if (isGoogleAnalytics) {
+              // For Google Analytics, wrap in a function that waits for gtag to be available
+              newScript.textContent = `
+                (function() {
+                  // Wait for gtag to be available
+                  function waitForGtag() {
+                    if (typeof gtag !== 'undefined') {
+                      ${oldScript.textContent}
+                    } else {
+                      setTimeout(waitForGtag, 50);
+                    }
+                  }
+                  waitForGtag();
+                })();
+              `;
+            } else if (isAdSense) {
+              // For AdSense, wrap in a function that waits for adsbygoogle to be available
+              newScript.textContent = `
+                (function() {
+                  // Wait for adsbygoogle to be available
+                  function waitForAdSense() {
+                    if (typeof adsbygoogle !== 'undefined') {
+                      ${oldScript.textContent}
+                    } else {
+                      setTimeout(waitForAdSense, 100);
+                    }
+                  }
+                  waitForAdSense();
+                })();
+              `;
+            } else {
+              newScript.textContent = oldScript.textContent;
+            }
           }
 
           // Append the fresh <script> into <head>; it will execute

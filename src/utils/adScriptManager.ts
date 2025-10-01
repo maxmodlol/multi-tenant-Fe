@@ -66,15 +66,26 @@ class AdScriptManager {
     // Append to head
     document.head.appendChild(newScript);
 
-    // For AdSense, trigger the push
-    if (isAdSense && window.adsbygoogle) {
-      setTimeout(() => {
-        try {
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
-        } catch (error) {
-          console.error("AdSense push error:", error);
+    // For AdSense, trigger the push with retry mechanism
+    if (isAdSense) {
+      const waitForAdSense = (retries = 10, delay = 100) => {
+        if (window.adsbygoogle) {
+          try {
+            (window.adsbygoogle = window.adsbygoogle || []).push({});
+            console.log(`AdSense: Pushed ad ${adId} for placement ${placement}`);
+          } catch (error) {
+            console.error("AdSense push error:", error);
+          }
+        } else if (retries > 0) {
+          // Retry after delay
+          setTimeout(() => waitForAdSense(retries - 1, delay), delay);
+        } else {
+          console.warn(`AdSense: adsbygoogle not available after ${retries * delay}ms, skipping ad ${adId}`);
         }
-      }, 100);
+      };
+
+      // Start the retry mechanism
+      waitForAdSense();
     }
   }
 

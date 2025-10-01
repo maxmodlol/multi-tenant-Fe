@@ -196,7 +196,7 @@ class ConsentManager {
     // For now, we'll just set default functional consent
     if (!this.consentState && this.isConsentRequired()) {
       this.setConsent({
-        analytics: false,
+        analytics: true, // Default to true for better user experience
         marketing: false,
         functional: true,
       });
