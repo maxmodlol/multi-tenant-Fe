@@ -157,32 +157,44 @@ function TenantAdInjector({
 
         // Handle AdSense push after script injection
         const isAdSense = adContainer.innerHTML.includes("adsbygoogle");
-        if (isAdSense && window.adsbygoogle) {
-          setTimeout(() => {
-            try {
-              // Get all ins elements in this specific ad container
-              const insElements = adContainer.querySelectorAll("ins.adsbygoogle");
+        if (isAdSense) {
+          // Wait for adsbygoogle to be available with retry mechanism
+          const waitForAdSense = (retries = 10, delay = 100) => {
+            if (window.adsbygoogle) {
+              try {
+                // Get all ins elements in this specific ad container
+                const insElements = adContainer.querySelectorAll("ins.adsbygoogle");
 
-              if (insElements.length > 0) {
-                // Check if any ins elements don't have ads yet
-                let needsPush = false;
-                insElements.forEach((ins: any) => {
-                  if (!ins.dataset.adsbygoogleStatus) {
-                    needsPush = true;
+                if (insElements.length > 0) {
+                  // Check if any ins elements don't have ads yet
+                  let needsPush = false;
+                  insElements.forEach((ins: any) => {
+                    if (!ins.dataset.adsbygoogleStatus) {
+                      needsPush = true;
+                    }
+                  });
+
+                  if (needsPush) {
+                    // Only push for unfilled ads
+                    (window.adsbygoogle = window.adsbygoogle || []).push({});
+                    console.log(`AdSense: Pushed ad ${ad.id} for placement ${placement}`);
+                  } else {
+                    console.log(`AdSense: Ad ${ad.id} already has ads, skipping push`);
                   }
-                });
-
-                if (needsPush) {
-                  // Only push for unfilled ads
-                  (window.adsbygoogle = window.adsbygoogle || []).push({});
-                } else {
-                  console.log(`AdSense: Ad ${ad.id} already has ads, skipping push`);
                 }
+              } catch (error) {
+                console.error("AdSense push error:", error);
               }
-            } catch (error) {
-              console.error("AdSense push error:", error);
+            } else if (retries > 0) {
+              // Retry after delay
+              setTimeout(() => waitForAdSense(retries - 1, delay), delay);
+            } else {
+              console.warn(`AdSense: adsbygoogle not available after ${retries * delay}ms, skipping ad ${ad.id}`);
             }
-          }, 200); // Delay to ensure proper initialization
+          };
+
+          // Start the retry mechanism
+          waitForAdSense();
         }
       }
     });
