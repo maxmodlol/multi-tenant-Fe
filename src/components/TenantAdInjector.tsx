@@ -189,12 +189,42 @@ function TenantAdInjector({
               // Retry after delay
               setTimeout(() => waitForAdSense(retries - 1, delay), delay);
             } else {
-              console.warn(`AdSense: adsbygoogle not available after ${retries * delay}ms, skipping ad ${ad.id}`);
+              console.warn(
+                `AdSense: adsbygoogle not available after ${retries * delay}ms, skipping ad ${ad.id}`,
+              );
             }
           };
 
           // Start the retry mechanism
           waitForAdSense();
+        }
+
+        // Handle GPT (Google Ad Manager) slot conflicts
+        const isGPT =
+          adContainer.innerHTML.includes("googletag") &&
+          adContainer.innerHTML.includes("defineSlot");
+        if (isGPT) {
+          // Check if this slot ID already exists
+          const slotElements = adContainer.querySelectorAll('[id*="div-gpt-ad-"]');
+          slotElements.forEach((slotEl: any) => {
+            const slotId = slotEl.id;
+            if ((window as any).googletag && (window as any).googletag.pubads) {
+              try {
+                // Check if slot already exists
+                const existingSlot = (window as any).googletag
+                  .pubads()
+                  .getSlots()
+                  .find((slot: any) => slot.getSlotElementId() === slotId);
+
+                if (existingSlot) {
+                  console.warn(`GPT: Slot ${slotId} already exists, skipping redefinition`);
+                  return;
+                }
+              } catch (error) {
+                console.warn(`GPT: Error checking existing slot ${slotId}:`, error);
+              }
+            }
+          });
         }
       }
     });
