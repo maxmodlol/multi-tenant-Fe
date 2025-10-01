@@ -200,6 +200,28 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </Script>
         )}
 
+        {/* Google AdSense Script - Load globally for all ads */}
+        <Script
+          id="google-adsense-global"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Load Google AdSense library globally (not on dashboard pages)
+              if (!window.location.pathname.startsWith('/dashboard') && 
+                  !window.location.pathname.startsWith('/login') &&
+                  !window.location.pathname.startsWith('/forgot-password') &&
+                  !window.location.pathname.startsWith('/reset-password') &&
+                  !window.location.pathname.startsWith('/auth')) {
+                const script = document.createElement('script');
+                script.async = true;
+                script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5603341970726415';
+                script.crossOrigin = 'anonymous';
+                document.head.appendChild(script);
+              }
+            `,
+          }}
+        />
+
         {/* Facebook SDK for Comments - Only load on HTTPS or localhost */}
         <Script
           id="facebook-sdk"

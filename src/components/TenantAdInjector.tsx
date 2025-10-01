@@ -128,8 +128,15 @@ function TenantAdInjector({
               script.textContent.includes("adsbygoogle") ||
               adContainer.innerHTML.includes("adsbygoogle");
 
+            // Check if this is a GPT (Google Ad Manager) script
+            const isGPT =
+              script.textContent.includes("googletag") && script.textContent.includes("defineSlot");
+
             if (isAdSense) {
               // For AdSense, execute directly but handle the push carefully
+              newScript.textContent = script.textContent;
+            } else if (isGPT) {
+              // For GPT scripts, execute directly (they need global scope)
               newScript.textContent = script.textContent;
             } else {
               // For other scripts, wrap in IIFE to avoid variable conflicts
@@ -199,32 +206,53 @@ function TenantAdInjector({
           waitForAdSense();
         }
 
-        // Handle GPT (Google Ad Manager) slot conflicts
+        // Handle GPT (Google Ad Manager) slot conflicts and ensure proper initialization
         const isGPT =
           adContainer.innerHTML.includes("googletag") &&
           adContainer.innerHTML.includes("defineSlot");
         if (isGPT) {
-          // Check if this slot ID already exists
-          const slotElements = adContainer.querySelectorAll('[id*="div-gpt-ad-"]');
-          slotElements.forEach((slotEl: any) => {
-            const slotId = slotEl.id;
+          // Wait for googletag to be available and properly initialized
+          const waitForGPT = (retries = 10, delay = 100) => {
             if ((window as any).googletag && (window as any).googletag.pubads) {
               try {
-                // Check if slot already exists
-                const existingSlot = (window as any).googletag
-                  .pubads()
-                  .getSlots()
-                  .find((slot: any) => slot.getSlotElementId() === slotId);
-
-                if (existingSlot) {
-                  console.warn(`GPT: Slot ${slotId} already exists, skipping redefinition`);
+                // Ensure pubads service is enabled
+                if (!(window as any).googletag.pubads().getSlots) {
+                  console.warn("GPT: pubads service not properly initialized");
                   return;
                 }
+
+                // Check if this slot ID already exists
+                const slotElements = adContainer.querySelectorAll('[id*="div-gpt-ad-"]');
+                slotElements.forEach((slotEl: any) => {
+                  const slotId = slotEl.id;
+                  try {
+                    // Check if slot already exists
+                    const existingSlot = (window as any).googletag
+                      .pubads()
+                      .getSlots()
+                      .find((slot: any) => slot.getSlotElementId() === slotId);
+
+                    if (existingSlot) {
+                      console.warn(`GPT: Slot ${slotId} already exists, skipping redefinition`);
+                      return;
+                    }
+                  } catch (error) {
+                    console.warn(`GPT: Error checking existing slot ${slotId}:`, error);
+                  }
+                });
               } catch (error) {
-                console.warn(`GPT: Error checking existing slot ${slotId}:`, error);
+                console.warn("GPT: Error in slot conflict check:", error);
               }
+            } else if (retries > 0) {
+              // Retry after delay
+              setTimeout(() => waitForGPT(retries - 1, delay), delay);
+            } else {
+              console.warn(`GPT: googletag not available after ${retries * delay}ms`);
             }
-          });
+          };
+
+          // Start the retry mechanism
+          waitForGPT();
         }
       }
     });
