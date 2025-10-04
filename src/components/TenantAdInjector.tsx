@@ -6,11 +6,15 @@ import { useTenantAds } from "@/src/hooks/public/useTenantAds";
 import { useCurrentTenant } from "@/src/hooks/public/useCurrentTenant";
 import { TenantAdPlacement } from "@/src/types/tenantAds";
 import type { PageType } from "@/src/types/tenantAds";
+import { adManager } from "@/src/utils/adManager";
 
-// Declare adsbygoogle for TypeScript
+// Declare global types for ad libraries
 declare global {
   interface Window {
     adsbygoogle: any[];
+    googletag: any;
+    gtag: (...args: any[]) => void;
+    dataLayer: any[];
   }
 }
 
@@ -53,8 +57,13 @@ function TenantAdInjector({
     error,
   } = useTenantAds(pageType, [placement], effectiveTenantId, blogId);
 
+  // Initialize AdManager on component mount
+  useEffect(() => {
+    adManager.initialize();
+  }, []);
+
   // Debounced ad injection to prevent rapid re-renders
-  const injectAds = useCallback(() => {
+  const injectAds = useCallback(async () => {
     if (!adsByPlacement || !containerRef.current) return;
 
     const ads = adsByPlacement[placement] || [];
@@ -63,15 +72,14 @@ function TenantAdInjector({
     // Clear previous content
     containerRef.current.innerHTML = "";
 
-    // Inject each ad
-    ads.forEach((ad, index) => {
+    // Process each ad with the AdManager
+    for (const ad of ads) {
       if (ad.isEnabled && ad.codeSnippet) {
         const adContainer = document.createElement("div");
         adContainer.className = `tenant-ad ${className}`;
         adContainer.setAttribute("data-ad-id", ad.id);
         adContainer.setAttribute("data-ad-placement", ad.placement);
         adContainer.setAttribute("data-ad-appearance", ad.appearance);
-        adContainer.setAttribute("data-ad-index", index.toString());
 
         // Apply appearance classes and add close button for popup/sticky
         switch (ad.appearance) {
@@ -96,9 +104,6 @@ function TenantAdInjector({
             break;
         }
 
-        // Inject the ad code
-        adContainer.innerHTML = ad.codeSnippet;
-
         // Add close button for popup and sticky ads
         if (ad.appearance === "POPUP" || ad.appearance === "STICKY") {
           const closeButton = document.createElement("button");
@@ -115,147 +120,23 @@ function TenantAdInjector({
 
         containerRef.current!.appendChild(adContainer);
 
-        // Handle script execution with proper AdSense support
-        const scripts = adContainer.querySelectorAll("script");
-        scripts.forEach((script, scriptIndex) => {
-          const newScript = document.createElement("script");
+        // Determine ad type and handle accordingly
+        const isAdSense = ad.codeSnippet.includes("adsbygoogle");
+        const isGPT = ad.codeSnippet.includes("googletag") && ad.codeSnippet.includes("defineSlot");
 
-          if (script.src) {
-            newScript.src = script.src;
-          } else if (script.textContent) {
-            // Check if this is an AdSense script
-            const isAdSense =
-              script.textContent.includes("adsbygoogle") ||
-              adContainer.innerHTML.includes("adsbygoogle");
-
-            // Check if this is a GPT (Google Ad Manager) script
-            const isGPT =
-              script.textContent.includes("googletag") && script.textContent.includes("defineSlot");
-
-            if (isAdSense) {
-              // For AdSense, execute directly but handle the push carefully
-              newScript.textContent = script.textContent;
-            } else if (isGPT) {
-              // For GPT scripts, execute directly (they need global scope)
-              newScript.textContent = script.textContent;
-            } else {
-              // For other scripts, wrap in IIFE to avoid variable conflicts
-              const wrappedScript = `
-                (function() {
-                  try {
-                    ${script.textContent}
-                  } catch (error) {
-                    console.warn('Ad script error:', error);
-                  }
-                })();
-              `;
-              newScript.textContent = wrappedScript;
-            }
+        try {
+          if (isAdSense) {
+            await adManager.handleAdSenseAd(ad.id, adContainer, ad.codeSnippet);
+          } else if (isGPT) {
+            await adManager.handleGPTAd(ad.id, adContainer, ad.codeSnippet);
+          } else {
+            await adManager.handleCustomAd(ad.id, adContainer, ad.codeSnippet);
           }
-
-          // Add unique attributes to prevent conflicts
-          newScript.setAttribute("data-ad-script", `${ad.id}-${scriptIndex}`);
-          newScript.setAttribute("data-ad-placement", ad.placement);
-          newScript.setAttribute("data-ad-type", "injected");
-
-          // Append to document head for better script execution
-          document.head.appendChild(newScript);
-        });
-
-        // Handle AdSense push after script injection
-        const isAdSense = adContainer.innerHTML.includes("adsbygoogle");
-        if (isAdSense) {
-          // Wait for adsbygoogle to be available with retry mechanism
-          const waitForAdSense = (retries = 10, delay = 100) => {
-            if (window.adsbygoogle) {
-              try {
-                // Get all ins elements in this specific ad container
-                const insElements = adContainer.querySelectorAll("ins.adsbygoogle");
-
-                if (insElements.length > 0) {
-                  // Check if any ins elements don't have ads yet
-                  let needsPush = false;
-                  insElements.forEach((ins: any) => {
-                    if (!ins.dataset.adsbygoogleStatus) {
-                      needsPush = true;
-                    }
-                  });
-
-                  if (needsPush) {
-                    // Only push for unfilled ads
-                    (window.adsbygoogle = window.adsbygoogle || []).push({});
-                    console.log(`AdSense: Pushed ad ${ad.id} for placement ${placement}`);
-                  } else {
-                    console.log(`AdSense: Ad ${ad.id} already has ads, skipping push`);
-                  }
-                }
-              } catch (error) {
-                console.error("AdSense push error:", error);
-              }
-            } else if (retries > 0) {
-              // Retry after delay
-              setTimeout(() => waitForAdSense(retries - 1, delay), delay);
-            } else {
-              console.warn(
-                `AdSense: adsbygoogle not available after ${retries * delay}ms, skipping ad ${ad.id}`,
-              );
-            }
-          };
-
-          // Start the retry mechanism
-          waitForAdSense();
-        }
-
-        // Handle GPT (Google Ad Manager) slot conflicts and ensure proper initialization
-        const isGPT =
-          adContainer.innerHTML.includes("googletag") &&
-          adContainer.innerHTML.includes("defineSlot");
-        if (isGPT) {
-          // Wait for googletag to be available and properly initialized
-          const waitForGPT = (retries = 10, delay = 100) => {
-            if ((window as any).googletag && (window as any).googletag.pubads) {
-              try {
-                // Ensure pubads service is enabled
-                if (!(window as any).googletag.pubads().getSlots) {
-                  console.warn("GPT: pubads service not properly initialized");
-                  return;
-                }
-
-                // Check if this slot ID already exists
-                const slotElements = adContainer.querySelectorAll('[id*="div-gpt-ad-"]');
-                slotElements.forEach((slotEl: any) => {
-                  const slotId = slotEl.id;
-                  try {
-                    // Check if slot already exists
-                    const existingSlot = (window as any).googletag
-                      .pubads()
-                      .getSlots()
-                      .find((slot: any) => slot.getSlotElementId() === slotId);
-
-                    if (existingSlot) {
-                      console.warn(`GPT: Slot ${slotId} already exists, skipping redefinition`);
-                      return;
-                    }
-                  } catch (error) {
-                    console.warn(`GPT: Error checking existing slot ${slotId}:`, error);
-                  }
-                });
-              } catch (error) {
-                console.warn("GPT: Error in slot conflict check:", error);
-              }
-            } else if (retries > 0) {
-              // Retry after delay
-              setTimeout(() => waitForGPT(retries - 1, delay), delay);
-            } else {
-              console.warn(`GPT: googletag not available after ${retries * delay}ms`);
-            }
-          };
-
-          // Start the retry mechanism
-          waitForGPT();
+        } catch (error) {
+          console.error(`Failed to load ad ${ad.id}:`, error);
         }
       }
-    });
+    }
   }, [adsByPlacement, placement, className]);
 
   // Use debounced injection to prevent rapid re-renders
@@ -271,14 +152,16 @@ function TenantAdInjector({
   useEffect(() => {
     return () => {
       if (containerRef.current) {
-        // Remove all injected scripts for this placement
-        const scripts = document.head.querySelectorAll(`script[data-ad-placement="${placement}"]`);
-        scripts.forEach((script) => script.remove());
+        // Use AdManager to clean up ads for this placement
+        const ads = adsByPlacement?.[placement] || [];
+        ads.forEach((ad) => {
+          adManager.cleanup(ad.id);
+        });
 
         containerRef.current.innerHTML = "";
       }
     };
-  }, [placement]);
+  }, [placement, adsByPlacement]);
 
   // Don't show loading spinner - just return empty container
   if (isLoading) {

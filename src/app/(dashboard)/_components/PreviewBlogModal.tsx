@@ -41,8 +41,9 @@ export default function PreviewBlogModal({
     );
   }
 
-  const totalPages = blog.pages.length;
-  const page = blog.pages.find((p: any) => p.pageNumber === currentPage)!;
+  const sortedPages = blog.pages.sort((a: any, b: any) => a.pageNumber - b.pageNumber);
+  const totalPages = sortedPages.length;
+  const page = sortedPages.find((p: any) => p.pageNumber === currentPage)!;
 
   return (
     <Dialog open onOpenChange={onClose}>

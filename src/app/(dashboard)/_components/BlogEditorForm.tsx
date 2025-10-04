@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, KeyboardEvent, useEffect, ChangeEvent } from "react";
+import { useState, useCallback, KeyboardEvent, useEffect, ChangeEvent, useMemo } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -109,17 +109,39 @@ export function BlogEditorForm({
   const [tagInput, setTagInput] = useState("");
   const [html, setHtml] = useState(initialData?.pages?.[0]?.content || "");
 
-  // normalize to the minimal shape we need for inputs:
-  const initialPages: BlogPageInput[] = initialData?.pages.map((p) => ({
-    pageNumber: p.pageNumber,
-    content: p.content,
-  })) ?? [{ pageNumber: 1, content: "" }];
+  // Helper function to ensure pages are properly ordered (1, 2, 3, ...)
+  const reorderPages = useCallback((pagesArray: BlogPageInput[]): BlogPageInput[] => {
+    return pagesArray.map((page, index) => ({
+      ...page,
+      pageNumber: index + 1,
+    }));
+  }, []);
+
+  // Normalize and properly order initial pages using useMemo to avoid synchronous updates
+  const initialPages: BlogPageInput[] = useMemo(() => {
+    if (!initialData?.pages || initialData.pages.length === 0) {
+      return [{ pageNumber: 1, content: "" }];
+    }
+
+    const sortedPages = initialData.pages
+      .sort((a, b) => a.pageNumber - b.pageNumber)
+      .map((p) => ({
+        pageNumber: p.pageNumber,
+        content: p.content,
+      }));
+
+    // Inline the reordering logic to avoid dependency issues
+    return sortedPages.map((page, index) => ({
+      ...page,
+      pageNumber: index + 1,
+    }));
+  }, [initialData?.pages]);
 
   const [pages, setPages] = useState<BlogPageInput[]>(initialPages);
 
   const [currentPage, setCurrentPage] = useState(0);
 
-  // helper to update the current page’s content
+  // helper to update the current page's content
 
   const [headingLevel, setHeadingLevel] = useState<"paragraph" | "h1" | "h2" | "h3" | "h4" | "h5">(
     "paragraph",
@@ -333,7 +355,7 @@ export function BlogEditorForm({
       coverPhoto: coverPreview,
       categoryNames: selectedCats.map((c) => c.name),
       tags,
-      pages,
+      pages: reorderPages(pages), // Ensure pages are properly ordered before saving
       authorId,
       tenant,
     };
@@ -356,7 +378,7 @@ export function BlogEditorForm({
       coverPhoto: coverPreview,
       categoryNames: selectedCats.map((c) => c.name),
       tags,
-      pages,
+      pages: reorderPages(pages), // Ensure pages are properly ordered before saving
       authorId,
       tenant,
     };
@@ -512,13 +534,13 @@ export function BlogEditorForm({
           size="icon"
           variant="outline"
           onClick={() => {
-            setPages((p) => [
-              ...p,
-              {
+            setPages((p) => {
+              const newPage: BlogPageInput = {
                 pageNumber: p.length + 1,
                 content: "",
-              } as BlogPageInput,
-            ]);
+              };
+              return [...p, newPage];
+            });
             setCurrentPage(pages.length);
           }}
         >
@@ -529,7 +551,10 @@ export function BlogEditorForm({
           variant="outline"
           disabled={pages.length === 1}
           onClick={() => {
-            setPages((p) => p.filter((_, i) => i !== currentPage));
+            setPages((p) => {
+              const filtered = p.filter((_, i) => i !== currentPage);
+              return reorderPages(filtered);
+            });
             setCurrentPage((i) => Math.max(0, i - 1));
           }}
         >

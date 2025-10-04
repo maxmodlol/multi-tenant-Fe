@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { useAdHeader } from "@/src/hooks/dashboard/useAdHeader";
 import type { AdHeaderSetting } from "@/src/types/ads";
+import { adManager } from "@/src/utils/adManager";
 
 /**
  * This component takes the raw HTML/JS string from headerData.headerSnippet
@@ -14,6 +15,11 @@ export default function AdHeaderInjector() {
   const pathname = usePathname();
   const { data: headerData, isLoading, error } = useAdHeader();
   const nodesRef = useRef<Node[]>([]);
+
+  // Initialize AdManager
+  useEffect(() => {
+    adManager.initialize();
+  }, []);
 
   useEffect(() => {
     // Always remove any previously inserted nodes before deciding what to do

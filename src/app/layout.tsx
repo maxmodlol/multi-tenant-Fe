@@ -8,6 +8,14 @@ import { detectTenantServerOnly } from "../lib/tenantFromServer";
 import type { Metadata } from "next";
 import TenantStyleInjector from "@/src/components/TenantStyleInjector";
 import { validateFaviconUrl } from "../lib/utils";
+import {
+  adConfig,
+  isGoogleAnalyticsEnabled,
+  isGoogleAdSenseEnabled,
+  isGoogleAdManagerEnabled,
+} from "../config/adConfig";
+import AdDebugger from "@/src/components/AdDebugger";
+import { shouldUseProductionSetup, initializeProductionAds } from "../utils/productionAdSetup";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -200,27 +208,178 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </Script>
         )}
 
+        {/* Google Analytics gtag - Load globally for tracking */}
+        {isGoogleAnalyticsEnabled() && (
+          <>
+            <Script
+              id="google-analytics-gtag"
+              strategy="afterInteractive"
+              src={`https://www.googletagmanager.com/gtag/js?id=${adConfig.googleAnalytics.measurementId}`}
+            />
+            <Script
+              id="google-analytics-config"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  // Initialize Google Analytics (not on dashboard pages)
+                  if (!window.location.pathname.startsWith('/dashboard') && 
+                      !window.location.pathname.startsWith('/login') &&
+                      !window.location.pathname.startsWith('/forgot-password') &&
+                      !window.location.pathname.startsWith('/reset-password') &&
+                      !window.location.pathname.startsWith('/auth')) {
+                    
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag('js', new Date());
+                    gtag('config', '${adConfig.googleAnalytics.measurementId}', {
+                      page_title: document.title,
+                      page_location: window.location.href,
+                    });
+                    
+                    // Make gtag globally available
+                    window.gtag = gtag;
+                  }
+                `,
+              }}
+            />
+          </>
+        )}
+
+        {/* Google Ad Manager (GPT) - Load globally for ad management */}
+        {isGoogleAdManagerEnabled() && (
+          <Script
+            id="google-ad-manager-gpt"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                // Load Google Ad Manager library globally (not on dashboard pages)
+                if (!window.location.pathname.startsWith('/dashboard') && 
+                    !window.location.pathname.startsWith('/login') &&
+                    !window.location.pathname.startsWith('/forgot-password') &&
+                    !window.location.pathname.startsWith('/reset-password') &&
+                    !window.location.pathname.startsWith('/auth')) {
+                  
+                  const gptScript = document.createElement('script');
+                  gptScript.async = true;
+                  gptScript.src = 'https://securepubads.g.doubleclick.net/tag/js/gpt.js';
+                  gptScript.onload = function() {
+                    // Initialize googletag after library loads
+                    if (window.googletag) {
+                      window.googletag.cmd.push(function() {
+                        window.googletag.pubads().enableSingleRequest();
+                        window.googletag.pubads().collapseEmptyDivs();
+                        window.googletag.enableServices();
+                      });
+                    }
+                  };
+                  document.head.appendChild(gptScript);
+                }
+              `,
+            }}
+          />
+        )}
+
         {/* Google AdSense Script - Load globally for all ads */}
-        <Script
-          id="google-adsense-global"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              // Load Google AdSense library globally (not on dashboard pages)
-              if (!window.location.pathname.startsWith('/dashboard') && 
-                  !window.location.pathname.startsWith('/login') &&
-                  !window.location.pathname.startsWith('/forgot-password') &&
-                  !window.location.pathname.startsWith('/reset-password') &&
-                  !window.location.pathname.startsWith('/auth')) {
-                const script = document.createElement('script');
-                script.async = true;
-                script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5603341970726415';
-                script.crossOrigin = 'anonymous';
-                document.head.appendChild(script);
-              }
-            `,
-          }}
-        />
+        {isGoogleAdSenseEnabled() && (
+          <Script
+            id="google-adsense-global"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                // Load Google AdSense library globally (not on dashboard pages)
+                if (!window.location.pathname.startsWith('/dashboard') && 
+                    !window.location.pathname.startsWith('/login') &&
+                    !window.location.pathname.startsWith('/forgot-password') &&
+                    !window.location.pathname.startsWith('/reset-password') &&
+                    !window.location.pathname.startsWith('/auth')) {
+                  const script = document.createElement('script');
+                  script.async = true;
+                  script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adConfig.googleAdSense.clientId}';
+                  script.crossOrigin = 'anonymous';
+                  script.onload = function() {
+                    // Initialize AdSense after library loads
+                    if (window.adsbygoogle) {
+                      window.adsbygoogle = window.adsbygoogle || [];
+                      console.log('AdSense library loaded successfully');
+                    }
+                  };
+                  document.head.appendChild(script);
+                }
+              `,
+            }}
+          />
+        )}
+
+        {/* Production Ad Setup - Fallback for existing production setup */}
+        {shouldUseProductionSetup() && (
+          <Script
+            id="production-ad-setup"
+            strategy="afterInteractive"
+            dangerouslySetInnerHTML={{
+              __html: `
+                // Initialize production ad systems when no environment variables are set
+                if (!window.location.pathname.startsWith('/dashboard') && 
+                    !window.location.pathname.startsWith('/login') &&
+                    !window.location.pathname.startsWith('/forgot-password') &&
+                    !window.location.pathname.startsWith('/reset-password') &&
+                    !window.location.pathname.startsWith('/auth')) {
+                  
+                  // Load Google Analytics
+                  const gaScript = document.createElement('script');
+                  gaScript.async = true;
+                  gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-QX3HEDWQ05';
+                  gaScript.onload = function() {
+                    window.dataLayer = window.dataLayer || [];
+                    function gtag(){dataLayer.push(arguments);}
+                    gtag('js', new Date());
+                    gtag('config', 'G-QX3HEDWQ05');
+                    window.gtag = gtag;
+                    console.log('✅ Production Google Analytics loaded');
+                  };
+                  document.head.appendChild(gaScript);
+
+                  // Load Google AdSense
+                  const adsenseScript = document.createElement('script');
+                  adsenseScript.async = true;
+                  adsenseScript.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5603341970726415';
+                  adsenseScript.crossOrigin = 'anonymous';
+                  adsenseScript.onload = function() {
+                    window.adsbygoogle = window.adsbygoogle || [];
+                    console.log('✅ Production Google AdSense loaded');
+                  };
+                  document.head.appendChild(adsenseScript);
+
+                  // Load Google Ad Manager
+                  const gptScript = document.createElement('script');
+                  gptScript.async = true;
+                  gptScript.src = 'https://securepubads.g.doubleclick.net/tag/js/gpt.js';
+                  gptScript.crossOrigin = 'anonymous';
+                  gptScript.onload = function() {
+                    window.googletag = window.googletag || {cmd: []};
+                    window.googletag.cmd.push(function() {
+                      // Define production slots
+                      window.googletag.defineSlot('/23282436620/lsektor.comStickyAds', [300, 250], 'div-gpt-ad-1756916838274-0').addService(window.googletag.pubads());
+                      window.googletag.defineSlot('/23282436620/AboveArticleAd', [[300, 250], [320, 50], [336, 280], [320, 100]], 'div-gpt-ad-1756916923084-0').addService(window.googletag.pubads());
+                      window.googletag.defineSlot('/23282436620/BelowArticleTitleAd', [[320, 100], [300, 250], [336, 280], [320, 50]], 'div-gpt-ad-1756917063845-0').addService(window.googletag.pubads());
+                      window.googletag.defineSlot('/23282436620/ArticleInlineAd1', [[320, 100], [336, 280], [300, 250], [320, 50]], 'div-gpt-ad-1756917167350-0').addService(window.googletag.pubads());
+                      window.googletag.defineSlot('/23282436620/ArticleInlineAd2', [[300, 250], [320, 100], [336, 280], [320, 50]], 'div-gpt-ad-1756917211452-0').addService(window.googletag.pubads());
+                      window.googletag.defineSlot('/23282436620/ArticleInlineAd3', [[300, 250], [320, 50], [336, 280], [320, 100]], 'div-gpt-ad-1756917425896-0').addService(window.googletag.pubads());
+                      window.googletag.defineSlot('/23282436620/ArticleInlineAd4', [[320, 50], [320, 100], [300, 250], [336, 280]], 'div-gpt-ad-1756917451647-0').addService(window.googletag.pubads());
+                      window.googletag.defineSlot('/23282436620/ArticleInlineAd5', [[300, 250], [336, 280], [320, 50], [320, 100]], 'div-gpt-ad-1756917481824-0').addService(window.googletag.pubads());
+                      window.googletag.defineSlot('/23282436620/BelowArticleAd', [[300, 250], [320, 100], [336, 280], [320, 50]], 'div-gpt-ad-1756917285961-0').addService(window.googletag.pubads());
+                      window.googletag.defineSlot('/23282436620/BelowCommentsAd', [[320, 100], [300, 250], [320, 50], [336, 280]], 'div-gpt-ad-1756917330438-0').addService(window.googletag.pubads());
+                      
+                      window.googletag.pubads().enableSingleRequest();
+                      window.googletag.enableServices();
+                      console.log('✅ Production Google Ad Manager loaded with all slots');
+                    });
+                  };
+                  document.head.appendChild(gptScript);
+                }
+              `,
+            }}
+          />
+        )}
 
         {/* Facebook SDK for Comments - Only load on HTTPS or localhost */}
         <Script
@@ -246,25 +405,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <TenantStyleInjector cssVars={cssVars} tenantId={tenantId} />
         <div id="modal-root"></div>
         <Providers>{children}</Providers>
-        {/* Ad Debugger for development */}
-        {process.env.NODE_ENV === "development" && (
-          <>
-            <script
-              dangerouslySetInnerHTML={{
-                __html: `
-                // Add GPT library for testing
-                if (typeof googletag === 'undefined') {
-                  window.googletag = window.googletag || {cmd: []};
-                  const gptScript = document.createElement('script');
-                  gptScript.async = true;
-                  gptScript.src = 'https://securepubads.g.doubleclick.net/tag/js/gpt.js';
-                  document.head.appendChild(gptScript);
-                }
-              `,
-              }}
-            />
-          </>
-        )}
+        <AdDebugger />
       </body>
     </html>
   );
