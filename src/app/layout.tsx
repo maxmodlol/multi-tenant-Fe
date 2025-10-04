@@ -245,7 +245,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </>
         )}
 
-        {/* Google Ad Manager (GPT) - Load globally for ad management (only if not using production setup) */}
+        {/* Google Ad Manager (GPT) - Only load if not using production setup */}
         {isGoogleAdManagerEnabled() && !shouldUseProductionSetup() && (
           <Script
             id="google-ad-manager-gpt"
@@ -262,6 +262,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   const gptScript = document.createElement('script');
                   gptScript.async = true;
                   gptScript.src = 'https://securepubads.g.doubleclick.net/tag/js/gpt.js';
+                  gptScript.crossOrigin = 'anonymous';
                   gptScript.onload = function() {
                     // Initialize googletag after library loads
                     if (window.googletag) {
