@@ -15,7 +15,7 @@ import {
   isGoogleAdManagerEnabled,
 } from "../config/adConfig";
 import AdDebugger from "@/src/components/AdDebugger";
-import { shouldUseProductionSetup, initializeProductionAds } from "../utils/productionAdSetup";
+// Production setup disabled to prevent conflicts
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
@@ -208,8 +208,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </Script>
         )}
 
-        {/* Google Analytics gtag - Load globally for tracking (only if not using production setup) */}
-        {isGoogleAnalyticsEnabled() && !shouldUseProductionSetup() && (
+        {/* Google Analytics gtag - Load globally for tracking */}
+        {isGoogleAnalyticsEnabled() && (
           <>
             <Script
               id="google-analytics-gtag"
@@ -245,8 +245,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </>
         )}
 
-        {/* Google Ad Manager (GPT) - Only load if not using production setup */}
-        {isGoogleAdManagerEnabled() && !shouldUseProductionSetup() && (
+        {/* Google Ad Manager (GPT) - Load globally for ad management */}
+        {isGoogleAdManagerEnabled() && (
           <Script
             id="google-ad-manager-gpt"
             strategy="afterInteractive"
@@ -280,8 +280,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
         )}
 
-        {/* Google AdSense Script - Load globally for all ads (only if not using production setup) */}
-        {isGoogleAdSenseEnabled() && !shouldUseProductionSetup() && (
+        {/* Google AdSense Script - Load globally for all ads */}
+        {isGoogleAdSenseEnabled() && (
           <Script
             id="google-adsense-global"
             strategy="afterInteractive"
@@ -311,85 +311,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
         )}
 
-        {/* Production Ad Setup - Fallback for existing production setup */}
-        {shouldUseProductionSetup() && (
-          <Script
-            id="production-ad-setup"
-            strategy="afterInteractive"
-            dangerouslySetInnerHTML={{
-              __html: `
-                // Initialize production ad systems when no environment variables are set
-                if (!window.location.pathname.startsWith('/dashboard') && 
-                    !window.location.pathname.startsWith('/login') &&
-                    !window.location.pathname.startsWith('/forgot-password') &&
-                    !window.location.pathname.startsWith('/reset-password') &&
-                    !window.location.pathname.startsWith('/auth')) {
-                  
-                  // Load Google Analytics
-                  const gaScript = document.createElement('script');
-                  gaScript.async = true;
-                  gaScript.src = 'https://www.googletagmanager.com/gtag/js?id=G-QX3HEDWQ05';
-                  gaScript.onload = function() {
-                    window.dataLayer = window.dataLayer || [];
-                    function gtag(){dataLayer.push(arguments);}
-                    gtag('js', new Date());
-                    gtag('config', 'G-QX3HEDWQ05');
-                    window.gtag = gtag;
-                    console.log('✅ Production Google Analytics loaded');
-                  };
-                  document.head.appendChild(gaScript);
-
-                  // Load Google AdSense
-                  const adsenseScript = document.createElement('script');
-                  adsenseScript.async = true;
-                  adsenseScript.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5603341970726415';
-                  adsenseScript.crossOrigin = 'anonymous';
-                  adsenseScript.onload = function() {
-                    window.adsbygoogle = window.adsbygoogle || [];
-                    console.log('✅ Production Google AdSense loaded');
-                  };
-                  document.head.appendChild(adsenseScript);
-
-                  // Load Google Ad Manager (just the library, let existing ad codes define slots)
-                  const gptScript = document.createElement('script');
-                  gptScript.async = true;
-                  gptScript.src = 'https://securepubads.g.doubleclick.net/tag/js/gpt.js';
-                  gptScript.crossOrigin = 'anonymous';
-                  gptScript.onload = function() {
-                    // Initialize googletag properly
-                    window.googletag = window.googletag || {cmd: []};
-                    
-                    // Wait for GPT to be fully loaded
-                    window.googletag.cmd.push(function() {
-                      try {
-                        // Ensure pubads service is available
-                        if (!window.googletag.pubads) {
-                          console.error('❌ GPT pubads service not available');
-                          return;
-                        }
-                        
-                        // Get pubads service once
-                        const pubads = window.googletag.pubads();
-                        if (!pubads) {
-                          console.error('❌ GPT pubads() returned null');
-                          return;
-                        }
-                        
-                        // Just enable services - let existing ad codes define slots
-                        pubads.enableSingleRequest();
-                        window.googletag.enableServices();
-                        console.log('✅ Production Google Ad Manager loaded (slots will be defined by existing ad codes)');
-                      } catch (error) {
-                        console.error('❌ GPT initialization failed:', error);
-                      }
-                    });
-                  };
-                  document.head.appendChild(gptScript);
-                }
-              `,
-            }}
-          />
-        )}
+        {/* Production Ad Setup - DISABLED to prevent conflicts */}
 
         {/* Facebook SDK for Comments - Only load on HTTPS or localhost */}
         <Script
