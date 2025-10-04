@@ -109,7 +109,7 @@ export function initializeProductionGoogleAnalytics(): void {
   if (typeof window === "undefined") return;
 
   // Only initialize if not already done
-  if (window.dataLayer && window.gtag) return;
+  if (window.dataLayer && typeof window.gtag === "function") return;
 
   try {
     window.dataLayer = window.dataLayer || [];
@@ -135,7 +135,7 @@ export function initializeProductionGoogleAdManager(): void {
   if (typeof window === "undefined") return;
 
   // Only initialize if not already done
-  if (window.googletag && window.googletag.pubads) return;
+  if (window.googletag && typeof window.googletag.pubads === "function") return;
 
   try {
     window.googletag = window.googletag || { cmd: [] };
