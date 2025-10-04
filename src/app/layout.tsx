@@ -349,7 +349,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   };
                   document.head.appendChild(adsenseScript);
 
-                  // Load Google Ad Manager
+                  // Load Google Ad Manager (just the library, let existing ad codes define slots)
                   const gptScript = document.createElement('script');
                   gptScript.async = true;
                   gptScript.src = 'https://securepubads.g.doubleclick.net/tag/js/gpt.js';
@@ -374,34 +374,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                           return;
                         }
                         
-                        // Define production slots with error handling
-                        const slots = [
-                          { path: '/23282436620/lsektor.comStickyAds', sizes: [300, 250], elementId: 'div-gpt-ad-1756916838274-0' },
-                          { path: '/23282436620/AboveArticleAd', sizes: [[300, 250], [320, 50], [336, 280], [320, 100]], elementId: 'div-gpt-ad-1756916923084-0' },
-                          { path: '/23282436620/BelowArticleTitleAd', sizes: [[320, 100], [300, 250], [336, 280], [320, 50]], elementId: 'div-gpt-ad-1756917063845-0' },
-                          { path: '/23282436620/ArticleInlineAd1', sizes: [[320, 100], [336, 280], [300, 250], [320, 50]], elementId: 'div-gpt-ad-1756917167350-0' },
-                          { path: '/23282436620/ArticleInlineAd2', sizes: [[300, 250], [320, 100], [336, 280], [320, 50]], elementId: 'div-gpt-ad-1756917211452-0' },
-                          { path: '/23282436620/ArticleInlineAd3', sizes: [[300, 250], [320, 50], [336, 280], [320, 100]], elementId: 'div-gpt-ad-1756917425896-0' },
-                          { path: '/23282436620/ArticleInlineAd4', sizes: [[320, 50], [320, 100], [300, 250], [336, 280]], elementId: 'div-gpt-ad-1756917451647-0' },
-                          { path: '/23282436620/ArticleInlineAd5', sizes: [[300, 250], [336, 280], [320, 50], [320, 100]], elementId: 'div-gpt-ad-1756917481824-0' },
-                          { path: '/23282436620/BelowArticleAd', sizes: [[300, 250], [320, 100], [336, 280], [320, 50]], elementId: 'div-gpt-ad-1756917285961-0' },
-                          { path: '/23282436620/BelowCommentsAd', sizes: [[320, 100], [300, 250], [320, 50], [336, 280]], elementId: 'div-gpt-ad-1756917330438-0' }
-                        ];
-                        
-                        // Define slots with proper error handling
-                        slots.forEach(slot => {
-                          try {
-                            window.googletag.defineSlot(slot.path, slot.sizes, slot.elementId).addService(pubads);
-                            console.log('✅ Defined slot:', slot.elementId);
-                          } catch (error) {
-                            console.error('❌ Failed to define slot', slot.elementId, ':', error);
-                          }
-                        });
-                        
-                        // Enable services
+                        // Just enable services - let existing ad codes define slots
                         pubads.enableSingleRequest();
                         window.googletag.enableServices();
-                        console.log('✅ Production Google Ad Manager loaded with', slots.length, 'slots');
+                        console.log('✅ Production Google Ad Manager loaded (slots will be defined by existing ad codes)');
                       } catch (error) {
                         console.error('❌ GPT initialization failed:', error);
                       }

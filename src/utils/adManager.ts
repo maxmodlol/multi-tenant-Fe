@@ -100,6 +100,38 @@ class AdManager {
   }
 
   /**
+   * Wait for GPT to be fully ready with pubads service
+   */
+  private async waitForGPTReady(): Promise<void> {
+    const maxWaitTime = 5000; // 5 seconds
+    const checkInterval = 100; // 100ms
+    let elapsed = 0;
+
+    while (elapsed < maxWaitTime) {
+      try {
+        if (
+          window.googletag &&
+          window.googletag.pubads &&
+          typeof window.googletag.pubads === "function"
+        ) {
+          const pubads = window.googletag.pubads();
+          if (pubads && typeof pubads.enableSingleRequest === "function") {
+            this.log("📚 GPT pubads service ready");
+            return;
+          }
+        }
+      } catch (error) {
+        // Continue waiting if pubads is not ready
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
+      elapsed += checkInterval;
+    }
+
+    this.log("⚠️ GPT pubads service not ready within timeout");
+  }
+
+  /**
    * Initialize Google Analytics
    */
   private initializeGoogleAnalytics(): void {
@@ -241,6 +273,9 @@ class AdManager {
       return;
     }
 
+    // Wait for GPT to be fully initialized
+    await this.waitForGPTReady();
+
     try {
       // Inject the ad code
       container.innerHTML = adCode;
@@ -277,13 +312,24 @@ class AdManager {
               return;
             }
 
-            // Execute the GPT script content
+            // Execute the GPT script content with proper error handling
             const scripts = div.querySelectorAll("script");
             scripts.forEach((script: HTMLScriptElement) => {
               if (script.textContent) {
-                // Execute the script in the global context
-                const func = new Function(script.textContent);
-                func();
+                try {
+                  // Wrap the script execution in a try-catch to handle pubads errors
+                  const wrappedScript = `
+                    try {
+                      ${script.textContent}
+                    } catch (error) {
+                      console.warn('GPT script execution failed:', error);
+                    }
+                  `;
+                  const func = new Function(wrappedScript);
+                  func();
+                } catch (error) {
+                  this.log(`❌ Failed to execute GPT script for slot ${slotId}:`, error);
+                }
               }
             });
 
@@ -335,6 +381,9 @@ class AdManager {
       this.log(`❌ Google Ad Manager not available for production ad ${adId}`);
       return;
     }
+
+    // Wait for GPT to be fully ready
+    await this.waitForGPTReady();
 
     try {
       // Create the div element

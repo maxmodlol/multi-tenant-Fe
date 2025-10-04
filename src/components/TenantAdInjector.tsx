@@ -123,12 +123,21 @@ function TenantAdInjector({
         // Determine ad type and handle accordingly
         const isAdSense = ad.codeSnippet.includes("adsbygoogle");
         const isGPT = ad.codeSnippet.includes("googletag") && ad.codeSnippet.includes("defineSlot");
+        const isGPTDisplay =
+          ad.codeSnippet.includes("googletag") &&
+          ad.codeSnippet.includes("display") &&
+          !ad.codeSnippet.includes("defineSlot");
 
         try {
           if (isAdSense) {
             await adManager.handleAdSenseAd(ad.id, adContainer, ad.codeSnippet);
           } else if (isGPT) {
             await adManager.handleGPTAd(ad.id, adContainer, ad.codeSnippet);
+          } else if (isGPTDisplay) {
+            // For GPT display-only ads, just inject the HTML and let the production setup handle it
+            console.log(`ℹ️ GPT display ad ${ad.id} - letting production setup handle display`);
+            // The HTML is already injected above, just track it as loaded
+            // The production setup will handle the actual display
           } else {
             await adManager.handleCustomAd(ad.id, adContainer, ad.codeSnippet);
           }
