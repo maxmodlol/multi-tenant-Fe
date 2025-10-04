@@ -258,9 +258,7 @@ export function initializeProductionAds(): void {
  * Check if we should use production setup (when no environment variables are set)
  */
 export function shouldUseProductionSetup(): boolean {
-  return (
-    !process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID &&
-    !process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID &&
-    !process.env.NEXT_PUBLIC_GPT_ENABLED
-  );
+  // Disable production setup to prevent conflicts with admin-created ads
+  // Let admin ads handle their own slot definitions
+  return false;
 }
