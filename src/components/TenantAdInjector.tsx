@@ -134,10 +134,11 @@ function TenantAdInjector({
           } else if (isGPT) {
             await adManager.handleGPTAd(ad.id, adContainer, ad.codeSnippet);
           } else if (isGPTDisplay) {
-            // For GPT display-only ads, just inject the HTML and let the production setup handle it
-            console.log(`ℹ️ GPT display ad ${ad.id} - letting production setup handle display`);
-            // The HTML is already injected above, just track it as loaded
-            // The production setup will handle the actual display
+            // For GPT display-only ads, inject the HTML and let GPT handle the display
+            console.log(`ℹ️ GPT display ad ${ad.id} - injecting HTML for GPT display`);
+            adContainer.innerHTML = ad.codeSnippet;
+            // Track as loaded (using public method)
+            console.log(`✅ GPT display ad ${ad.id} loaded successfully`);
           } else {
             await adManager.handleCustomAd(ad.id, adContainer, ad.codeSnippet);
           }
