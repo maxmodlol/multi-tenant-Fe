@@ -155,16 +155,24 @@ export function initializeProductionGoogleAdManager(): void {
           return;
         }
 
-        // Don't define slots here - let existing ad codes handle slot definitions
-        // This prevents duplicate slot definition errors
-        console.log("ℹ️ Skipping slot definitions - will be handled by existing ad codes");
+        // Define production slots to prevent conflicts with admin-created ads
+        PRODUCTION_SLOTS.forEach((slot) => {
+          try {
+            window.googletag.defineSlot(slot.path, slot.sizes, slot.elementId).addService(pubads);
+            console.log("✅ Defined production slot:", slot.elementId);
+          } catch (error) {
+            console.warn(`⚠️ Failed to define production slot ${slot.elementId}:`, error);
+          }
+        });
 
         // Enable services
         pubads.enableSingleRequest();
         window.googletag.enableServices();
 
         console.log(
-          "✅ Production Google Ad Manager initialized (slots will be defined by existing ad codes)",
+          "✅ Production Google Ad Manager initialized with",
+          PRODUCTION_SLOTS.length,
+          "slots",
         );
       } catch (error) {
         console.error("❌ GPT initialization failed:", error);
