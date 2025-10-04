@@ -38,7 +38,6 @@ export default function BlogDetailClient({
   const searchParams = useSearchParams();
   const urlPage = parseInt(searchParams.get("page") || "1", 10);
   const [page, setPage] = useState(urlPage || initialPage);
-  const total = blog.pages.length;
   const qc = useQueryClient();
   const router = useRouter();
 
@@ -80,8 +79,10 @@ export default function BlogDetailClient({
     setPage(urlPage || 1);
   }, [urlPage]);
 
-  // Inject inline ads into content
-  const contentWithInlineAds = blog.pages.map((pageContent) =>
+  // Ensure pages are sorted by pageNumber and inject inline ads into content
+  const sortedPages = blog.pages.sort((a, b) => a.pageNumber - b.pageNumber);
+  const total = sortedPages.length;
+  const contentWithInlineAds = sortedPages.map((pageContent) =>
     injectInlineAdsIntoContent(pageContent.content, inlineAds),
   );
 
@@ -175,7 +176,7 @@ export default function BlogDetailClient({
                 __html:
                   contentWithInlineAds.length > 0
                     ? contentWithInlineAds[page - 1]
-                    : blog.pages[page - 1].content,
+                    : sortedPages[page - 1].content,
               }}
             />
           </article>
