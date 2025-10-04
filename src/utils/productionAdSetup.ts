@@ -141,26 +141,42 @@ export function initializeProductionGoogleAdManager(): void {
     window.googletag = window.googletag || { cmd: [] };
 
     window.googletag.cmd.push(function () {
-      // Define all your production slots
-      PRODUCTION_SLOTS.forEach((slot) => {
-        try {
-          window.googletag
-            .defineSlot(slot.path, slot.sizes, slot.elementId)
-            .addService(window.googletag.pubads());
-        } catch (error) {
-          console.warn(`⚠️ Failed to define slot ${slot.elementId}:`, error);
+      try {
+        // Ensure pubads service is available
+        if (!window.googletag.pubads) {
+          console.error("❌ GPT pubads service not available");
+          return;
         }
-      });
 
-      // Enable services
-      window.googletag.pubads().enableSingleRequest();
-      window.googletag.enableServices();
+        // Get pubads service once
+        const pubads = window.googletag.pubads();
+        if (!pubads) {
+          console.error("❌ GPT pubads() returned null");
+          return;
+        }
 
-      console.log(
-        "✅ Production Google Ad Manager initialized with",
-        PRODUCTION_SLOTS.length,
-        "slots",
-      );
+        // Define all your production slots
+        PRODUCTION_SLOTS.forEach((slot) => {
+          try {
+            window.googletag.defineSlot(slot.path, slot.sizes, slot.elementId).addService(pubads);
+            console.log("✅ Defined slot:", slot.elementId);
+          } catch (error) {
+            console.warn(`⚠️ Failed to define slot ${slot.elementId}:`, error);
+          }
+        });
+
+        // Enable services
+        pubads.enableSingleRequest();
+        window.googletag.enableServices();
+
+        console.log(
+          "✅ Production Google Ad Manager initialized with",
+          PRODUCTION_SLOTS.length,
+          "slots",
+        );
+      } catch (error) {
+        console.error("❌ GPT initialization failed:", error);
+      }
     });
   } catch (error) {
     console.error("❌ Production Google Ad Manager initialization failed:", error);

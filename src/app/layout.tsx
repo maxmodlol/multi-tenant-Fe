@@ -208,8 +208,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </Script>
         )}
 
-        {/* Google Analytics gtag - Load globally for tracking */}
-        {isGoogleAnalyticsEnabled() && (
+        {/* Google Analytics gtag - Load globally for tracking (only if not using production setup) */}
+        {isGoogleAnalyticsEnabled() && !shouldUseProductionSetup() && (
           <>
             <Script
               id="google-analytics-gtag"
@@ -245,8 +245,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </>
         )}
 
-        {/* Google Ad Manager (GPT) - Load globally for ad management */}
-        {isGoogleAdManagerEnabled() && (
+        {/* Google Ad Manager (GPT) - Load globally for ad management (only if not using production setup) */}
+        {isGoogleAdManagerEnabled() && !shouldUseProductionSetup() && (
           <Script
             id="google-ad-manager-gpt"
             strategy="afterInteractive"
@@ -279,8 +279,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           />
         )}
 
-        {/* Google AdSense Script - Load globally for all ads */}
-        {isGoogleAdSenseEnabled() && (
+        {/* Google AdSense Script - Load globally for all ads (only if not using production setup) */}
+        {isGoogleAdSenseEnabled() && !shouldUseProductionSetup() && (
           <Script
             id="google-adsense-global"
             strategy="afterInteractive"
@@ -355,23 +355,56 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   gptScript.src = 'https://securepubads.g.doubleclick.net/tag/js/gpt.js';
                   gptScript.crossOrigin = 'anonymous';
                   gptScript.onload = function() {
+                    // Initialize googletag properly
                     window.googletag = window.googletag || {cmd: []};
+                    
+                    // Wait for GPT to be fully loaded
                     window.googletag.cmd.push(function() {
-                      // Define production slots
-                      window.googletag.defineSlot('/23282436620/lsektor.comStickyAds', [300, 250], 'div-gpt-ad-1756916838274-0').addService(window.googletag.pubads());
-                      window.googletag.defineSlot('/23282436620/AboveArticleAd', [[300, 250], [320, 50], [336, 280], [320, 100]], 'div-gpt-ad-1756916923084-0').addService(window.googletag.pubads());
-                      window.googletag.defineSlot('/23282436620/BelowArticleTitleAd', [[320, 100], [300, 250], [336, 280], [320, 50]], 'div-gpt-ad-1756917063845-0').addService(window.googletag.pubads());
-                      window.googletag.defineSlot('/23282436620/ArticleInlineAd1', [[320, 100], [336, 280], [300, 250], [320, 50]], 'div-gpt-ad-1756917167350-0').addService(window.googletag.pubads());
-                      window.googletag.defineSlot('/23282436620/ArticleInlineAd2', [[300, 250], [320, 100], [336, 280], [320, 50]], 'div-gpt-ad-1756917211452-0').addService(window.googletag.pubads());
-                      window.googletag.defineSlot('/23282436620/ArticleInlineAd3', [[300, 250], [320, 50], [336, 280], [320, 100]], 'div-gpt-ad-1756917425896-0').addService(window.googletag.pubads());
-                      window.googletag.defineSlot('/23282436620/ArticleInlineAd4', [[320, 50], [320, 100], [300, 250], [336, 280]], 'div-gpt-ad-1756917451647-0').addService(window.googletag.pubads());
-                      window.googletag.defineSlot('/23282436620/ArticleInlineAd5', [[300, 250], [336, 280], [320, 50], [320, 100]], 'div-gpt-ad-1756917481824-0').addService(window.googletag.pubads());
-                      window.googletag.defineSlot('/23282436620/BelowArticleAd', [[300, 250], [320, 100], [336, 280], [320, 50]], 'div-gpt-ad-1756917285961-0').addService(window.googletag.pubads());
-                      window.googletag.defineSlot('/23282436620/BelowCommentsAd', [[320, 100], [300, 250], [320, 50], [336, 280]], 'div-gpt-ad-1756917330438-0').addService(window.googletag.pubads());
-                      
-                      window.googletag.pubads().enableSingleRequest();
-                      window.googletag.enableServices();
-                      console.log('✅ Production Google Ad Manager loaded with all slots');
+                      try {
+                        // Ensure pubads service is available
+                        if (!window.googletag.pubads) {
+                          console.error('❌ GPT pubads service not available');
+                          return;
+                        }
+                        
+                        // Get pubads service once
+                        const pubads = window.googletag.pubads();
+                        if (!pubads) {
+                          console.error('❌ GPT pubads() returned null');
+                          return;
+                        }
+                        
+                        // Define production slots with error handling
+                        const slots = [
+                          { path: '/23282436620/lsektor.comStickyAds', sizes: [300, 250], elementId: 'div-gpt-ad-1756916838274-0' },
+                          { path: '/23282436620/AboveArticleAd', sizes: [[300, 250], [320, 50], [336, 280], [320, 100]], elementId: 'div-gpt-ad-1756916923084-0' },
+                          { path: '/23282436620/BelowArticleTitleAd', sizes: [[320, 100], [300, 250], [336, 280], [320, 50]], elementId: 'div-gpt-ad-1756917063845-0' },
+                          { path: '/23282436620/ArticleInlineAd1', sizes: [[320, 100], [336, 280], [300, 250], [320, 50]], elementId: 'div-gpt-ad-1756917167350-0' },
+                          { path: '/23282436620/ArticleInlineAd2', sizes: [[300, 250], [320, 100], [336, 280], [320, 50]], elementId: 'div-gpt-ad-1756917211452-0' },
+                          { path: '/23282436620/ArticleInlineAd3', sizes: [[300, 250], [320, 50], [336, 280], [320, 100]], elementId: 'div-gpt-ad-1756917425896-0' },
+                          { path: '/23282436620/ArticleInlineAd4', sizes: [[320, 50], [320, 100], [300, 250], [336, 280]], elementId: 'div-gpt-ad-1756917451647-0' },
+                          { path: '/23282436620/ArticleInlineAd5', sizes: [[300, 250], [336, 280], [320, 50], [320, 100]], elementId: 'div-gpt-ad-1756917481824-0' },
+                          { path: '/23282436620/BelowArticleAd', sizes: [[300, 250], [320, 100], [336, 280], [320, 50]], elementId: 'div-gpt-ad-1756917285961-0' },
+                          { path: '/23282436620/BelowCommentsAd', sizes: [[320, 100], [300, 250], [320, 50], [336, 280]], elementId: 'div-gpt-ad-1756917330438-0' }
+                        ];
+                        
+                        // Define slots with proper error handling
+                        slots.forEach(slot => {
+                          try {
+                            window.googletag.defineSlot(slot.path, slot.sizes, slot.elementId).addService(pubads);
+                            console.log('✅ Defined slot:', slot.elementId);
+                          } catch (error) {
+                            console.error('❌ Failed to define slot', slot.elementId, ':', error);
+                          }
+                        });
+                        
+                        // Enable services
+                        pubads.enableSingleRequest();
+                        window.googletag.enableServices();
+                        console.log('✅ Production Google Ad Manager loaded with', slots.length, 'slots');
+                      } catch (error) {
+                        console.error('❌ GPT initialization failed:', error);
+                      }
                     });
                   };
                   document.head.appendChild(gptScript);
