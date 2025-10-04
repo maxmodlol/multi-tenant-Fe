@@ -82,6 +82,12 @@ export default function AdHeaderInjector() {
               oldScript.textContent.includes("adsbygoogle") &&
               oldScript.textContent.includes("push");
 
+            // Check if this is a GPT script
+            const isGPT =
+              oldScript.textContent.includes("googletag") &&
+              (oldScript.textContent.includes("defineSlot") ||
+                oldScript.textContent.includes("display"));
+
             if (isGoogleAnalytics) {
               // For Google Analytics, wrap in a function that waits for gtag to be available
               newScript.textContent = `
@@ -110,6 +116,21 @@ export default function AdHeaderInjector() {
                     }
                   }
                   waitForAdSense();
+                })();
+              `;
+            } else if (isGPT) {
+              // For GPT scripts, wrap in a function that waits for googletag to be available
+              newScript.textContent = `
+                (function() {
+                  // Wait for googletag to be available
+                  function waitForGPT() {
+                    if (typeof googletag !== 'undefined' && googletag.pubads) {
+                      ${oldScript.textContent}
+                    } else {
+                      setTimeout(waitForGPT, 100);
+                    }
+                  }
+                  waitForGPT();
                 })();
               `;
             } else {
