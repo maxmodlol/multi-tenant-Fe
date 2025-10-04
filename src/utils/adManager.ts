@@ -215,7 +215,7 @@ class AdManager {
   }
 
   /**
-   * Handle AdSense ad with proper conflict prevention
+   * Handle AdSense ad with proper conflict prevention and fallback
    */
   public async handleAdSenseAd(
     adId: string,
@@ -230,6 +230,7 @@ class AdManager {
     // Check if adsbygoogle is available
     if (typeof window.adsbygoogle === "undefined") {
       this.log(`❌ AdSense not available for ad ${adId}`);
+      this.showAdFallback(container, adId, "AdSense not available");
       return;
     }
 
@@ -245,6 +246,7 @@ class AdManager {
 
       if (insElements.length === 0) {
         this.log(`⚠️ No AdSense ins elements found in ad ${adId}`);
+        this.showAdFallback(container, adId, "No AdSense elements found");
         return;
       }
 
@@ -268,6 +270,9 @@ class AdManager {
 
           this.log(`✅ AdSense ad ${adId} pushed successfully`);
 
+          // Set up monitoring for ad loading
+          this.monitorAdLoading(container, adId, "adsense");
+
           // Track the ad
           this.loadedSlots.set(adId, {
             id: adId,
@@ -286,6 +291,7 @@ class AdManager {
       }
     } catch (error) {
       this.log(`❌ AdSense ad ${adId} failed:`, error);
+      this.showAdFallback(container, adId, "AdSense loading failed");
       this.trackAdEvent("adsense_load", adId, "error");
     }
   }
@@ -389,11 +395,199 @@ class AdManager {
         adType: "gpt",
       });
 
+      // Set up monitoring for ad loading
+      this.monitorAdLoading(container, adId, "gpt");
+
       // Track in Google Analytics
       this.trackAdEvent("gpt_load", adId, "success");
     } catch (error) {
       this.log(`❌ GPT ad ${adId} failed:`, error);
+      this.showAdFallback(container, adId, "GPT loading failed");
       this.trackAdEvent("gpt_load", adId, "error");
+    }
+  }
+
+  /**
+   * Monitor ad loading and show fallback if no content appears
+   */
+  private monitorAdLoading(container: HTMLElement, adId: string, adType: string): void {
+    const checkInterval = 1000; // Check every 1 second
+    const maxChecks = 10; // Check for 10 seconds
+    let checkCount = 0;
+
+    const checkForContent = () => {
+      checkCount++;
+
+      // Check if ad has actual content (not just empty space)
+      const hasContent = this.hasAdContent(container);
+
+      if (hasContent) {
+        this.log(`✅ Ad ${adId} loaded successfully with content`);
+        return;
+      }
+
+      if (checkCount >= maxChecks) {
+        this.log(`⚠️ Ad ${adId} failed to load content after ${maxChecks} seconds`);
+        this.showAdFallback(container, adId, `No content loaded after ${maxChecks}s`);
+        return;
+      }
+
+      // Continue monitoring
+      setTimeout(checkForContent, checkInterval);
+    };
+
+    // Start monitoring after a short delay
+    setTimeout(checkForContent, checkInterval);
+  }
+
+  /**
+   * Check if ad container has actual content
+   */
+  private hasAdContent(container: HTMLElement): boolean {
+    // Check for various ad content indicators
+    const hasIframe = container.querySelector("iframe");
+    const hasImg = container.querySelector("img");
+    const hasAdContent = container.querySelector('[class*="ad"], [id*="ad"]');
+    const hasVisibleContent = container.offsetHeight > 50; // At least 50px height
+
+    // Check for AdSense specific content
+    const adsenseContent = container.querySelector(
+      'ins.adsbygoogle[data-adsbygoogle-status="done"]',
+    );
+
+    // Check for GPT specific content
+    const gptContent = container.querySelector(
+      '[id^="div-gpt-ad-"] iframe, [id^="div-gpt-ad-"] img',
+    );
+
+    return !!(
+      hasIframe ||
+      hasImg ||
+      hasAdContent ||
+      hasVisibleContent ||
+      adsenseContent ||
+      gptContent
+    );
+  }
+
+  /**
+   * Show fallback content when ad fails to load
+   */
+  private showAdFallback(container: HTMLElement, adId: string, reason: string): void {
+    // Don't show fallback if debug is disabled
+    if (!isDebugEnabled()) {
+      container.style.display = "none";
+      return;
+    }
+
+    // Show debug fallback
+    container.innerHTML = `
+      <div style="
+        padding: 20px;
+        background: #f8f9fa;
+        border: 2px dashed #dee2e6;
+        text-align: center;
+        color: #6c757d;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-size: 14px;
+        border-radius: 8px;
+        min-height: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+      ">
+        <div style="margin-bottom: 8px;">
+          <strong>Ad Space</strong>
+        </div>
+        <div style="font-size: 12px; opacity: 0.8;">
+          ID: ${adId}
+        </div>
+        <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">
+          Reason: ${reason}
+        </div>
+        <div style="font-size: 11px; opacity: 0.6; margin-top: 8px;">
+          (Debug mode - hidden in production)
+        </div>
+      </div>
+    `;
+
+    this.log(`🔄 Showing fallback for ad ${adId}: ${reason}`);
+  }
+
+  /**
+   * Handle GPT display-only ads (ads that only call googletag.display)
+   */
+  public async handleGPTDisplayAd(
+    adId: string,
+    container: HTMLElement,
+    adCode: string,
+  ): Promise<void> {
+    if (this.loadedSlots.has(adId)) {
+      this.log(`⚠️ GPT display ad ${adId} already loaded, skipping`);
+      return;
+    }
+
+    // Wait for GPT to be ready
+    await this.waitForGPTReady();
+
+    try {
+      // Inject the ad code
+      container.innerHTML = adCode;
+
+      // Find the GPT div in the injected content
+      const gptDiv = container.querySelector('[id^="div-gpt-ad-"]') as HTMLElement;
+      if (!gptDiv) {
+        this.log(`⚠️ No GPT div found in display ad ${adId}`);
+        return;
+      }
+
+      const slotId = gptDiv.id;
+      this.log(`🎯 Processing GPT display ad ${adId} for slot: ${slotId}`);
+
+      // Wait for the slot to be defined (it should be defined by global header)
+      let retryCount = 0;
+      const maxRetries = 10;
+      const retryDelay = 500; // 500ms
+
+      const tryDisplay = () => {
+        try {
+          const existingSlots = window.googletag.pubads().getSlots();
+          const slotExists = existingSlots.some((slot: any) => slot.getSlotElementId() === slotId);
+
+          if (slotExists) {
+            this.log(`✅ GPT slot ${slotId} is defined, displaying...`);
+            window.googletag.display(slotId);
+
+            // Track the ad
+            this.loadedSlots.set(adId, {
+              id: adId,
+              element: container,
+              isLoaded: true,
+              adType: "gpt",
+            });
+
+            this.log(`✅ GPT display ad ${adId} loaded successfully`);
+
+            // Set up monitoring for ad loading
+            this.monitorAdLoading(container, adId, "gpt_display");
+          } else if (retryCount < maxRetries) {
+            retryCount++;
+            this.log(`⏳ GPT slot ${slotId} not defined yet, retry ${retryCount}/${maxRetries}...`);
+            setTimeout(tryDisplay, retryDelay);
+          } else {
+            this.log(`❌ GPT slot ${slotId} not defined after ${maxRetries} retries`);
+            this.showAdFallback(container, adId, "GPT slot not defined");
+          }
+        } catch (error) {
+          this.log(`❌ GPT display error for ad ${adId}:`, error);
+        }
+      };
+
+      // Start the display process
+      tryDisplay();
+    } catch (error) {
+      this.log(`❌ GPT display ad ${adId} failed:`, error);
     }
   }
 
