@@ -132,6 +132,35 @@ class AdManager {
   }
 
   /**
+   * Wait for AdSense to be fully ready
+   */
+  private async waitForAdSenseReady(): Promise<void> {
+    const maxWaitTime = 3000; // 3 seconds
+    const checkInterval = 100; // 100ms
+    let elapsed = 0;
+
+    while (elapsed < maxWaitTime) {
+      try {
+        if (
+          window.adsbygoogle &&
+          Array.isArray(window.adsbygoogle) &&
+          typeof window.adsbygoogle.push === "function"
+        ) {
+          this.log("📚 AdSense service ready");
+          return;
+        }
+      } catch (error) {
+        // Continue waiting if AdSense is not ready
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, checkInterval));
+      elapsed += checkInterval;
+    }
+
+    this.log("⚠️ AdSense service not ready within timeout");
+  }
+
+  /**
    * Initialize Google Analytics
    */
   private initializeGoogleAnalytics(): void {
@@ -204,6 +233,9 @@ class AdManager {
       return;
     }
 
+    // Wait for AdSense to be fully ready
+    await this.waitForAdSenseReady();
+
     try {
       // Inject the ad code
       container.innerHTML = adCode;
@@ -275,6 +307,42 @@ class AdManager {
 
     // Wait for GPT to be fully initialized
     await this.waitForGPTReady();
+
+    // Check if this ad code contains slot definitions that might conflict with production setup
+    const hasSlotDefinition = adCode.includes("defineSlot");
+    if (hasSlotDefinition) {
+      this.log(`⚠️ GPT ad ${adId} contains slot definitions - checking for conflicts`);
+
+      // Extract slot IDs from the ad code to check if they're already defined
+      const slotIdMatches = adCode.match(/defineSlot\([^,]+,\s*[^,]+,\s*['"`]([^'"`]+)['"`]\)/g);
+      if (slotIdMatches) {
+        for (const match of slotIdMatches) {
+          const slotIdMatch = match.match(/['"`]([^'"`]+)['"`]\)/);
+          if (slotIdMatch) {
+            const slotId = slotIdMatch[1];
+            // Check if this slot is already defined in production setup
+            if (this.isProductionSlot(slotId)) {
+              this.log(
+                `⚠️ Slot ${slotId} is already defined in production setup - skipping slot definition`,
+              );
+              // Remove the slot definition from the code and just keep the display part
+              const displayOnlyCode = this.extractDisplayOnlyCode(adCode);
+              if (displayOnlyCode) {
+                container.innerHTML = displayOnlyCode;
+                this.log(`✅ Using display-only code for slot ${slotId}`);
+                this.loadedSlots.set(adId, {
+                  id: adId,
+                  element: container,
+                  isLoaded: true,
+                  adType: "gpt",
+                });
+                return;
+              }
+            }
+          }
+        }
+      }
+    }
 
     try {
       // Inject the ad code
@@ -561,6 +629,52 @@ class AdManager {
   /**
    * Debug logging
    */
+  /**
+   * Check if a slot ID is part of the production setup
+   */
+  private isProductionSlot(slotId: string): boolean {
+    const productionSlotIds = [
+      "div-gpt-ad-1756916838274-0",
+      "div-gpt-ad-1756916923084-0",
+      "div-gpt-ad-1756917063845-0",
+      "div-gpt-ad-1756917167350-0",
+      "div-gpt-ad-1756917211452-0",
+      "div-gpt-ad-1756917425896-0",
+      "div-gpt-ad-1756917451647-0",
+      "div-gpt-ad-1756917481824-0",
+      "div-gpt-ad-1756917285961-0",
+      "div-gpt-ad-1756917330438-0",
+    ];
+    return productionSlotIds.includes(slotId);
+  }
+
+  /**
+   * Extract display-only code from GPT ad code (removes slot definitions)
+   */
+  private extractDisplayOnlyCode(adCode: string): string | null {
+    try {
+      // Create a temporary div to parse the HTML
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = adCode;
+
+      // Find the div with the slot ID
+      const slotDiv = tempDiv.querySelector("div[id^='div-gpt-ad-']");
+      if (slotDiv) {
+        // Keep only the div and its display script, remove any defineSlot scripts
+        const displayScript = slotDiv.querySelector("script");
+        if (displayScript && displayScript.textContent?.includes("display")) {
+          return `<div id="${slotDiv.id}" style="${slotDiv.getAttribute("style") || ""}">
+            <script>${displayScript.textContent}</script>
+          </div>`;
+        }
+      }
+      return null;
+    } catch (error) {
+      this.log(`❌ Failed to extract display-only code:`, error);
+      return null;
+    }
+  }
+
   private log(...args: any[]): void {
     if (this.config.enableDebug) {
       console.log("[AdManager]", ...args);
