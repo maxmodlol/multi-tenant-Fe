@@ -227,68 +227,128 @@ class AdManager {
       return;
     }
 
-    // Check if adsbygoogle is available
-    if (typeof window.adsbygoogle === "undefined") {
-      this.log(`❌ AdSense not available for ad ${adId}`);
-      this.showAdFallback(container, adId, "AdSense not available");
-      return;
-    }
-
-    // Wait for AdSense to be fully ready
-    await this.waitForAdSenseReady();
-
     try {
-      // Inject the ad code
+      console.log(`🔍 DEBUG AdSense: Starting ad ${adId}`);
+      console.log(`🔍 DEBUG AdSense: Code snippet:`, adCode.substring(0, 200));
+
+      // Parse the ad code to extract script tags and content
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(adCode, "text/html");
+
+      // Extract and load external AdSense scripts first
+      const scriptTags = doc.querySelectorAll("script[src*='adsbygoogle']");
+      const loadPromises: Promise<void>[] = [];
+
+      console.log(`🔍 DEBUG AdSense: Found ${scriptTags.length} AdSense script tags`);
+
+      scriptTags.forEach((scriptTag: any) => {
+        const src = scriptTag.getAttribute("src");
+        const alreadyLoaded = document.querySelector(`script[src="${src}"]`);
+        console.log(`🔍 DEBUG AdSense: Script src: ${src}, already loaded: ${!!alreadyLoaded}`);
+
+        if (src && !alreadyLoaded) {
+          // Load the AdSense library if not already loaded
+          const promise = new Promise<void>((resolve, reject) => {
+            const newScript = document.createElement("script");
+            newScript.src = src;
+            newScript.async = true;
+            newScript.crossOrigin = "anonymous";
+            newScript.onload = () => {
+              console.log(`✅ DEBUG AdSense: Library loaded successfully: ${src}`);
+              this.log(`✅ AdSense library loaded: ${src}`);
+              resolve();
+            };
+            newScript.onerror = () => {
+              console.error(`❌ DEBUG AdSense: Failed to load library: ${src}`);
+              this.log(`❌ Failed to load AdSense library: ${src}`);
+              reject();
+            };
+            document.head.appendChild(newScript);
+          });
+          loadPromises.push(promise);
+        }
+      });
+
+      // Wait for all external scripts to load
+      if (loadPromises.length > 0) {
+        console.log(`🔍 DEBUG AdSense: Waiting for ${loadPromises.length} scripts to load...`);
+        await Promise.all(loadPromises);
+        console.log(`✅ DEBUG AdSense: All scripts loaded, waiting 500ms for initialization`);
+        // Wait a bit more for AdSense to initialize
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
+
+      // Check if adsbygoogle is available after loading
+      const adsenseAvailable = typeof window.adsbygoogle !== "undefined";
+      console.log(`🔍 DEBUG AdSense: window.adsbygoogle available: ${adsenseAvailable}`);
+
+      if (!adsenseAvailable) {
+        console.error(`❌ DEBUG AdSense: AdSense not available for ad ${adId}`);
+        this.log(`❌ AdSense not available for ad ${adId}`);
+        this.showAdFallback(container, adId, "AdSense not available");
+        return;
+      }
+
+      // Inject the full ad code (including ins elements and inline scripts)
+      console.log(`🔍 DEBUG AdSense: Injecting ad code into container`);
       container.innerHTML = adCode;
 
       // Find all AdSense ins elements in this container
       const insElements = container.querySelectorAll("ins.adsbygoogle");
+      console.log(`🔍 DEBUG AdSense: Found ${insElements.length} ins.adsbygoogle elements`);
 
       if (insElements.length === 0) {
+        console.warn(`⚠️ DEBUG AdSense: No AdSense ins elements found in ad ${adId}`);
         this.log(`⚠️ No AdSense ins elements found in ad ${adId}`);
         this.showAdFallback(container, adId, "No AdSense elements found");
         return;
       }
 
-      // Check if any ins elements need to be pushed
-      let needsPush = false;
-      insElements.forEach((ins: any) => {
-        if (!ins.dataset.adsbygoogleStatus) {
-          needsPush = true;
+      // Log ins element details
+      insElements.forEach((ins: any, idx) => {
+        console.log(
+          `🔍 DEBUG AdSense: ins[${idx}] client: ${ins.dataset.adClient}, slot: ${ins.dataset.adSlot}`,
+        );
+      });
+
+      // Execute inline scripts that contain adsbygoogle.push()
+      const inlineScripts = container.querySelectorAll("script:not([src])");
+      console.log(`🔍 DEBUG AdSense: Found ${inlineScripts.length} inline scripts`);
+
+      inlineScripts.forEach((script: any, idx) => {
+        if (script.textContent.includes("adsbygoogle")) {
+          try {
+            console.log(
+              `🔍 DEBUG AdSense: Executing inline script ${idx}:`,
+              script.textContent.substring(0, 100),
+            );
+            // Execute the script in global context
+            eval(script.textContent);
+            console.log(`✅ DEBUG AdSense: Inline script ${idx} executed successfully`);
+            this.log(`✅ Executed AdSense inline script for ad ${adId}`);
+          } catch (error) {
+            console.error(`❌ DEBUG AdSense: Failed to execute script ${idx}:`, error);
+            this.log(`❌ Failed to execute AdSense script:`, error);
+          }
         }
       });
 
-      if (needsPush) {
-        // Create a unique push identifier
-        const pushId = `${adId}-${Date.now()}`;
+      console.log(`✅ DEBUG AdSense: Ad ${adId} injected successfully`);
+      this.log(`✅ AdSense ad ${adId} injected successfully`);
 
-        if (!this.adSensePushes.has(pushId)) {
-          this.adSensePushes.add(pushId);
+      // Set up monitoring for ad loading
+      this.monitorAdLoading(container, adId, "adsense");
 
-          // Push the ad
-          (window.adsbygoogle = window.adsbygoogle || []).push({});
+      // Track the ad
+      this.loadedSlots.set(adId, {
+        id: adId,
+        element: container,
+        isLoaded: true,
+        adType: "adsense",
+      });
 
-          this.log(`✅ AdSense ad ${adId} pushed successfully`);
-
-          // Set up monitoring for ad loading
-          this.monitorAdLoading(container, adId, "adsense");
-
-          // Track the ad
-          this.loadedSlots.set(adId, {
-            id: adId,
-            element: container,
-            isLoaded: true,
-            adType: "adsense",
-          });
-
-          // Track in Google Analytics
-          this.trackAdEvent("adsense_load", adId, "success");
-        } else {
-          this.log(`⚠️ AdSense push ${pushId} already executed`);
-        }
-      } else {
-        this.log(`ℹ️ AdSense ad ${adId} already has ads loaded`);
-      }
+      // Track in Google Analytics
+      this.trackAdEvent("adsense_load", adId, "success");
     } catch (error) {
       this.log(`❌ AdSense ad ${adId} failed:`, error);
       this.showAdFallback(container, adId, "AdSense loading failed");
@@ -300,33 +360,51 @@ class AdManager {
    * Handle Google Ad Manager (GPT) ad with slot conflict prevention
    */
   public async handleGPTAd(adId: string, container: HTMLElement, adCode: string): Promise<void> {
+    console.log(`🔍 DEBUG GPT: Starting ad ${adId}`);
+    console.log(`🔍 DEBUG GPT: Code snippet:`, adCode.substring(0, 200));
+
     if (this.loadedSlots.has(adId)) {
+      console.log(`⚠️ DEBUG GPT: Ad ${adId} already loaded, skipping`);
       this.log(`⚠️ GPT ad ${adId} already loaded, skipping`);
       return;
     }
 
     // Check if googletag is available
-    if (typeof window.googletag === "undefined") {
+    const gptAvailable = typeof window.googletag !== "undefined";
+    console.log(`🔍 DEBUG GPT: window.googletag available: ${gptAvailable}`);
+
+    if (!gptAvailable) {
+      console.error(`❌ DEBUG GPT: Google Ad Manager not available for ad ${adId}`);
       this.log(`❌ Google Ad Manager not available for ad ${adId}`);
       return;
     }
 
     // Wait for GPT to be fully initialized
+    console.log(`🔍 DEBUG GPT: Waiting for GPT to be ready...`);
     await this.waitForGPTReady();
+    console.log(`✅ DEBUG GPT: GPT is ready`);
 
     // Process GPT ad normally - no conflict detection needed since production setup doesn't define slots
 
     try {
       // Inject the ad code
+      console.log(`🔍 DEBUG GPT: Injecting ad code into container`);
       container.innerHTML = adCode;
 
       // Find all GPT div elements in this container
       const gptDivs = container.querySelectorAll('[id*="div-gpt-ad-"]');
+      console.log(`🔍 DEBUG GPT: Found ${gptDivs.length} GPT div elements`);
 
       if (gptDivs.length === 0) {
+        console.warn(`⚠️ DEBUG GPT: No GPT div elements found in ad ${adId}`);
         this.log(`⚠️ No GPT div elements found in ad ${adId}`);
         return;
       }
+
+      // Log div IDs
+      gptDivs.forEach((div: any, idx) => {
+        console.log(`🔍 DEBUG GPT: div[${idx}] id: ${div.id}`);
+      });
 
       // Process each GPT div
       gptDivs.forEach((div: any) => {
@@ -523,26 +601,37 @@ class AdManager {
     container: HTMLElement,
     adCode: string,
   ): Promise<void> {
+    console.log(`🔍 DEBUG GPT Display: Starting ad ${adId}`);
+    console.log(`🔍 DEBUG GPT Display: Code snippet:`, adCode.substring(0, 200));
+
     if (this.loadedSlots.has(adId)) {
+      console.log(`⚠️ DEBUG GPT Display: Ad ${adId} already loaded, skipping`);
       this.log(`⚠️ GPT display ad ${adId} already loaded, skipping`);
       return;
     }
 
     // Wait for GPT to be ready
+    console.log(`🔍 DEBUG GPT Display: Waiting for GPT to be ready...`);
     await this.waitForGPTReady();
+    console.log(`✅ DEBUG GPT Display: GPT is ready`);
 
     try {
       // Inject the ad code
+      console.log(`🔍 DEBUG GPT Display: Injecting ad code into container`);
       container.innerHTML = adCode;
 
       // Find the GPT div in the injected content
       const gptDiv = container.querySelector('[id^="div-gpt-ad-"]') as HTMLElement;
+      console.log(`🔍 DEBUG GPT Display: Found GPT div:`, gptDiv ? gptDiv.id : "null");
+
       if (!gptDiv) {
+        console.warn(`⚠️ DEBUG GPT Display: No GPT div found in display ad ${adId}`);
         this.log(`⚠️ No GPT div found in display ad ${adId}`);
         return;
       }
 
       const slotId = gptDiv.id;
+      console.log(`🎯 DEBUG GPT Display: Processing ad ${adId} for slot: ${slotId}`);
       this.log(`🎯 Processing GPT display ad ${adId} for slot: ${slotId}`);
 
       // Wait for the slot to be defined (it should be defined by global header)
