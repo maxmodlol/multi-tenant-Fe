@@ -19,11 +19,20 @@ export default function AdHeaderInjector() {
 
   // Fetch tenant-specific header ads (should work on all page types)
   // We'll fetch for "home" page type as it typically contains global ads
-  const { data: headerAdsData, isLoading } = useTenantAds(
-    "home",
-    [TenantAdPlacement.HEADER],
+  const {
+    data: headerAdsData,
+    isLoading,
+    error,
+  } = useTenantAds("home", [TenantAdPlacement.HEADER], currentTenant);
+
+  // DEBUG: Log what we're fetching
+  console.log("🔍 AdHeaderInjector DEBUG:", {
     currentTenant,
-  );
+    isLoading,
+    error,
+    headerAdsData,
+    placement: TenantAdPlacement.HEADER,
+  });
 
   const nodesRef = useRef<Node[]>([]);
 
@@ -65,6 +74,9 @@ export default function AdHeaderInjector() {
       tenantId: currentTenant,
       adCount: allHeaderAds.length,
       ads: allHeaderAds.map((ad) => ({ id: ad.id, title: ad.title, enabled: ad.isEnabled })),
+      rawData: { headerAdsData, isLoading },
+      currentPath: pathname,
+      fullResponse: headerAdsData,
     });
 
     // Process each tenant-specific header ad

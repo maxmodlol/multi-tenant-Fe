@@ -10,14 +10,26 @@ export function useTenantAds(
   tenantId?: string,
   blogId?: string,
 ) {
-  return useQuery({
+  const result = useQuery({
     queryKey: ["tenant-ads", pageType, placements, tenantId, blogId],
-    queryFn: () =>
-      tenantAdService.getPublicTenantAdsForPage(pageType, placements, tenantId, blogId),
+    queryFn: () => {
+      console.log("🔍 useTenantAds API call:", { pageType, placements, tenantId, blogId });
+      return tenantAdService.getPublicTenantAdsForPage(pageType, placements, tenantId, blogId);
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     enabled: !!tenantId, // Only run query if tenantId is provided
   });
+
+  // DEBUG: Log the result
+  console.log("🔍 useTenantAds result:", {
+    data: result.data,
+    isLoading: result.isLoading,
+    error: result.error,
+    queryKey: ["tenant-ads", pageType, placements, tenantId, blogId],
+  });
+
+  return result;
 }
 
 export function useTenantAdsByPlacement(

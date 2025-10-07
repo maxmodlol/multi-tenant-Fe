@@ -106,9 +106,17 @@ export const tenantAdService = {
     }
 
     // Use the new public endpoint
-    const response = await apiPublic.get(
-      `/public/tenant-ads/page/${pageType}?${params.toString()}`,
-    );
+    const url = `/public/tenant-ads/page/${pageType}?${params.toString()}`;
+    console.log("🔍 tenantAdService API call:", { url, params: params.toString() });
+
+    const response = await apiPublic.get(url);
+
+    console.log("🔍 tenantAdService API response:", {
+      url,
+      status: response.status,
+      data: response.data,
+    });
+
     return response.data;
   },
 };
