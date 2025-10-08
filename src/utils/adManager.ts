@@ -61,6 +61,9 @@ class AdManager {
 
     this.log("🚀 Initializing Ad Manager...");
 
+    // Set up global error handlers for ad-related errors
+    this.setupGlobalErrorHandlers();
+
     // Wait for all libraries to be available
     await this.waitForLibraries();
 
@@ -72,6 +75,31 @@ class AdManager {
 
     this.isInitialized = true;
     this.log("✅ Ad Manager initialized successfully");
+  }
+
+  /**
+   * Set up global error handlers for ad-related issues
+   */
+  private setupGlobalErrorHandlers(): void {
+    // Handle JavaScript errors
+    window.addEventListener("error", (event) => {
+      if (event.message && event.message.includes("adsbygoogle")) {
+        this.log("❌ AdSense error caught:", event.message);
+      } else if (event.message && event.message.includes("sandboxed")) {
+        this.log("🛡️ Sandboxed iframe error caught (likely ad blocker):", event.message);
+        console.log("💡 This error is usually caused by ad blockers or browser security policies");
+      } else if (event.message && event.message.includes("googletag")) {
+        this.log("🔵 GPT error caught:", event.message);
+      }
+    });
+
+    // Handle unhandled promise rejections
+    window.addEventListener("unhandledrejection", (event) => {
+      if (event.reason && typeof event.reason === 'string' && event.reason.includes("sandboxed")) {
+        this.log("🛡️ Sandboxed promise rejection caught:", event.reason);
+        console.log("💡 This is likely caused by ad blockers blocking iframe creation");
+      }
+    });
   }
 
   /**
@@ -558,6 +586,24 @@ class AdManager {
       return;
     }
 
+    // Determine the type of issue and show appropriate message
+    let icon = "📢";
+    let suggestion = "";
+    
+    if (reason.includes("ad blocker")) {
+      icon = "🚫";
+      suggestion = "Disable ad blocker or whitelist this site";
+    } else if (reason.includes("sandbox")) {
+      icon = "🛡️";
+      suggestion = "Browser security policy blocking ads";
+    } else if (reason.includes("AdSense")) {
+      icon = "🔴";
+      suggestion = "AdSense script loading issue";
+    } else if (reason.includes("GPT")) {
+      icon = "🔵";
+      suggestion = "Google Ad Manager loading issue";
+    }
+
     // Show debug fallback
     container.innerHTML = `
       <div style="
@@ -575,6 +621,9 @@ class AdManager {
         justify-content: center;
         align-items: center;
       ">
+        <div style="margin-bottom: 8px; font-size: 24px;">
+          ${icon}
+        </div>
         <div style="margin-bottom: 8px;">
           <strong>Ad Space</strong>
         </div>
@@ -584,6 +633,9 @@ class AdManager {
         <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">
           Reason: ${reason}
         </div>
+        ${suggestion ? `<div style="font-size: 11px; opacity: 0.7; margin-top: 8px; color: #dc3545;">
+          💡 ${suggestion}
+        </div>` : ''}
         <div style="font-size: 11px; opacity: 0.6; margin-top: 8px;">
           (Debug mode - hidden in production)
         </div>
@@ -644,31 +696,69 @@ class AdManager {
           const existingSlots = window.googletag.pubads().getSlots();
           const slotExists = existingSlots.some((slot: any) => slot.getSlotElementId() === slotId);
 
+          console.log(
+            `🔍 DEBUG GPT Display: Checking if slot ${slotId} is defined... exists: ${slotExists}, retry: ${retryCount}/${maxRetries}`,
+          );
+          console.log(
+            `🔍 DEBUG GPT Display: Total defined slots:`,
+            existingSlots.map((s: any) => s.getSlotElementId()),
+          );
+
           if (slotExists) {
+            console.log(
+              `✅ DEBUG GPT Display: Slot ${slotId} is defined, calling googletag.display()...`,
+            );
             this.log(`✅ GPT slot ${slotId} is defined, displaying...`);
-            window.googletag.display(slotId);
+            
+            try {
+              window.googletag.display(slotId);
+              console.log(`✅ DEBUG GPT Display: googletag.display() called for ${slotId}`);
 
-            // Track the ad
-            this.loadedSlots.set(adId, {
-              id: adId,
-              element: container,
-              isLoaded: true,
-              adType: "gpt",
-            });
+              // Track the ad
+              this.loadedSlots.set(adId, {
+                id: adId,
+                element: container,
+                isLoaded: true,
+                adType: "gpt",
+              });
 
-            this.log(`✅ GPT display ad ${adId} loaded successfully`);
+              console.log(`✅ DEBUG GPT Display: Ad ${adId} loaded successfully`);
+              this.log(`✅ GPT display ad ${adId} loaded successfully`);
 
-            // Set up monitoring for ad loading
-            this.monitorAdLoading(container, adId, "gpt_display");
+              // Set up monitoring for ad loading
+              this.monitorAdLoading(container, adId, "gpt_display");
+            } catch (displayError) {
+              const error = displayError as Error;
+              console.error(`❌ DEBUG GPT Display: googletag.display() failed for ${slotId}:`, error);
+              this.log(`❌ GPT display failed for ${slotId}:`, error);
+              
+              // Check if this is due to ad blocker or sandbox issues
+              if (error.message && error.message.includes('sandboxed')) {
+                console.log(`🛡️ DEBUG GPT Display: Ad blocked by sandbox policy, showing fallback`);
+                this.showAdFallback(container, adId, "Ad blocked by security policy");
+              } else if (error.message && error.message.includes('blocked')) {
+                console.log(`🚫 DEBUG GPT Display: Ad blocked by ad blocker, showing fallback`);
+                this.showAdFallback(container, adId, "Ad blocked by ad blocker");
+              } else {
+                this.showAdFallback(container, adId, "GPT display failed");
+              }
+            }
           } else if (retryCount < maxRetries) {
             retryCount++;
+            console.log(
+              `⏳ DEBUG GPT Display: Slot ${slotId} not defined yet, retry ${retryCount}/${maxRetries} in ${retryDelay}ms`,
+            );
             this.log(`⏳ GPT slot ${slotId} not defined yet, retry ${retryCount}/${maxRetries}...`);
             setTimeout(tryDisplay, retryDelay);
           } else {
+            console.error(
+              `❌ DEBUG GPT Display: Slot ${slotId} not defined after ${maxRetries} retries`,
+            );
             this.log(`❌ GPT slot ${slotId} not defined after ${maxRetries} retries`);
             this.showAdFallback(container, adId, "GPT slot not defined");
           }
         } catch (error) {
+          console.error(`❌ DEBUG GPT Display: Error for ad ${adId}:`, error);
           this.log(`❌ GPT display error for ad ${adId}:`, error);
         }
       };
