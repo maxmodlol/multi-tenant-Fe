@@ -95,7 +95,7 @@ class AdManager {
 
     // Handle unhandled promise rejections
     window.addEventListener("unhandledrejection", (event) => {
-      if (event.reason && typeof event.reason === 'string' && event.reason.includes("sandboxed")) {
+      if (event.reason && typeof event.reason === "string" && event.reason.includes("sandboxed")) {
         this.log("🛡️ Sandboxed promise rejection caught:", event.reason);
         console.log("💡 This is likely caused by ad blockers blocking iframe creation");
       }
@@ -361,6 +361,26 @@ class AdManager {
         }
       });
 
+      // Set up AdSense event listeners to track actual ad loading
+      insElements.forEach((ins: any, idx) => {
+        ins.addEventListener("load", () => {
+          console.log(`🎯 DEBUG AdSense: Ad loaded successfully:`, {
+            client: ins.dataset.adClient,
+            slot: ins.dataset.adSlot,
+            index: idx,
+          });
+        });
+
+        ins.addEventListener("error", (error: any) => {
+          console.error(`❌ DEBUG AdSense: Ad failed to load:`, {
+            client: ins.dataset.adClient,
+            slot: ins.dataset.adSlot,
+            index: idx,
+            error: error,
+          });
+        });
+      });
+
       console.log(`✅ DEBUG AdSense: Ad ${adId} injected successfully`);
       this.log(`✅ AdSense ad ${adId} injected successfully`);
 
@@ -589,7 +609,7 @@ class AdManager {
     // Determine the type of issue and show appropriate message
     let icon = "📢";
     let suggestion = "";
-    
+
     if (reason.includes("ad blocker")) {
       icon = "🚫";
       suggestion = "Disable ad blocker or whitelist this site";
@@ -633,9 +653,13 @@ class AdManager {
         <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">
           Reason: ${reason}
         </div>
-        ${suggestion ? `<div style="font-size: 11px; opacity: 0.7; margin-top: 8px; color: #dc3545;">
+        ${
+          suggestion
+            ? `<div style="font-size: 11px; opacity: 0.7; margin-top: 8px; color: #dc3545;">
           💡 ${suggestion}
-        </div>` : ''}
+        </div>`
+            : ""
+        }
         <div style="font-size: 11px; opacity: 0.6; margin-top: 8px;">
           (Debug mode - hidden in production)
         </div>
@@ -709,7 +733,7 @@ class AdManager {
               `✅ DEBUG GPT Display: Slot ${slotId} is defined, calling googletag.display()...`,
             );
             this.log(`✅ GPT slot ${slotId} is defined, displaying...`);
-            
+
             try {
               window.googletag.display(slotId);
               console.log(`✅ DEBUG GPT Display: googletag.display() called for ${slotId}`);
@@ -725,18 +749,43 @@ class AdManager {
               console.log(`✅ DEBUG GPT Display: Ad ${adId} loaded successfully`);
               this.log(`✅ GPT display ad ${adId} loaded successfully`);
 
+              // Set up GPT event listeners to track actual ad loading
+              window.googletag.pubads().addEventListener("slotOnload", (event: any) => {
+                console.log(
+                  `🎯 DEBUG GPT Display: Slot loaded successfully:`,
+                  event.slot.getSlotElementId(),
+                );
+              });
+
+              window.googletag.pubads().addEventListener("slotRenderEnded", (event: any) => {
+                console.log(`🎯 DEBUG GPT Display: Slot render ended:`, {
+                  slotId: event.slot.getSlotElementId(),
+                  isEmpty: event.isEmpty,
+                  size: event.size,
+                  creativeId: event.creativeId,
+                });
+                if (event.isEmpty) {
+                  console.log(
+                    `⚠️ DEBUG GPT Display: Slot ${event.slot.getSlotElementId()} is EMPTY - no ad served`,
+                  );
+                }
+              });
+
               // Set up monitoring for ad loading
               this.monitorAdLoading(container, adId, "gpt_display");
             } catch (displayError) {
               const error = displayError as Error;
-              console.error(`❌ DEBUG GPT Display: googletag.display() failed for ${slotId}:`, error);
+              console.error(
+                `❌ DEBUG GPT Display: googletag.display() failed for ${slotId}:`,
+                error,
+              );
               this.log(`❌ GPT display failed for ${slotId}:`, error);
-              
+
               // Check if this is due to ad blocker or sandbox issues
-              if (error.message && error.message.includes('sandboxed')) {
+              if (error.message && error.message.includes("sandboxed")) {
                 console.log(`🛡️ DEBUG GPT Display: Ad blocked by sandbox policy, showing fallback`);
                 this.showAdFallback(container, adId, "Ad blocked by security policy");
-              } else if (error.message && error.message.includes('blocked')) {
+              } else if (error.message && error.message.includes("blocked")) {
                 console.log(`🚫 DEBUG GPT Display: Ad blocked by ad blocker, showing fallback`);
                 this.showAdFallback(container, adId, "Ad blocked by ad blocker");
               } else {
