@@ -86,56 +86,65 @@ export default function BlogDetailClient({
     injectInlineAdsIntoContent(pageContent.content, inlineAds),
   );
 
-  // Execute AdSense push for inline ads after content is rendered
+  // Process inline ads through AdManager after content is rendered
   useEffect(() => {
     if (inlineAds.length > 0) {
-      const executeInlineAds = () => {
-        if (window.adsbygoogle) {
-          // Find all inline ad containers and execute push for them
-          const inlineAdContainers = document.querySelectorAll(".inline-ad-container");
-          console.log(`Found ${inlineAdContainers.length} inline ad containers`);
+      const processInlineAds = async () => {
+        // Find all inline ad containers and process them through AdManager
+        const inlineAdContainers = document.querySelectorAll(".inline-ad-container");
+        console.log(`🔍 Found ${inlineAdContainers.length} inline ad containers`);
 
-          inlineAdContainers.forEach((container, index) => {
+        // Import AdManager dynamically
+        const { adManager } = await import("@/src/utils/adManager");
+
+        inlineAdContainers.forEach(async (container, index) => {
+          const htmlContent = container.innerHTML;
+
+          // Check if this container has AdSense or GPT ads
+          const hasAdSense = htmlContent.includes("adsbygoogle");
+          const hasGPT = htmlContent.includes("googletag") || htmlContent.includes("div-gpt-ad-");
+
+          if (hasAdSense || hasGPT) {
             try {
-              // Check if this container has AdSense ads
-              const insElements = container.querySelectorAll("ins.adsbygoogle");
-              if (insElements.length > 0) {
-                // Check if any ins elements don't have ads yet
-                let needsPush = false;
-                insElements.forEach((ins: any) => {
-                  if (!ins.dataset.adsbygoogleStatus) {
-                    needsPush = true;
-                  }
-                });
+              console.log(`🔍 Processing inline ad container ${index + 1}:`, {
+                hasAdSense,
+                hasGPT,
+                contentLength: htmlContent.length,
+              });
 
-                if (needsPush) {
-                  (window.adsbygoogle = window.adsbygoogle || []).push({});
-                  console.log(`Inline AdSense ad ${index + 1} pushed successfully`);
-                } else {
-                  console.log(`Inline AdSense ad ${index + 1} already has ads, skipping push`);
-                }
+              // Clear the container first
+              container.innerHTML = "";
+
+              // Process through AdManager
+              if (hasAdSense) {
+                await adManager.handleAdSenseAd(
+                  `inline-ad-${index}`,
+                  container as HTMLElement,
+                  htmlContent,
+                );
+              } else if (hasGPT) {
+                await adManager.handleGPTDisplayAd(
+                  `inline-ad-${index}`,
+                  container as HTMLElement,
+                  htmlContent,
+                );
               }
+
+              console.log(`✅ Inline ad container ${index + 1} processed successfully`);
             } catch (error) {
-              console.error(`Error pushing inline AdSense ad ${index + 1}:`, error);
+              console.error(`❌ Error processing inline ad container ${index + 1}:`, error);
+              // Restore original content if processing fails
+              container.innerHTML = htmlContent;
             }
-          });
-        } else {
-          // Retry after a short delay, but limit retries
-          setTimeout(executeInlineAds, 100);
-        }
+          }
+        });
       };
 
       // Execute after a short delay to ensure DOM is updated
-      const timeoutId = setTimeout(executeInlineAds, 200);
-
-      // Add a timeout to prevent infinite retries
-      const maxTimeoutId = setTimeout(() => {
-        console.warn("Inline AdSense ads not executed after 10 seconds");
-      }, 10000);
+      const timeoutId = setTimeout(processInlineAds, 500);
 
       return () => {
         clearTimeout(timeoutId);
-        clearTimeout(maxTimeoutId);
       };
     }
   }, [inlineAds, page]);
