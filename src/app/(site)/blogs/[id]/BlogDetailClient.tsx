@@ -104,16 +104,60 @@ export default function BlogDetailClient({
           const hasAdSense = htmlContent.includes("adsbygoogle");
           const hasGPT = htmlContent.includes("googletag") || htmlContent.includes("div-gpt-ad-");
 
-          if (hasAdSense || hasGPT) {
+          // Check for specific corrupted HTML pattern we're seeing
+          const hasSpecificCorruption = htmlContent.includes('style="color:rgb(26, 29, 34)">');
+
+          if (hasAdSense || hasGPT || hasSpecificCorruption) {
             try {
               console.log(`🔍 Processing inline ad container ${index + 1}:`, {
                 hasAdSense,
                 hasGPT,
+                hasSpecificCorruption,
                 contentLength: htmlContent.length,
+                htmlContent: htmlContent.substring(0, 200) + "...",
               });
 
               // Clear the container first
               container.innerHTML = "";
+
+              // If it's the specific corruption we're seeing, show a fallback instead of trying to process it
+              if (hasSpecificCorruption && !hasAdSense && !hasGPT) {
+                console.warn(`⚠️ Corrupted inline ad detected, showing fallback`);
+                container.innerHTML = `
+                  <div style="
+                    padding: 20px;
+                    background: #f8f9fa;
+                    border: 2px dashed #dee2e6;
+                    text-align: center;
+                    color: #6c757d;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                    font-size: 14px;
+                    border-radius: 8px;
+                    min-height: 100px;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                  ">
+                    <div style="margin-bottom: 8px; font-size: 24px;">
+                      📢
+                    </div>
+                    <div style="margin-bottom: 8px;">
+                      <strong>Ad Space</strong>
+                    </div>
+                    <div style="font-size: 12px; opacity: 0.8;">
+                      ID: inline-ad-${index}
+                    </div>
+                    <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">
+                      Reason: Corrupted ad code detected
+                    </div>
+                    <div style="font-size: 11px; opacity: 0.6; margin-top: 8px;">
+                      (Debug mode - hidden in production)
+                    </div>
+                  </div>
+                `;
+                return;
+              }
 
               // Process through AdManager
               if (hasAdSense) {
@@ -133,8 +177,40 @@ export default function BlogDetailClient({
               console.log(`✅ Inline ad container ${index + 1} processed successfully`);
             } catch (error) {
               console.error(`❌ Error processing inline ad container ${index + 1}:`, error);
-              // Restore original content if processing fails
-              container.innerHTML = htmlContent;
+              // Show fallback instead of restoring corrupted content
+              container.innerHTML = `
+                <div style="
+                  padding: 20px;
+                  background: #f8f9fa;
+                  border: 2px dashed #dee2e6;
+                  text-align: center;
+                  color: #6c757d;
+                  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                  font-size: 14px;
+                  border-radius: 8px;
+                  min-height: 100px;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                ">
+                  <div style="margin-bottom: 8px; font-size: 24px;">
+                    ⚠️
+                  </div>
+                  <div style="margin-bottom: 8px;">
+                    <strong>Ad Space</strong>
+                  </div>
+                  <div style="font-size: 12px; opacity: 0.8;">
+                    ID: inline-ad-${index}
+                  </div>
+                  <div style="font-size: 12px; opacity: 0.8; margin-top: 4px;">
+                    Reason: Ad processing failed
+                  </div>
+                  <div style="font-size: 11px; opacity: 0.6; margin-top: 8px;">
+                    (Debug mode - hidden in production)
+                  </div>
+                </div>
+              `;
             }
           }
         });
