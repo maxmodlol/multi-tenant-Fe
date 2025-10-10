@@ -735,6 +735,23 @@ class AdManager {
             this.log(`✅ GPT slot ${slotId} is defined, displaying...`);
 
             try {
+              // Log ad unit details before display
+              const slot = window.googletag
+                .pubads()
+                .getSlots()
+                .find((s: any) => s.getSlotElementId() === slotId);
+              if (slot) {
+                const adUnitPath = slot.getAdUnitPath();
+                const slotSizes = slot.getSizes();
+                console.log(`🔍 DEBUG GPT Display: Ad unit details:`, {
+                  slotId,
+                  adUnitPath,
+                  slotSizes,
+                  targeting: slot.getTargetingMap(),
+                  categoryExclusions: slot.getCategoryExclusions(),
+                });
+              }
+
               window.googletag.display(slotId);
               console.log(`✅ DEBUG GPT Display: googletag.display() called for ${slotId}`);
 
@@ -763,11 +780,22 @@ class AdManager {
                   isEmpty: event.isEmpty,
                   size: event.size,
                   creativeId: event.creativeId,
+                  advertiserId: event.advertiserId,
+                  campaignId: event.campaignId,
+                  lineItemId: event.lineItemId,
+                  creativeSize: event.creativeSize,
                 });
                 if (event.isEmpty) {
-                  console.log(
+                  console.warn(
                     `⚠️ DEBUG GPT Display: Slot ${event.slot.getSlotElementId()} is EMPTY - no ad served`,
                   );
+                  console.warn(`⚠️ DEBUG GPT Display: Possible causes:`, {
+                    "Ad unit not active": "Check GAM console",
+                    "No line items": "Create line items in GAM",
+                    "Geographic restrictions": "Check targeting settings",
+                    "Low fill rate": "Common with new accounts",
+                    "Budget exhausted": "Check line item budgets",
+                  });
                 }
               });
 
